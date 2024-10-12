@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.link {
+    @apply underline transition-colors;
+    @apply hover:text-red-500 transition-colors;
+}
+
+.scroll-xs::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+}
+
+.scroll-xs::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+.scroll-xs::-webkit-scrollbar-thumb {
+    @apply bg-gray-400;
+    border-radius: 1px;
+}

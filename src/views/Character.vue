@@ -1,21 +1,104 @@
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue';
 
-const spellLevels = ref(["Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ", "Ⅴ", "Ⅵ", "Ⅶ", "Ⅷ", "Ⅸ", "Ⅹ"])
-const abilities = ref(["力", "敏", "体", "智", "感", "魅"])
-const remainingHP = ref(0)
-const fullHP = ref(100)
-const HPBarStyleRight = computed(() => { return `${100 - remainingHP.value / fullHP.value * 100}%` })
+
+let c = {
+    name: "阿列克",
+    username: "盒子",
+    currentHP: 37,
+    maxHP: 65,
+}
+
+let a = [
+    {
+        order: 0,
+        name: "力",
+        value: 15,
+        sources: [
+            { name: "基础值", value: 10 },
+            { name: "谷歌手甲", link: "https://www.google.com", value: 5 }
+        ]
+    },
+    {
+        order: 1,
+        name: "敏",
+        value: 10,
+        sources: [
+            { name: "基础值", value: 10 },
+        ]
+    },
+    {
+        order: 2,
+        name: "体",
+        value: 10,
+        sources: [
+            { name: "基础值", value: 10 },
+        ]
+    },
+    {
+        order: 3,
+        name: "智",
+        value: 20,
+        sources: [
+            { name: "基础值", value: 10 },
+            { name: "谷歌头环", link: "https://www.google.com", value: 5 },
+            { name: "谷歌药水", link: "https://www.google.com", value: 3 },
+            { name: "谷歌项链", link: "https://www.google.com", value: 2 },
+        ]
+    },
+    {
+        order: 4,
+        name: "感",
+        value: 10,
+        sources: [
+            { name: "基础值", value: 10 },
+        ]
+    },
+    {
+        order: 5,
+        name: "魅",
+        value: 10,
+        sources: [
+            { name: "基础值", value: 10 },
+        ]
+    }
+]
+let s = [
+    {level: "Ⅰ", order: 0, available: 5, total: 5}, {level: "Ⅱ", order: 1, available: 2, total: 2}
+]
+const abilities = ref(a)
+// const spellSlots = ref(["Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ", "Ⅴ", "Ⅵ", "Ⅶ", "Ⅷ", "Ⅸ", "Ⅹ"])
+const spellSlots = ref(s)
+const character = ref(c)
+const HPBarStyleRight = computed(() => { return `${100 - character.value.currentHP / character.value.maxHP * 100}%` })
+
+function abilityExpandScroll(event: Event) {
+    const dom = event.currentTarget as HTMLElement
+    const wheelEvent = event as WheelEvent
+    dom.scrollLeft += wheelEvent.deltaY
+}
 
 </script>
 <template>
     <main class="bg-slate-600 h-screen flex justify-start items-start">
         <div id="main-status">
             <div id="abilities-container"
-                class="w-16 bg-gray-700 flex flex-col justify-around items-stretch cursor-default select-none">
-                <div v-for="i in abilities" class="text-center text-slate-50 py-2 border-b border-b-slate-50 mx-1">
-                    <div>{{ i }}</div>
-                    <div class="font-bold text-xl">15</div>
+                class="w-16 flex flex-col items-stretch cursor-default select-none bg-gray-800">
+                <div v-for="ability in abilities"
+                    class="ability-item-container text-center flex flex-col justify-center text-slate-50 py-2 border-b border-b-slate-50 relative flex-grow z-10">
+                    <div class="ability-expand-container scroll-xs" @wheel.prevent="abilityExpandScroll">
+                        <div class="text-2xl mx-1">=</div>
+                        <div class="ability-source" v-for="source, idx in ability.sources" :key="idx">
+                            <div class="inline-block transition-none">
+                                <a v-if="source.link" :href="source.link" target="_blank" class="text-sm link block">{{
+                                    source.name }}</a>
+                                <div v-else class="text-sm">{{ source.name }}</div>
+                                <div class="text-lg font-bold">{{ source.value }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>{{ ability.name }}</div>
+                    <div class="font-bold text-xl">{{ ability.value }}</div>
                 </div>
             </div>
             <div id="profile" class="bg-slate-300 relative overflow-hidden">
@@ -23,25 +106,26 @@ const HPBarStyleRight = computed(() => { return `${100 - remainingHP.value / ful
                 <div id="info">
                     <div class="name-container">
                         <span class="key">角色名字：</span>
-                        <span class="value">阿卡列</span>
+                        <span class="value">{{ character.name }}</span>
                     </div>
                     <div class="name-container">
                         <span class="key">玩家名字：</span>
-                        <span class="value">盒子</span>
+                        <span class="value">{{ character.username }}</span>
                     </div>
                 </div>
             </div>
             <div id="spell-slots-container"
-                class="w-16 flex flex-col justify-start items-stretch bg-gray-800 cursor-default select-none overflow-auto">
-                <div v-for="i in spellLevels" class="text-center text-slate-50 py-2 border-b border-b-slate-50 mx-1">
-                    <div class="text-xs leading-3">{{ i }}</div>
-                    <div>🔷×5</div>
+                class="w-16 flex flex-col justify-start items-stretch bg-gray-800 cursor-default select-none overflow-auto scroll-xs">
+                <div v-for="slot in spellSlots" class="slot">
+                    <div>{{ slot.level }}</div>
+                    <div class="slot-fig">🔷×{{ slot.available }}</div>
+                    <div class="slot-text">{{ slot.available }} / {{ slot.total }}</div>
                 </div>
             </div>
             <div id="hp-container"
                 class="h-8 bg-red-900 text-center font-bold text-slate-50 leading-8 relative overflow-hidden">
                 <div class="w-full h-full absolute top-0 bg-red-500" :style="{ right: HPBarStyleRight }"></div>
-                <span class="relative"> {{ remainingHP }} / {{ fullHP }} </span>
+                <span class="relative"> {{ character.currentHP }} / {{ character.maxHP }} </span>
             </div>
         </div>
         <div id="skills"></div>
@@ -72,6 +156,30 @@ const HPBarStyleRight = computed(() => { return `${100 - remainingHP.value / ful
     @apply border-b-0;
 }
 
+.ability-expand-container {
+    @apply w-64 ml-16 bg-gray-800 absolute h-full top-0 rounded-r-md p-4 pl-0 overflow-auto;
+    @apply scale-x-0 transition origin-left;
+    @apply flex justify-start items-center;
+    box-shadow: 6px 2px 6px rgb(0 0 0 / 0.1);
+}
+
+.ability-item-container:hover>.ability-expand-container {
+    @apply scale-x-100;
+}
+
+.ability-source {
+    @apply text-center flex-shrink-0;
+}
+
+.ability-source::after {
+    content: "+";
+    @apply text-2xl mx-1 inline-block;
+}
+
+.ability-source:last-child::after {
+    content: "";
+}
+
 
 #profile {
     height: 32rem;
@@ -98,16 +206,16 @@ const HPBarStyleRight = computed(() => { return `${100 - remainingHP.value / ful
     @apply hover:font-bold;
 }
 
-#spell-slots-container::-webkit-scrollbar {
-    width: 3px;
+.slot {
+    @apply text-center text-slate-50 py-2 border-b border-b-slate-50;
 }
 
-#spell-slots-container::-webkit-scrollbar-track {
-    background-color: transparent;
+.slot:hover>.slot-text, .slot-fig {
+    @apply visible h-auto;
 }
 
-#spell-slots-container::-webkit-scrollbar-thumb {
-    @apply bg-gray-400;
-    border-radius: 1px;
+.slot:hover>.slot-fig, .slot-text {
+    @apply invisible h-0;
 }
+
 </style>
