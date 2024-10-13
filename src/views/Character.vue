@@ -93,8 +93,7 @@ function abilityExpandScroll(event: Event) {
                 <div id="xp-amount" class="relative transition-transform origin-top"> {{ character.XP }} / {{
                     character.nextLvlXP }} </div>
             </div>
-            <div id="abilities-container"
-                class="w-16 flex flex-col items-stretch bg-gray-800">
+            <div id="abilities-container" class="w-16 flex flex-col items-stretch bg-gray-800">
                 <div v-for="ability in abilities"
                     class="ability-item-container text-center flex flex-col justify-center text-slate-50 py-2 border-b border-b-slate-50 relative flex-grow z-10">
                     <div class="ability-expand-container scroll-xs" @wheel.prevent="abilityExpandScroll">
@@ -139,14 +138,49 @@ function abilityExpandScroll(event: Event) {
                 <span class="relative"> {{ character.currentHP }} / {{ character.maxHP }} </span>
             </div>
         </div>
-        <div id="skills"></div>
-        <div id="equipments"></div>
-        <div id="package"></div>
-        <div id="spells"></div>
+        <div style="grid-area: b;"></div>
+        <div id="actions-container">
+            <div id="actions-list-container">
+                <div id="action-tabs">
+                    <router-link exact-active-class="selected-action-tab" to="/actions/favorite"
+                        class="action-tab">收藏</router-link>
+                    <router-link exact-active-class="selected-action-tab" to="/actions/check"
+                        class="action-tab">检定</router-link>
+                    <router-link exact-active-class="selected-action-tab" to="/actions/save"
+                        class="action-tab">豁免</router-link>
+                    <router-link exact-active-class="selected-action-tab" to="/actions/weapons"
+                        class="action-tab">武器</router-link>
+                    <router-link exact-active-class="selected-action-tab" to="/actions/spells"
+                        class="action-tab">法术</router-link>
+                </div>
+                <div id="action-list">
+                    <router-view />
+                </div>
+            </div>
+            <div id="roll-container">
+                <div id="roll-result"> 2d10 + 4 = 3[d10] + 4[d10] + 4 = 11 </div>
+                <div id="roll"></div>
+            </div>
+        </div>
+        <!-- <div id="skills"></div> -->
+        <!-- <div id="equipments"></div> -->
+        <!-- <div id="package"></div> -->
+        <!-- <div id="spells"></div> -->
     </main>
 </template>
 <style scoped>
+main {
+    @apply w-full h-screen;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+        "a b"
+        "c c";
+}
+
 #main-status {
+    grid-area: a;
     display: grid;
     grid-template-areas:
         "a a a"
@@ -237,7 +271,8 @@ function abilityExpandScroll(event: Event) {
     @apply text-center text-slate-50 py-2 border-b border-b-slate-50 whitespace-nowrap;
 }
 
-.slot-fig, .slot-text {
+.slot-fig,
+.slot-text {
     @apply inline-block w-full transition-transform;
 }
 
@@ -246,12 +281,54 @@ function abilityExpandScroll(event: Event) {
     @apply scale-x-100;
 }
 
-.slot:hover>.slot-text, .slot:hover>.slot-fig {
+.slot:hover>.slot-text,
+.slot:hover>.slot-fig {
     @apply -translate-x-16;
 }
 
 .slot:hover>.slot-fig,
 .slot-text {
     @apply scale-x-0;
+}
+
+#actions-container {
+    @apply h-full bg-gray-800;
+    grid-area: c;
+    display: flex;
+}
+
+#actions-list-container {
+    @apply basis-1 flex flex-col justify-start items-stretch;
+    flex-grow: 2;
+}
+
+#roll-result {
+    @apply h-12 py-1 leading-10 text-center text-slate-50 font-bold;
+}
+
+#action-tabs {
+    @apply w-full h-12 px-2 pt-2;
+    @apply flex justify-start items-stretch gap-1;
+}
+
+.action-tab {
+    @apply w-32 text-center leading-10 rounded-t-lg bg-slate-600 text-slate-50 transition-all;
+}
+
+.action-tab:hover, .selected-action-tab {
+    @apply font-bold bg-slate-900;
+}
+
+#action-list {
+    @apply bg-gray-800 px-2 pb-2 flex-grow;
+}
+
+#roll-container {
+    @apply flex flex-col justify-start pr-2 pb-2 items-stretch;
+    flex-grow: 1;
+}
+
+#roll {
+    @apply basis-1 bg-slate-900 rounded-lg flex-grow;
 }
 </style>
