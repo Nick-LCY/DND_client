@@ -84,7 +84,7 @@ function abilityExpandScroll(event: Event) {
 
 </script>
 <template>
-    <main class="bg-slate-600 h-screen flex justify-start items-start">
+    <main class="bg-slate-600 h-screen flex justify-start items-start cursor-default select-none">
         <div id="main-status">
             <div id="xp-container"
                 class="h-6 bg-yellow-900 text-center font-bold text-slate-50 leading-6 relative overflow-hidden text-sm">
@@ -94,7 +94,7 @@ function abilityExpandScroll(event: Event) {
                     character.nextLvlXP }} </div>
             </div>
             <div id="abilities-container"
-                class="w-16 flex flex-col items-stretch cursor-default select-none bg-gray-800">
+                class="w-16 flex flex-col items-stretch bg-gray-800">
                 <div v-for="ability in abilities"
                     class="ability-item-container text-center flex flex-col justify-center text-slate-50 py-2 border-b border-b-slate-50 relative flex-grow z-10">
                     <div class="ability-expand-container scroll-xs" @wheel.prevent="abilityExpandScroll">
@@ -126,7 +126,7 @@ function abilityExpandScroll(event: Event) {
                 </div>
             </div>
             <div id="spell-slots-container"
-                class="w-16 flex flex-col justify-start items-stretch bg-gray-800 cursor-default select-none overflow-auto scroll-xs">
+                class="w-16 flex flex-col justify-start items-stretch bg-gray-800 overflow-y-auto overflow-x-hidden scroll-xs">
                 <div v-for="slot in spellSlots" class="slot">
                     <div>{{ slot.level }}</div>
                     <div class="slot-fig">🔷×{{ slot.available }}</div>
@@ -228,26 +228,30 @@ function abilityExpandScroll(event: Event) {
     @apply flex justify-between text-slate-200 leading-10;
 }
 
-.name-container>.key {
-    @apply select-none;
-}
-
 .name-container>.value {
     @apply select-all cursor-pointer;
     @apply hover:font-bold;
 }
 
 .slot {
-    @apply text-center text-slate-50 py-2 border-b border-b-slate-50;
+    @apply text-center text-slate-50 py-2 border-b border-b-slate-50 whitespace-nowrap;
+}
+
+.slot-fig, .slot-text {
+    @apply inline-block w-full transition-transform;
 }
 
 .slot:hover>.slot-text,
 .slot-fig {
-    @apply visible h-auto;
+    @apply scale-x-100;
+}
+
+.slot:hover>.slot-text, .slot:hover>.slot-fig {
+    @apply -translate-x-16;
 }
 
 .slot:hover>.slot-fig,
 .slot-text {
-    @apply invisible h-0;
+    @apply scale-x-0;
 }
 </style>
