@@ -7,6 +7,9 @@ let c = {
     username: "盒子",
     currentHP: 37,
     maxHP: 65,
+    XP: 1052,
+    nextLvlXP: 3000,
+    lvl: 5,
 }
 
 let a = [
@@ -64,13 +67,14 @@ let a = [
     }
 ]
 let s = [
-    {level: "Ⅰ", order: 0, available: 5, total: 5}, {level: "Ⅱ", order: 1, available: 2, total: 2}
+    { level: "Ⅰ", order: 0, available: 5, total: 5 }, { level: "Ⅱ", order: 1, available: 2, total: 2 }
 ]
 const abilities = ref(a)
 // const spellSlots = ref(["Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ", "Ⅴ", "Ⅵ", "Ⅶ", "Ⅷ", "Ⅸ", "Ⅹ"])
 const spellSlots = ref(s)
 const character = ref(c)
 const HPBarStyleRight = computed(() => { return `${100 - character.value.currentHP / character.value.maxHP * 100}%` })
+const XPBarStyleRight = computed(() => { return `${100 - character.value.XP / character.value.nextLvlXP * 100}%` })
 
 function abilityExpandScroll(event: Event) {
     const dom = event.currentTarget as HTMLElement
@@ -82,6 +86,13 @@ function abilityExpandScroll(event: Event) {
 <template>
     <main class="bg-slate-600 h-screen flex justify-start items-start">
         <div id="main-status">
+            <div id="xp-container"
+                class="h-6 bg-yellow-900 text-center font-bold text-slate-50 leading-6 relative overflow-hidden text-sm">
+                <div class="w-full h-full absolute top-0 bg-yellow-500" :style="{ right: XPBarStyleRight }"></div>
+                <div id="xp-level" class="relative transition-transform origin-bottom">{{ character.lvl }}级</div>
+                <div id="xp-amount" class="relative transition-transform origin-top"> {{ character.XP }} / {{
+                    character.nextLvlXP }} </div>
+            </div>
             <div id="abilities-container"
                 class="w-16 flex flex-col items-stretch cursor-default select-none bg-gray-800">
                 <div v-for="ability in abilities"
@@ -138,12 +149,32 @@ function abilityExpandScroll(event: Event) {
 #main-status {
     display: grid;
     grid-template-areas:
+        "a a a"
         ". . ."
-        "a a a";
+        "b b b";
+}
+
+#xp-container {
+    grid-area: a;
+}
+
+#xp-amount,
+#xp-container:hover>#xp-level {
+    @apply scale-y-0;
+}
+
+#xp-container:hover>#xp-level,
+#xp-container:hover>#xp-amount {
+    @apply -translate-y-6;
+}
+
+#xp-container:hover>#xp-amount,
+#xp-level {
+    @apply scale-y-100;
 }
 
 #hp-container {
-    grid-area: a;
+    grid-area: b;
 }
 
 #abilities-container,
@@ -210,12 +241,13 @@ function abilityExpandScroll(event: Event) {
     @apply text-center text-slate-50 py-2 border-b border-b-slate-50;
 }
 
-.slot:hover>.slot-text, .slot-fig {
+.slot:hover>.slot-text,
+.slot-fig {
     @apply visible h-auto;
 }
 
-.slot:hover>.slot-fig, .slot-text {
+.slot:hover>.slot-fig,
+.slot-text {
     @apply invisible h-0;
 }
-
 </style>
