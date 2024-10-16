@@ -32,3 +32,11 @@
 .description p {
     @apply mb-2;
 }
+
+.description ul {
+    @apply pl-6;
+}
+
+.description li {
+    @apply list-disc;
+}

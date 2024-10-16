@@ -1,5 +1,5 @@
 function getById(id: string) {
-    return import("./_dnd5e:races.half_orc.json")
+    return import(`./${id}.json`)
 }
 
 export {

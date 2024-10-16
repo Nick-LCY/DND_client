@@ -1,0 +1,271 @@
+{
+  "description": "",
+  "equipment": [],
+  "features": [
+    {
+      "category": "proficiencies",
+      "description": "轻甲、中甲、盾牌",
+      "effects": [
+        {
+          "effect": {
+            "description": "你能熟练运用轻甲",
+            "expressions": [
+              "self.proficiency.armor append('_dnd5e:#light_armor')"
+            ],
+            "id": "_dnd5e:effects.light_armor_proficiency",
+            "name": "轻甲熟练项"
+          },
+          "type": "permanent"
+        },
+        {
+          "effect": {
+            "description": "你能熟练运用中甲",
+            "expressions": [
+              "self.proficiency.armor append('_dnd5e:#medium_armor')"
+            ],
+            "id": "_dnd5e:effects.medium_armor_proficiency",
+            "name": "中甲熟练项"
+          },
+          "type": "permanent"
+        },
+        {
+          "effect": {
+            "description": "你能熟练运用盾牌",
+            "expressions": [
+              "self.proficiency.armor append('_dnd5e:#shields')"
+            ],
+            "id": "_dnd5e:effects.shield_proficiency",
+            "name": "盾牌熟练项"
+          },
+          "type": "permanent"
+        }
+      ],
+      "id": "_dnd5e:features.babarian.armor",
+      "name": "护甲"
+    },
+    {
+      "category": "proficiencies",
+      "description": "简易武器、军用武器",
+      "effects": [
+        {
+          "effect": {
+            "description": "你能熟练运用简易武器",
+            "expressions": [
+              "self.proficiency.weapons append('_dnd5e:#simple_weapons')"
+            ],
+            "id": "_dnd5e:effects.simple_weapon_proficiency",
+            "name": "简易武器熟练项"
+          },
+          "type": "permanent"
+        },
+        {
+          "effect": {
+            "description": "你能熟练运用军用武器",
+            "expressions": [
+              "self.proficiency.weapons append('_dnd5e:#martial_weapons')"
+            ],
+            "id": "_dnd5e:effects.martial_weapon_proficiency",
+            "name": "军用武器熟练项"
+          },
+          "type": "permanent"
+        }
+      ],
+      "id": "_dnd5e:features.babarian.weapons",
+      "name": "武器"
+    },
+    {
+      "category": "proficiencies",
+      "description": "力量、体质",
+      "effects": [
+        {
+          "effect": {
+            "description": "你在使用力量豁免时可以获得熟练值加成",
+            "expressions": [
+              "self.proficiency.saves.strength +1"
+            ],
+            "id": "_dnd5e:effects.strength_save_proficiency",
+            "name": "力量豁免熟练项"
+          },
+          "type": "permanent"
+        },
+        {
+          "effect": {
+            "description": "你在使用体质豁免时可以获得熟练值加成",
+            "expressions": [
+              "self.proficiency.saves.constitution+1"
+            ],
+            "id": "_dnd5e:effects.constitution_save_proficiency",
+            "name": "体质豁免熟练项"
+          },
+          "type": "permanent"
+        }
+      ],
+      "id": "_dnd5e:features.babarian.saves",
+      "name": "豁免"
+    },
+    {
+      "category": "proficiencies",
+      "description": "从驯兽、运动、威吓、自然、察觉和生存中选两项",
+      "effects": {
+        "available": [
+          {
+            "effect": {
+              "description": "安抚或训练动物，或让动物以某种方式行事。",
+              "expressions": [
+                "self.proficiency.skills.animal_handling +1"
+              ],
+              "id": "_dnd5e:effects.animal_handling_proficiency",
+              "name": "驯兽技能熟练项"
+            },
+            "type": "permanent"
+          },
+          {
+            "effect": {
+              "description": "跳得比平时更远，在波涛汹涌的水中保持漂浮，或者打破什么东西。",
+              "expressions": [
+                "self.proficiency.skills.athletics +1"
+              ],
+              "id": "_dnd5e:effects.athletics_proficiency",
+              "name": "运动技能熟练项"
+            },
+            "type": "permanent"
+          },
+          {
+            "effect": {
+              "description": "威慑或威胁某人，让他做你想做的事。",
+              "expressions": [
+                "self.proficiency.skills.intimidation +1"
+              ],
+              "id": "_dnd5e:effects.intimidation_proficiency",
+              "name": "威吓技能熟练项"
+            },
+            "type": "permanent"
+          },
+          {
+            "effect": {
+              "description": "回忆有关地形、植物、动物和天气的传说。",
+              "expressions": [
+                "self.proficiency.skills.nature +1"
+              ],
+              "id": "_dnd5e:effects.nature_proficiency",
+              "name": "自然技能熟练项"
+            },
+            "type": "permanent"
+          },
+          {
+            "effect": {
+              "description": "使用多种感官的组合，注意容易错过的东西。",
+              "expressions": [
+                "self.proficiency.skills.perception +1"
+              ],
+              "id": "_dnd5e:effects.perception_proficiency",
+              "name": "察觉技能熟练项"
+            },
+            "type": "permanent"
+          },
+          {
+            "effect": {
+              "description": "沿着足迹、觅食、寻找小径或避开自然灾害。",
+              "expressions": [
+                "self.proficiency.skills.survival +1"
+              ],
+              "id": "_dnd5e:effects.survival_proficiency",
+              "name": "生存"
+            },
+            "type": "permanent"
+          }
+        ],
+        "choose": 2
+      },
+      "id": "_dnd5e:features.babarian.skills",
+      "name": "技能"
+    },
+    {
+      "category": "class_traits",
+      "description": "你带着原初的狂怒作战。你可以在自己回合内以一个附赠动作进入狂暴。\n\n狂暴持续期间，只要你未着装重甲就获得以下增益：\n* 你进行力量检定和力量豁免时具有优势。\n* 你用力量值发动近战武器攻击时的伤害掷骰获得加值。此加值随你的野蛮人等级提升而增加，具体见“野蛮人职业表”中“狂暴伤害”一栏。\n* 你拥有钝击，穿刺和挥砍伤害的抗性。\n拥有施法能力的角色无法在狂暴持续期间施展法术或进行法术专注。\n你的狂暴状态维持1分钟。如果你在狂暴其间陷入昏迷，或者，如果你从自己上回合结束开始到本回合结束时都未攻击任何敌对生物也未受到伤害，则狂暴提前结束。你也可以在自己回合里以一个附赠动作主动结束狂暴状态。\n“野蛮人职业表”中根据你的野蛮人等级给出了相应的狂暴次数。如果你用光了这些次数，则必须完成一次长休才能再次使用狂暴。",
+      "effects": [
+        {
+          "effect": {
+            "description": "为你的角色添加狂暴技能",
+            "expressions": [
+              "self.actions append('_dnd5e:actions.rage')",
+              "self.resources append('_dnd5e:resources.rage_count')"
+            ],
+            "id": "_dnd5e:effects.actions_add_rage",
+            "name": "添加狂暴技能"
+          },
+          "type": "permanent"
+        }
+      ],
+      "id": "_dnd5e:features.babarian.rage",
+      "name": "狂暴"
+    },
+    {
+      "category": "class_traits",
+      "description": "未着装任何护甲时，你的AC等于10＋你的敏捷调整值＋你的体质调整值。使用盾牌不会影响你从此特性获益。",
+      "effects": [
+        {
+          "effect": {
+            "conditions": [
+              "self.equipment|include('_dnd5e:#armor') != true"
+            ],
+            "description": "未着装任何护甲时，你的AC等于10＋你的敏捷调整值＋你的体质调整值。使用盾牌不会影响你从此特性获益。",
+            "expressions": [
+              "self.ac =10+(self.dexerity-10)/2+(self.constitution-10)/2"
+            ],
+            "id": "_dnd5e:effects.unarmored_defense",
+            "name": "无甲防御"
+          },
+          "type": "permanent"
+        }
+      ],
+      "id": "_dnd5e:features.babarian.unarmored_defense",
+      "name": "无甲防御"
+    },
+    {
+      "category": "class_traits",
+      "description": "第2级起，你可以抛弃一切防御的执念进行狂乱的攻击。你在自己回合内发动第一次攻击时，可以选择发动鲁莽攻击。使用此特性后，你本回合内所有使用力量值发动的近战武器攻击具有优势。此后，所有对你发动的攻击检定也将具有优势，且该优势持续存在至你的下个回合。",
+      "effects": [
+        {
+          "effect": {
+            "description": "为你的角色添加狂暴技能",
+            "expressions": [
+              "self.actions append('_dnd5e:actions.rage')",
+              "self.resources append('_dnd5e:resources.rage_count')"
+            ],
+            "id": "_dnd5e:effects.actions_add_rage",
+            "name": "添加狂暴技能"
+          },
+          "type": "permanent"
+        }
+      ],
+      "id": "_dnd5e:features.babarian.reckless_attack",
+      "name": "鲁莽攻击"
+    },
+    {
+      "category": "class_traits",
+      "description": "第2级时，你获得对周遭异常情况超乎寻常的感测力，让你能先一步脱离危险。 在受到你能看见的效应（诸如陷阱和法术）影响时，你对其进行的敏捷豁免具有优势。你无法在目盲、耳聋或是失能的状态下从此特性获益。",
+      "effects": [
+        {
+          "effect": {
+            "description": "在受到你能看见的效应（诸如陷阱和法术）影响时，你对其进行的敏捷豁免具有优势。你无法在目盲、耳聋或是失能的状态下从此特性获益。",
+            "id": "_dnd5e:effects.danger_sense",
+            "name": "险境感知"
+          },
+          "type": "permanent"
+        }
+      ],
+      "id": "_dnd5e:features.babarian.danger_sense",
+      "name": "险境感知"
+    },
+    {
+      "category": "class_traits",
+      "description": "第3级时，你选择一种道途来塑造你狂怒时的特质。你可以从狂战士Berserker和图腾武者Totem Warrior中选择其一。随后，你将在第3、第6、第10、第14级时获得所选道途的相应特性。",
+      "id": "_dnd5e:features.babarian.primal_path",
+      "name": "原初道途"
+    }
+  ],
+  "hp_dice": "d12",
+  "id": "_dnd5e:classes.barbarian",
+  "name": "野蛮人"
+}

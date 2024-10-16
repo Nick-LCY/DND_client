@@ -21,9 +21,23 @@ async function changeRace(raceId: string) {
     const categories: Categories = {};
     for (let feature of raceData!.features) {
         if (feature.category in categories) {
-            categories[feature.category].data.push({ name: feature.name, description: feature.description })
+            categories[feature.category].data.push(
+                {
+                    name: feature.name,
+                    description: md.render(feature.description)
+                }
+            )
         } else {
-            categories[feature.category] = { data: [{ name: feature.name, description: feature.description }], collapse: false }
+            categories[feature.category] = {
+                data:
+                    [
+                        {
+                            name: feature.name,
+                            description: md.render(feature.description)
+                        }
+                    ],
+                collapse: false
+            }
         }
     }
     description.value = md.render(raceData!.description)
@@ -37,7 +51,8 @@ async function changeRace(raceId: string) {
         <div
             class="h-48 overflow-y-auto bg-slate-700 mx-8 rounded-lg scroll-xs flex flex-col items-stretch flex-shrink-0">
             <label class="option" v-for="race in races" :for="race.id" :key="race.id">
-                <input type="radio" class="hidden" name="race" :id="race.id" @change="changeRace(race.id)">
+                <input type="radio" class="hidden" name="race" :value="race.id" :id="race.id"
+                    @change="changeRace(race.id)">
                 <div class="option-circle"></div>
                 {{ race.name }}
             </label>
