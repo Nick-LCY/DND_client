@@ -47,9 +47,9 @@ function updateRace(categories_data: Categories) {
                 <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1> -->
             </div>
         </div>
-        <div class="bg-slate-800 h-screen">
-            <h2 class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50">特质</h2>
-            <div class="scroll-xs overflow-y-auto m-4">
+        <div class="bg-slate-800 h-screen flex flex-col items-stretch">
+            <h2 class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">特质</h2>
+            <div class="scroll-xs overflow-y-auto m-4 h-64 flex-grow pr-4">
                 <div v-for="(features, categoryName) in categories" :key="categoryName">
                     <button
                         class="cursor-pointer hover:bg-slate-700 w-full text-left transition rounded-md p-2 mb-2 flex justify-between"
