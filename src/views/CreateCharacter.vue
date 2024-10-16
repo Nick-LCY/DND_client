@@ -1,10 +1,6 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
-import races_data from "../api/races.json";
-import half_orc_data from "../api/_dnd5e:races.half_orc.json";
-import markdownit from 'markdown-it';
-const races = ref(races_data)
-// const half_orc = ref(half_orc_data)
+import { ref, computed } from 'vue';
+import Step1 from '../components/createCharacter/step1.vue';
 
 interface Category {
     name: string
@@ -13,49 +9,42 @@ interface Category {
 interface Categories {
     [key: string]: { data: Array<Category>, collapse: boolean }
 }
-const categories = ref<Categories>({});
-for (let feature of half_orc_data.features) {
-    if (feature.category in categories.value) {
-        categories.value[feature.category].data.push({ name: feature.name, description: feature.description })
-    } else {
-        categories.value[feature.category] = { data: [{ name: feature.name, description: feature.description }], collapse: false }
-    }
-}
 
+const categories = ref<Categories>({});
 const categoryMapping: { [key: string]: string } = {
     race_traits: "种族特质"
 }
+const currentStep = ref<number>(0);
+const stepCardTranslate = computed(() => {
+    return `translate(${currentStep.value * -100}%, 0)`
+})
+
 
 function collapse(categoryName: string) {
     categories.value[categoryName].collapse = !categories.value[categoryName].collapse
 }
 
-const md = markdownit()
-let result = md.render(half_orc_data.description)
+function updateRace(categories_data: Categories) {
+    categories.value = categories_data
+}
 </script>
 <template>
     <main>
         <div class="bg-slate-600 flex flex-col justify-start items-stretch h-screen">
             <div class="flex mx-8 mt-4 justify-between items-center relative">
-                <div class="step-circle finished"></div>
-                <div class="step-circle"></div>
-                <div class="step-circle"></div>
-                <div class="step-circle"></div>
+                <button class="step-circle" @click="currentStep = 1" :class="{finished: currentStep >= 1}"></button>
+                <button class="step-circle" @click="currentStep = 2" :class="{finished: currentStep >= 2}"></button>
+                <button class="step-circle" @click="currentStep = 3" :class="{finished: currentStep >= 3}"></button>
+                <button class="step-circle" @click="currentStep = 4" :class="{finished: currentStep >= 4}"></button>
                 <div class="absolute top-2 bottom-2 left-0 w-full bg-slate-50"></div>
             </div>
-            <h2 class="font-bold text-center text-3xl my-8 flex-shrink-0">选择种族</h2>
-            <div
-                class="h-48 overflow-y-auto bg-slate-700 mx-8 rounded-lg scroll-xs flex flex-col items-stretch flex-shrink-0">
-                <label class="option" v-for="race in races" :for="race.id" :key="race.id">
-                    <input type="radio" class="hidden" name="race" :id="race.id">
-                    <div class="option-circle"></div>
-                    {{ race.name }}
-                </label>
-            </div>
-            <div class="description scroll-xs" v-html="result"></div>
-            <div class="mx-8 flex items-stretch h-10 shrink-0 gap-2 mb-8">
-                <button class="leading-10 w-10 rounded-md bg-red-500 transition hover:bg-red-700">X</button>
-                <button class="leading-10 flex-grow rounded-md bg-green-600 font-bold text-lg transition hover:bg-green-800">继续</button>
+            <div class="flex-grow flex justify-start overflow-x-hidden items-stretch">
+                <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
+                <!-- <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
+                <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
+                <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
+                <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
+                <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1> -->
             </div>
         </div>
         <div class="bg-slate-800 h-screen">
@@ -86,28 +75,6 @@ main {
     @apply text-slate-50;
 }
 
-.option {
-    @apply p-4 text-lg bg-slate-700 flex items-center transition-colors cursor-pointer border-b-4 border-slate-800;
-    @apply hover:bg-slate-800;
-}
-
-.option-circle {
-    @apply w-6 h-6 mr-4 rounded-full bg-slate-800 border-2 border-slate-700 relative;
-}
-
-.option:hover>.option-circle {
-    @apply border-slate-500
-}
-
-input[name="race"]:checked+.option-circle::after {
-    content: " ";
-    @apply w-3 h-3 rounded-full bg-slate-300 absolute top-1 left-1;
-}
-
-.description {
-    @apply m-8 p-2 bg-slate-800 overflow-auto rounded-lg flex-grow;
-}
-
 .collapsed {
     @apply scale-y-0;
 }
@@ -118,5 +85,9 @@ input[name="race"]:checked+.option-circle::after {
 
 .step-circle.finished {
     @apply bg-slate-50;
+}
+
+.step-card {
+    @apply flex flex-col items-stretch flex-shrink-0 w-full transition-transform;
 }
 </style>
