@@ -98,10 +98,11 @@ function nextStep() {
         <div class="bg-slate-800 h-screen flex flex-col items-stretch">
             <h2 class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">特质</h2>
             <div class="scroll-xs overflow-y-scroll m-4 h-64 flex-grow pr-4">
-                <div v-for="(features, categoryName) in currentCategories" :key="categoryName">
+                <div v-for="(features, categoryName) in currentCategories" :key="categoryName"
+                    class=" border-2 border-gray-700 rounded-md mb-2">
                     <button
-                        class="cursor-pointer hover:bg-slate-700 w-full text-left transition rounded-md p-2 mb-2 flex justify-between items-center"
-                        @click="collapse(String(categoryName))">
+                        class="cursor-pointer hover:bg-slate-700 w-full text-left transition p-2 flex justify-between items-center"
+                        :class="{ 'bg-slate-700': !features.collapse }" @click="collapse(String(categoryName))">
                         <h3 class="text-2xl font-bold"> {{ categoryMapping[categoryName] }} </h3>
                         <div class="relative w-4 h-1 transition" :class="{ 'rotate-45': !features.collapse }">
                             <div class="w-4 h-1 bg-slate-50"></div>
@@ -110,7 +111,7 @@ function nextStep() {
                     </button>
                     <div class="collapse-container scroll-xs" :id="String(categoryName)" ref="categoryRefs"
                         :class="{ collapsed: features.collapse }">
-                        <div v-for="feature, idx in features.data" :key="idx" class="ml-4 mb-2">
+                        <div v-for="feature, idx in features.data" :key="idx" class="ml-4 my-2">
                             <h3 class="font-bold text-lg">{{ feature.name }}</h3>
                             <p class="description" v-html="feature.description"></p>
                             <div v-if="'selection' in feature" class="ml-4">
