@@ -2,26 +2,8 @@
 import { ref, computed } from 'vue';
 import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
+import { Categories } from '../assets/js/categories';
 
-interface Option {
-    id: string
-    name: string
-    description: string
-}
-
-interface Selection {
-    choose: number
-    available: Array<Option>
-}
-interface Feature {
-    id: string
-    name: string
-    description: string
-    selection?: Selection
-}
-interface Categories {
-    [key: string]: { data: Array<Feature>, collapse: boolean }
-}
 
 const categories = ref<Categories>({});
 const categoryMapping: { [key: string]: string } = {

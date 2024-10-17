@@ -1,67 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { getById } from '../../api/getById';
-import markdownit from 'markdown-it';
-
-interface Option {
-    id: string
-    name: string
-    description: string
-}
-
-interface Selection {
-    choose: number
-    available: Array<Option>
-}
-interface Feature {
-    id: string
-    name: string
-    description: string
-    selection?: Selection
-}
-interface Categories {
-    [key: string]: { data: Array<Feature>, collapse: boolean }
-}
+import { updateCategories } from '../../assets/js/generateCategories';
 
 let classes_data = [{ id: "_dnd5e:babarian", name: "野蛮人" }]
 
 const classes = ref(classes_data)
-const md = markdownit()
 const emit = defineEmits(["change"])
 const description = ref<string>("")
 
 async function changeClass(classId: string) {
     let classData = await getById(classId);
-    const categories: Categories = {};
-    for (let feature of classData!.features) {
-        if (!(feature.category in categories)) {
-            categories[feature.category] = { data: [], collapse: false }
-        }
-        const data: Feature = {
-            id: feature.id,
-            name: feature.name,
-            description: md.render(feature.description)
-        }
-        if ("effects" in feature) {
-            let effects = feature.effects
-            if (Object.getPrototypeOf(effects) === Object.prototype) {
-                data.selection = {
-                    choose: effects.choose,
-                    available: []
-                }
-                for (let effect of effects.available) {
-                    effect = effect.effect
-                    data.selection.available.push({
-                        id: effect.id,
-                        name: effect.name,
-                        description: md.render(effect.description)
-                    })
-                }
-            }
-        }
-        categories[feature.category].data.push(data)
-    }
-    description.value = md.render(classData!.description)
+    let { categories, description: descriptionHTML } = updateCategories(classData)
+    description.value = descriptionHTML
     emit("change", categories)
 }
 </script>

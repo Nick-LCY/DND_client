@@ -2,47 +2,16 @@
 import { ref } from 'vue';
 import { getById } from '../../api/getById';
 import races_data from "../../api/races.json";
-import markdownit from 'markdown-it';
-interface Category {
-    name: string
-    description: string
-}
-interface Categories {
-    [key: string]: { data: Array<Category>, collapse: boolean }
-}
-
+import { updateCategories } from '../../assets/js/generateCategories';
 const races = ref(races_data)
-const md = markdownit()
 const emit = defineEmits(["change"])
 const description = ref<string>("")
 
 async function changeRace(raceId: string) {
-    let raceData = await getById(raceId);
-    const categories: Categories = {};
-    for (let feature of raceData!.features) {
-        if (feature.category in categories) {
-            categories[feature.category].data.push(
-                {
-                    name: feature.name,
-                    description: md.render(feature.description)
-                }
-            )
-        } else {
-            categories[feature.category] = {
-                data:
-                    [
-                        {
-                            name: feature.name,
-                            description: md.render(feature.description)
-                        }
-                    ],
-                collapse: false
-            }
-        }
-    }
-    description.value = md.render(raceData!.description)
+    let classData = await getById(raceId);
+    let { categories, description: descriptionHTML } = updateCategories(classData)
+    description.value = descriptionHTML
     emit("change", categories)
-
 }
 </script>
 <template>
