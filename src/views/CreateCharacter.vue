@@ -13,6 +13,7 @@ const categoryMapping: { [key: string]: string } = {
     race_traits: "种族特质",
     class_traits: "职业特质",
     proficiencies: "熟练项",
+    subclass_traits: "子职业特质",
 }
 const currentStep = ref<number>(0);
 const totalSteps = ref<number>(5);
@@ -24,7 +25,9 @@ const categoryRefs = ref<Array<HTMLElement>>([]);
 
 function recordCategoryHeight() {
     for (let featureRef of categoryRefs.value) {
-        featureRef.style.setProperty("height", `${featureRef.offsetHeight}px`)
+        if (featureRef.style.getPropertyValue("height") === "") {
+            featureRef.style.setProperty("height", `${featureRef.offsetHeight}px`)
+        }
     }
 }
 

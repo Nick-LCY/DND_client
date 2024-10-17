@@ -29,16 +29,20 @@ interface OriginalFeature {
     effects?: OriginalEffectSelection
 }
 
+interface OriginalSubclass {
+    features: Array<OriginalFeature>
+}
+
 
 interface OriginalData {
     description: string
     features: Array<OriginalFeature>
+    selectedSubclass?: OriginalSubclass
 }
 
-const md = markdownit()
-function updateCategories(originalData: OriginalData): ProcessedData {
+function processFeatures(features: Array<OriginalFeature>): Categories {
     const categories: Categories = {};
-    for (let feature of originalData.features) {
+    for (let feature of features) {
         if (!(feature.category in categories)) {
             categories[feature.category] = { data: [], collapse: false }
         }
@@ -65,6 +69,18 @@ function updateCategories(originalData: OriginalData): ProcessedData {
             }
         }
         categories[feature.category].data.push(data)
+    }
+    return categories
+}
+
+const md = markdownit()
+function updateCategories(originalData: OriginalData): ProcessedData {
+    let categories = processFeatures(originalData.features)
+    if (originalData.selectedSubclass != undefined) {
+        categories = {
+            ...categories,
+            ...processFeatures(originalData.selectedSubclass.features)
+        }
     }
     return {
         categories: categories,

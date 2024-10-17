@@ -14,12 +14,25 @@ const subclassAvailable = computed(() => classSelection.value.level >= subclassA
 const subclassAvailableLevel = ref(20)
 const subclasses = ref<Array<{id: string, name: string}>>([])
 
-async function changeClass(classId: string) {
-    let classData = await getById(classId);
+async function changeClass() {
+    let classData = await getById(classSelection.value.id);
     subclassAvailableLevel.value = classData.subclasses_available_level
     subclasses.value = classData.subclasses
     let { categories, description: descriptionHTML } = updateCategories(classData)
     description.value = descriptionHTML
+    emit("change", categories)
+}
+
+async function changeSubclass() {
+    let classData = JSON.parse(JSON.stringify(await getById(classSelection.value.id)));
+    let subclassId = classSelection.value.subclass
+    for (let subclass of classData.subclasses) {
+        if (subclass.id === subclassId) {
+            classData.selectedSubclass = subclass
+            break
+        }
+    }
+    let { categories, description: _ } = updateCategories(classData)
     emit("change", categories)
 }
 
@@ -40,7 +53,7 @@ function levelUp() {
                 <div class="overflow-y-auto bg-slate-700 rounded-lg scroll-xs flex flex-col items-stretch flex-grow">
                     <label class="option" v-for="class_obj in classes" :for="class_obj.id" :key="class_obj.id">
                         <input type="radio" class="hidden" name="class" :id="class_obj.id" :value="class_obj.id"
-                            v-model="classSelection.id" @change="changeClass(class_obj.id)">
+                            v-model="classSelection.id" @change="changeClass">
                         <div class="option-circle"></div>
                         {{ class_obj.name }}
                     </label>
@@ -53,7 +66,7 @@ function levelUp() {
                 <div class="overflow-y-auto bg-slate-700 rounded-lg scroll-xs flex flex-col items-stretch flex-grow">
                     <label class="option" v-for="subclass_obj in subclasses" :for="subclass_obj.id" :key="subclass_obj.id">
                         <input type="radio" class="hidden" name="subclass" :id="subclass_obj.id" :value="subclass_obj.id"
-                            v-model="classSelection.subclass">
+                            v-model="classSelection.subclass" @change="changeSubclass">
                         <div class="option-circle"></div>
                         {{ subclass_obj.name }}
                     </label>
