@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { getById } from '../../api/getById';
 import { updateCategories } from '../../assets/js/generateCategories';
 import classes_data from "../../api/classes.json";
@@ -12,6 +12,11 @@ const choosenClass = computed(() => classSelection.value.id != "")
 const subclassAvailable = computed(() => classSelection.value.level >= subclassAvailableLevel.value)
 const subclassAvailableLevel = ref(20)
 const subclasses = ref<Array<{id: string, name: string}>>([])
+watch(subclassAvailable, (_1, wasAvailable, _2) => {
+    if (wasAvailable) {
+        changeClass()
+    }
+})
 
 async function changeClass() {
     let classData = await getById(classSelection.value.id);

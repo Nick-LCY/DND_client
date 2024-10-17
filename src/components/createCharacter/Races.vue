@@ -6,25 +6,60 @@ import { updateCategories } from '../../assets/js/generateCategories';
 const races = ref(races_data)
 const emit = defineEmits(["change"])
 const description = ref<string>("")
+const subraces = ref<Array<{ id: string, name: string }>>([{ id: "none", name: "无" }])
+const raceSelection = ref<{ race: string, subrace: string }>({ race: "", subrace: "none" })
 
-async function changeRace(raceId: string) {
-    let classData = await getById(raceId);
-    let { categories, description: descriptionHTML } = updateCategories(classData)
+async function changeRace() {
+    let raceData = JSON.parse(JSON.stringify(await getById(raceSelection.value.race)));
+    subraces.value = [{ id: "none", name: "无" }, ...raceData.subraces]
+    let { categories, description: descriptionHTML } = updateCategories(raceData)
     description.value = descriptionHTML
+    emit("change", categories)
+}
+
+async function changeSubrace() {
+    let raceData = JSON.parse(JSON.stringify(await getById(raceSelection.value.race)));
+    let subraceId = raceSelection.value.subrace
+    if (subraceId === "none") {
+        changeRace()
+        return
+    }
+    for (let subrace of raceData.subraces) {
+        if (subrace.id === subraceId) {
+            raceData.selectedSubrace = subrace
+            break
+        }
+    }
+    let { categories, description: _ } = updateCategories(raceData)
     emit("change", categories)
 }
 </script>
 <template>
     <div>
-        <h2 class="font-bold text-center text-3xl my-8 flex-shrink-0">选择种族</h2>
-        <div
-            class="h-48 overflow-y-auto bg-slate-700 mx-8 rounded-lg scroll-xs flex flex-col items-stretch flex-shrink-0">
-            <label class="option" v-for="race in races" :for="race.id" :key="race.id">
-                <input type="radio" class="hidden" name="race" :value="race.id" :id="race.id"
-                    @change="changeRace(race.id)">
-                <div class="option-circle"></div>
-                {{ race.name }}
-            </label>
+        <h2 class="font-bold text-center text-3xl mt-8 mb-4 flex-shrink-0">选择种族</h2>
+        <div class="h-48 mx-8 flex items-stretch gap-4 flex-shrink-0">
+            <div class="flex flex-col items-stretch flex-grow basis-1">
+                <span class="font-bold text-xl text-center mb-2 transition-all overflow-hidden flex-shrink-0">主种族</span>
+                <div class="overflow-y-auto bg-slate-700 rounded-lg scroll-xs flex flex-col items-stretch flex-grow">
+                    <label class="option" v-for="race in races" :for="race.id" :key="race.id">
+                        <input type="radio" class="hidden" name="race" :value="race.id" :id="race.id"
+                            v-model="raceSelection.race" @change="changeRace">
+                        <div class="option-circle"></div>
+                        {{ race.name }}
+                    </label>
+                </div>
+            </div>
+            <div class="flex flex-col items-stretch flex-grow basis-1">
+                <span class="font-bold text-xl text-center mb-2 transition-all overflow-hidden flex-shrink-0">亚种</span>
+                <div class="overflow-y-auto bg-slate-700 rounded-lg scroll-xs flex flex-col items-stretch flex-grow">
+                    <label class="option" v-for="subrace in subraces" :for="subrace.id" :key="subrace.id">
+                        <input type="radio" class="hidden" name="subrace" :value="subrace.id" :id="subrace.id"
+                            v-model="raceSelection.subrace" @change="changeSubrace">
+                        <div class="option-circle"></div>
+                        {{ subrace.name }}
+                    </label>
+                </div>
+            </div>
         </div>
         <div class="description scroll-xs" v-html="description"></div>
     </div>
@@ -43,7 +78,7 @@ async function changeRace(raceId: string) {
     @apply border-slate-500
 }
 
-input[name="race"]:checked+.option-circle::after {
+input[type="radio"]:checked+.option-circle::after {
     content: " ";
     @apply w-3 h-3 rounded-full bg-slate-300 absolute top-1 left-1;
 }

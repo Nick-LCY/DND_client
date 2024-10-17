@@ -33,11 +33,16 @@ interface OriginalSubclass {
     features: Array<OriginalFeature>
 }
 
+interface OriginalSubrace {
+    features: Array<OriginalFeature>
+}
+
 
 interface OriginalData {
     description: string
     features: Array<OriginalFeature>
     selectedSubclass?: OriginalSubclass
+    selectedSubrace?: OriginalSubrace
 }
 
 function processFeatures(features: Array<OriginalFeature>): Categories {
@@ -80,6 +85,12 @@ function updateCategories(originalData: OriginalData): ProcessedData {
         categories = {
             ...categories,
             ...processFeatures(originalData.selectedSubclass.features)
+        }
+    }
+    if (originalData.selectedSubrace != undefined) {
+        categories = {
+            ...categories,
+            ...processFeatures(originalData.selectedSubrace.features)
         }
     }
     return {

@@ -11,9 +11,12 @@ const currentCategories = computed(
 )
 const categoryMapping: { [key: string]: string } = {
     race_traits: "种族特质",
+    race_proficiencies: "种族熟练项",
     class_traits: "职业特质",
     proficiencies: "熟练项",
     subclass_traits: "子职业特质",
+    subrace_traits: "亚种特质",
+    subrace_proficiencies: "亚种熟练项",
 }
 const currentStep = ref<number>(0);
 const totalSteps = ref<number>(5);
