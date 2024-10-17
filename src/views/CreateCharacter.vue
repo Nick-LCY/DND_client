@@ -121,7 +121,7 @@ function nextStep() {
                     </button>
                     <div class="collapse-container scroll-xs" :id="String(categoryName)" ref="categoryRefs"
                         :class="{ collapsed: features.collapse }">
-                        <div v-for="feature, idx in features.data" :key="idx" class="ml-4 my-2">
+                        <div v-for="feature, idx in features.data" :key="idx" class="mx-4 my-2">
                             <h3 class="font-bold text-lg">{{ feature.name }}</h3>
                             <p class="description" v-html="feature.description"></p>
                             <div v-if="'selection' in feature" class="ml-4">

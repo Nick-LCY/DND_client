@@ -27,7 +27,7 @@ function levelDown() {
     classSelection.value.level = Math.max(1, classSelection.value.level - 1)
 }
 function levelUp() {
-    classSelection.value.level++
+    classSelection.value.level = Math.min(20, classSelection.value.level + 1)
 }
 </script>
 <template>
