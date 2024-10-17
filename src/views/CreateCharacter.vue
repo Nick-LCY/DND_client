@@ -92,7 +92,9 @@ function nextStep() {
                 <div class="absolute top-2 bottom-2 left-0 w-full bg-slate-50"></div>
             </div>
             <div class="flex-grow flex justify-start overflow-x-hidden items-stretch">
-                <div class="step-card"></div>
+                <div class="step-card justify-center" :style="{ 'transform': stepCardTranslate }">
+                    <h1 class="text-4xl font-bold text-center">点击继续</h1>
+                </div>
                 <Races class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateCategories"></Races>
                 <Classes class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateCategories">
                 </Classes>

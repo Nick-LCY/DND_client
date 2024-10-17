@@ -2,8 +2,7 @@
 import { ref, computed } from 'vue';
 import { getById } from '../../api/getById';
 import { updateCategories } from '../../assets/js/generateCategories';
-
-let classes_data = [{ id: "_dnd5e:babarian", name: "野蛮人" }]
+import classes_data from "../../api/classes.json";
 
 const classes = ref(classes_data)
 const emit = defineEmits(["change"])
