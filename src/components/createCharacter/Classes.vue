@@ -29,11 +29,6 @@ async function changeClass(classId: string) {
             </label>
         </div>
         <div class="description scroll-xs" v-html="description"></div>
-        <div class="mx-8 flex items-stretch h-10 shrink-0 gap-2 mb-8">
-            <button class="leading-10 w-10 rounded-md bg-red-500 transition hover:bg-red-700">X</button>
-            <button
-                class="leading-10 flex-grow rounded-md bg-green-600 font-bold text-lg transition hover:bg-green-800">继续</button>
-        </div>
     </div>
 </template>
 <style scoped>

@@ -39,6 +39,14 @@ function shouldCheckboxDisabled(checkboxValue: string, featureId: string, choose
     if (featureSelections.value[featureId].includes(checkboxValue)) return false
     return true
 }
+
+function prevStep() {
+    currentStep.value = Math.max(0, currentStep.value - 1)
+}
+
+function nextStep() {
+    currentStep.value++
+}
 </script>
 <template>
     <main>
@@ -59,15 +67,25 @@ function shouldCheckboxDisabled(checkboxValue: string, featureId: string, choose
                 <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
                 <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1> -->
             </div>
+            <div class="mx-8 flex items-stretch h-10 shrink-0 gap-2 mb-8">
+                <button @click="prevStep"
+                    class="leading-10 w-10 rounded-md bg-gray-400 transition hover:bg-gray-700">👈</button>
+                <button @click="nextStep"
+                    class="leading-10 flex-grow rounded-md bg-green-600 font-bold text-lg transition hover:bg-green-800">继续</button>
+            </div>
         </div>
         <div class="bg-slate-800 h-screen flex flex-col items-stretch">
             <h2 class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">特质</h2>
-            <div class="scroll-xs overflow-y-auto m-4 h-64 flex-grow pr-4">
+            <div class="scroll-xs overflow-y-scroll m-4 h-64 flex-grow pr-4">
                 <div v-for="(features, categoryName) in categories" :key="categoryName">
                     <button
-                        class="cursor-pointer hover:bg-slate-700 w-full text-left transition rounded-md p-2 mb-2 flex justify-between"
+                        class="cursor-pointer hover:bg-slate-700 w-full text-left transition rounded-md p-2 mb-2 flex justify-between items-center"
                         @click="collapse(String(categoryName))">
                         <h3 class="text-2xl font-bold"> {{ categoryMapping[categoryName] }} </h3>
+                        <div class="relative w-4 h-1 transition" :class="{'rotate-45': !features.collapse}">
+                            <div class="w-4 h-1 bg-slate-50"></div>
+                            <div class="w-4 h-1 bg-slate-50 absolute top-0 transition rotate-90"></div>
+                        </div>
                     </button>
                     <div :class="{ collapsed: features.collapse }" class="overflow-hidden">
                         <div v-for="feature, idx in features.data" :key="idx" class="ml-4 mb-2">
@@ -76,7 +94,7 @@ function shouldCheckboxDisabled(checkboxValue: string, featureId: string, choose
                             <div v-if="'selection' in feature" class="ml-4">
                                 <label v-for="option of feature.selection!.available" :key="option.id" :for="option.id"
                                     class="cursor-pointer"
-                                    :class="{ 'cursor-not-allowed': shouldCheckboxDisabled(option.id, feature.id, feature.selection!.choose) }">
+                                    :class="{ 'checkbox-disabled': shouldCheckboxDisabled(option.id, feature.id, feature.selection!.choose) }">
                                     <input type="checkbox" :id="option.id" :value="option.id" class="hidden"
                                         v-model="featureSelections[feature.id]"
                                         :disabled="shouldCheckboxDisabled(option.id, feature.id, feature.selection!.choose)">
@@ -129,5 +147,8 @@ input[type="checkbox"]:checked+div>.checkbox::after {
     left: 2px;
     bottom: 2px;
     right: 2px;
+}
+.checkbox-disabled {
+    @apply cursor-not-allowed text-gray-400;
 }
 </style>
