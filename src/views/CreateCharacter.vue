@@ -15,6 +15,7 @@ const categoryMapping: { [key: string]: string } = {
     proficiencies: "熟练项",
 }
 const currentStep = ref<number>(0);
+const totalSteps = ref<number>(5);
 const stepCardTranslate = computed(() => {
     return `translate(${currentStep.value * -100}%, 0)`
 })
@@ -60,6 +61,15 @@ function prevStep() {
     nextTick(() => recordCategoryHeight())
 }
 
+function setStep(step: number) {
+    currentStep.value = step
+    for (let categoryName in categories.value[currentStep.value]) {
+        let category = categories.value[currentStep.value][categoryName]
+        category.collapse = false
+    }
+    nextTick(() => recordCategoryHeight())
+}
+
 function nextStep() {
     currentStep.value++
     for (let categoryName in categories.value[currentStep.value]) {
@@ -73,10 +83,8 @@ function nextStep() {
     <main>
         <div class="bg-slate-600 flex flex-col justify-start items-stretch h-screen">
             <div class="flex mx-8 mt-4 justify-between items-center relative">
-                <button class="step-circle" @click="currentStep = 1" :class="{ finished: currentStep >= 1 }"></button>
-                <button class="step-circle" @click="currentStep = 2" :class="{ finished: currentStep >= 2 }"></button>
-                <button class="step-circle" @click="currentStep = 3" :class="{ finished: currentStep >= 3 }"></button>
-                <button class="step-circle" @click="currentStep = 4" :class="{ finished: currentStep >= 4 }"></button>
+                <button v-for="i in totalSteps" :key="i" @click="setStep(i)" class="step-circle"
+                    :class="{ finished: currentStep >= i }"></button>
                 <div class="absolute top-2 bottom-2 left-0 w-full bg-slate-50"></div>
             </div>
             <div class="flex-grow flex justify-start overflow-x-hidden items-stretch">
