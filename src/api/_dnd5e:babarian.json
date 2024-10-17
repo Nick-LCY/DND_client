@@ -267,5 +267,10 @@
   ],
   "hp_dice": "d12",
   "id": "_dnd5e:classes.barbarian",
-  "name": "野蛮人"
+  "name": "野蛮人",
+  "subclasses_available_level": 3,
+  "subclasses": [
+    {"id": "_dnd5e:subclasses.a", "name": "A道途"},
+    {"id": "_dnd5e:subclasses.b", "name": "B道途"}
+  ]
 }

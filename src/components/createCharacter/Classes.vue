@@ -8,11 +8,16 @@ let classes_data = [{ id: "_dnd5e:babarian", name: "野蛮人" }]
 const classes = ref(classes_data)
 const emit = defineEmits(["change"])
 const description = ref<string>("")
-const classSelection = ref<{ id: string, level: number }>({ id: "", level: 1 })
+const classSelection = ref<{ id: string, level: number, subclass: string }>({ id: "", level: 1, subclass: "" })
 const choosenClass = computed(() => classSelection.value.id != "")
+const subclassAvailable = computed(() => classSelection.value.level >= subclassAvailableLevel.value)
+const subclassAvailableLevel = ref(20)
+const subclasses = ref<Array<{id: string, name: string}>>([])
 
 async function changeClass(classId: string) {
     let classData = await getById(classId);
+    subclassAvailableLevel.value = classData.subclasses_available_level
+    subclasses.value = classData.subclasses
     let { categories, description: descriptionHTML } = updateCategories(classData)
     description.value = descriptionHTML
     emit("change", categories)
@@ -27,17 +32,36 @@ function levelUp() {
 </script>
 <template>
     <div>
-        <h2 class="font-bold text-center text-3xl my-8 flex-shrink-0">选择职业</h2>
-        <div
-            class="h-48 overflow-y-auto bg-slate-700 mx-8 rounded-lg scroll-xs flex flex-col items-stretch flex-shrink-0">
-            <label class="option" v-for="class_obj in classes" :for="class_obj.id" :key="class_obj.id">
-                <input type="radio" class="hidden" name="class" :id="class_obj.id" :value="class_obj.id"
-                    v-model="classSelection.id" @change="changeClass(class_obj.id)">
-                <div class="option-circle"></div>
-                {{ class_obj.name }}
-            </label>
+        <h2 class="font-bold text-center text-3xl mt-8 mb-4 flex-shrink-0">选择职业</h2>
+        <div class="h-48 mx-8 scroll-xs flex items-stretch flex-shrink-0">
+            <div class="w-1/2 flex-grow flex flex-col transition-all" :class="{ 'mr-2': subclassAvailable }">
+                <span class="font-bold text-xl text-center mb-2 transition-all overflow-hidden h-0"
+                    :class="{ 'h-7': subclassAvailable }">主职业</span>
+                <div class="overflow-y-auto bg-slate-700 rounded-lg scroll-xs flex flex-col items-stretch flex-grow">
+                    <label class="option" v-for="class_obj in classes" :for="class_obj.id" :key="class_obj.id">
+                        <input type="radio" class="hidden" name="class" :id="class_obj.id" :value="class_obj.id"
+                            v-model="classSelection.id" @change="changeClass(class_obj.id)">
+                        <div class="option-circle"></div>
+                        {{ class_obj.name }}
+                    </label>
+                </div>
+            </div>
+            <div class="w-0 flex flex-col overflow-hidden transition-all"
+                :class="{ 'ml-2': subclassAvailable, '!w-1/2': subclassAvailable }">
+                <span class="font-bold text-xl text-center mb-2 overflow-hidden h-0"
+                    :class="{ 'h-7': subclassAvailable }">子职业</span>
+                <div class="overflow-y-auto bg-slate-700 rounded-lg scroll-xs flex flex-col items-stretch flex-grow">
+                    <label class="option" v-for="subclass_obj in subclasses" :for="subclass_obj.id" :key="subclass_obj.id">
+                        <input type="radio" class="hidden" name="subclass" :id="subclass_obj.id" :value="subclass_obj.id"
+                            v-model="classSelection.subclass">
+                        <div class="option-circle"></div>
+                        {{ subclass_obj.name }}
+                    </label>
+                </div>
+            </div>
         </div>
-        <div class="mx-8 mt-4 shrink-0 flex justify-between items-center h-0 overflow-hidden transition-all" :class="{'show': choosenClass}">
+        <div class="mx-8 mt-4 shrink-0 flex justify-between items-center h-0 overflow-hidden transition-all"
+            :class="{ 'show': choosenClass }">
             <span class="text-xl font-bold shrink-0">等级：</span>
             <div class="flex justify-between items-center">
                 <button
@@ -73,7 +97,7 @@ function levelUp() {
     @apply border-slate-500
 }
 
-input[name="class"]:checked+.option-circle::after {
+input[type="radio"]:checked+.option-circle::after {
     content: " ";
     @apply w-3 h-3 rounded-full bg-slate-300 absolute top-1 left-1;
 }

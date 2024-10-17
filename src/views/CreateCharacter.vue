@@ -84,7 +84,8 @@ function nextStep() {
         <div class="bg-slate-600 flex flex-col justify-start items-stretch h-screen">
             <div class="flex mx-8 mt-4 justify-between items-center relative">
                 <button v-for="i in totalSteps" :key="i" @click="setStep(i)" class="step-circle"
-                    :class="{ finished: currentStep >= i }"></button>
+                    :class="{ finished: currentStep >= i, 'cursor-default': currentStep == i }"
+                    :disabled="currentStep == i"></button>
                 <div class="absolute top-2 bottom-2 left-0 w-full bg-slate-50"></div>
             </div>
             <div class="flex-grow flex justify-start overflow-x-hidden items-stretch">
