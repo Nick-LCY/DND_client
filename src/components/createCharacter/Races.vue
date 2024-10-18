@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { getById } from '../../api/getById';
-import races_data from "../../api/races.json";
 import { processFeatures } from '../../assets/js/featureProcessing';
 import { renderMD } from '../../assets/js/renderMarkdown';
-const races = ref(races_data)
+import { getByDataType } from '../../assets/js/api/getByDataType';
+import { getById } from '../../assets/js/api/getById';
+
+const races = ref<Array<{ id: string, name: string }>>([])
+getByDataType("races").then(data => {
+   races.value = data
+})
 const emit = defineEmits(["change"])
 const description = ref<string>("")
 const subraces = ref<Array<{ id: string, name: string }>>([{ id: "none", name: "无" }])

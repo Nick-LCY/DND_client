@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { getById } from '../../api/getById';
 import { processFeatures } from '../../assets/js/featureProcessing';
 import { renderMD } from '../../assets/js/renderMarkdown';
-import classes_data from "../../api/classes.json";
+import { getByDataType } from '../../assets/js/api/getByDataType';
+import { getById } from '../../assets/js/api/getById';
 
-const classes = ref(classes_data)
+const classes = ref<Array<{ id: string, name: string }>>([])
+getByDataType("classes").then(data => {
+   classes.value = data
+})
 const emit = defineEmits(["change"])
 const description = ref<string>("")
 const classSelection = ref<{ id: string, level: number, subclass: string }>({ id: "", level: 1, subclass: "" })

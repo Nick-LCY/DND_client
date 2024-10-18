@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { getById } from '../../api/getById';
 import { processFeatures } from '../../assets/js/featureProcessing';
 import { renderMD } from '../../assets/js/renderMarkdown';
-import backgrounds_data from "../../api/backgrounds.json";
+import { getByDataType } from '../../assets/js/api/getByDataType';
+import { getById } from '../../assets/js/api/getById';
 
-const backgrounds = ref(backgrounds_data)
+const backgrounds = ref<Array<{ id: string, name: string }>>([])
+getByDataType("backgrounds").then(data => {
+    backgrounds.value = data
+})
 const emit = defineEmits(["change"])
 const description = ref<string>("")
 const backgroundSelection = ref<string>("")
