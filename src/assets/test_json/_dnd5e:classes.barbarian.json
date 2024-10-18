@@ -3,7 +3,7 @@
   "equipment": [],
   "features": [
     {
-      "category": "proficiencies",
+      "category": "class_proficiencies",
       "description": "轻甲、中甲、盾牌",
       "effects": [
         {
@@ -44,7 +44,7 @@
       "name": "护甲"
     },
     {
-      "category": "proficiencies",
+      "category": "class_proficiencies",
       "description": "简易武器、军用武器",
       "effects": [
         {
@@ -74,7 +74,7 @@
       "name": "武器"
     },
     {
-      "category": "proficiencies",
+      "category": "class_proficiencies",
       "description": "力量、体质",
       "effects": [
         {
@@ -104,7 +104,7 @@
       "name": "豁免"
     },
     {
-      "category": "proficiencies",
+      "category": "class_proficiencies",
       "description": "从驯兽、运动、威吓、自然、察觉和生存中选两项",
       "effects": {
         "available": [
@@ -170,7 +170,7 @@
                 "self.proficiency.skills.survival +1"
               ],
               "id": "_dnd5e:effects.survival_proficiency",
-              "name": "生存"
+              "name": "生存技能熟练项"
             },
             "type": "permanent"
           }
@@ -261,6 +261,7 @@
     {
       "category": "class_traits",
       "description": "第3级时，你选择一种道途来塑造你狂怒时的特质。你可以从狂战士Berserker和图腾武者Totem Warrior中选择其一。随后，你将在第3、第6、第10、第14级时获得所选道途的相应特性。",
+      "effects": [],
       "id": "_dnd5e:features.barbarian.primal_path",
       "name": "原初道途"
     }
@@ -275,24 +276,81 @@
         {
           "category": "subclass_traits",
           "description": "从你第3级选择此道途起，你可以在进入狂暴的同时进入狂怒。使用此特性时，你可以在本回合之后狂暴持续时间内的每个回合里，以一个附赠动作发动一次近战武器攻击。而当本次狂暴终止时，你将提升一级力竭。",
+          "effects": [
+            {
+              "effect": {
+                "description": "为你的角色添加狂怒技能",
+                "expressions": [
+                  "self.actions append('_dnd5e:actions.frenzy')"
+                ],
+                "id": "_dnd5e:effects.actions_add_frenzy",
+                "name": "添加狂怒技能"
+              },
+              "type": "permanent"
+            },
+            {
+              "effect": {
+                "description": "为你的角色移除狂暴技能",
+                "expressions": [
+                  "self.actions remove('_dnd5e:actions.rage')"
+                ],
+                "id": "_dnd5e:effects.actions_remove_rage",
+                "name": "移除狂暴技能"
+              },
+              "type": "permanent"
+            }
+          ],
           "id": "_dnd5e:features.barbarian.berserker.frenzy",
           "name": "狂怒"
         },
         {
           "category": "subclass_traits",
           "description": "第6级起，你在狂暴期间无法被魅惑或恐慌。如果你开始狂暴时已经陷入魅惑或恐慌，则该效应在你狂暴期间被压制。",
+          "effects": [
+            {
+              "effect": {
+                "description": "你在狂暴期间无法被魅惑或恐慌。如果你开始狂暴时已经陷入魅惑或恐慌，则该效应在你狂暴期间被压制。",
+                "id": "_dnd5e:effects.mindless_rage",
+                "name": "无我狂暴"
+              },
+              "type": "permanent"
+            }
+          ],
           "id": "_dnd5e:features.barbarian.berserker.mindless_rage",
           "name": "无我狂暴"
         },
         {
           "category": "subclass_traits",
           "description": "第10级起，你可以用一个动作展示自己的可怖姿态来恐吓他人。指定30尺内一个你能看见的生物。如果该生物能看见你或听见你的声音，则其必须进行一次感知豁免（DC为8＋你的熟练加值＋你的魅力调整值），豁免失败者将因此而陷入恐慌，并持续至你的下回合结束。在接下来的回合里，你可以通过使用动作来延长此效应的持续时间，使之持续至你此后一回合结束。如果该生物在结束其回合时离开你的视线范围，或是离开你60尺外，则此效应提前终止。\n\n如果此生物成功通过此豁免，则你在随后的24小时内无法对该生物使用此特性。",
+          "effects": [
+            {
+              "effect": {
+                "description": "为你的角色添加威吓技能",
+                "expressions": [
+                  "self.actions append('_dnd5e:actions.intimidating_presence')"
+                ],
+                "id": "_dnd5e:effects.actions_add_intimidating_presence",
+                "name": "添加威吓技能"
+              },
+              "type": "permanent"
+            }
+          ],
           "id": "_dnd5e:features.barbarian.berserker.intimidating_presence",
           "name": "威慑之姿"
         },
         {
           "category": "subclass_traits",
           "description": "第14级起，身边5尺内敌人对你造成伤害时，你可以用反应对该生物发动一次近战武器攻击。",
+          "effects": [
+            {
+              "effect": {
+                "description": "第14级起，身边5尺内敌人对你造成伤害时，你可以用反应对该生物发动一次近战武器攻击。",
+                "id": "_dnd5e:effects.retaliation",
+                "name": "报偿"
+              },
+              "type": "permanent"
+            }
+          ],
           "id": "_dnd5e:features.barbarian.berserker.retaliation",
           "name": "报偿"
         }

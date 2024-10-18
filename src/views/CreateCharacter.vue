@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
+import Backgrounds from '../components/createCharacter/Backgrounds.vue';
 import { Categories } from '../assets/js/categories';
 import _ from "lodash";
 
@@ -18,10 +19,13 @@ const categoryMapping: { [key: string]: string } = {
     race_traits: "种族特质",
     race_proficiencies: "种族熟练项",
     class_traits: "职业特质",
-    proficiencies: "熟练项",
+    class_proficiencies: "职业熟练项",
     subclass_traits: "子职业特质",
+    subclass_proficiencies: "子职业熟练项",
     subrace_traits: "亚种特质",
     subrace_proficiencies: "亚种熟练项",
+    background_traits: "背景特质",
+    background_proficiencies: "背景熟练项",
 }
 const currentStep = ref<number>(0);
 const totalSteps = ref<number>(5);
@@ -117,6 +121,8 @@ function nextStep() {
                 <Races class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories"></Races>
                 <Classes class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
                 </Classes>
+                <Backgrounds class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
+                </Backgrounds>
                 <!-- <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
                 <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
                 <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>

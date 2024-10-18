@@ -1,0 +1,144 @@
+{
+  "description": "",
+  "features": [
+    {
+      "category": "background_proficiencies",
+      "description": "洞悉、宗教",
+      "effects": [
+        {
+          "effect": {
+            "description": "辨别一个人的情绪和意图。",
+            "expressions": [
+              "self.proficiency.skills.insight +1"
+            ],
+            "id": "_dnd5e:effects.insight_proficiency",
+            "name": "洞悉技能熟练项"
+          },
+          "type": "permanent"
+        },
+        {
+          "effect": {
+            "description": "回想一下关于神、宗教仪式和神圣象征的传说。",
+            "expressions": [
+              "self.proficiency.skills.religion +1"
+            ],
+            "id": "_dnd5e:effects.religion_proficiency",
+            "name": "宗教技能熟练项"
+          },
+          "type": "permanent"
+        }
+      ],
+      "id": "_dnd5e:features.acolyte.skills",
+      "name": "技能"
+    },
+    {
+      "category": "background_traits",
+      "description": "任选两门语言。",
+      "effects": {
+        "available": [
+          {
+            "effect": {
+              "description": "你能使用通用语进行沟通及写作。",
+              "expressions": [
+                "self.language.speak append('common')",
+                "self.language.write append('common')"
+              ],
+              "id": "_dnd5e:effects.language_common",
+              "name": "通用语"
+            },
+            "type": "permanent"
+          },
+          {
+            "effect": {
+              "description": "你能使用矮人语进行沟通及写作。",
+              "expressions": [
+                "self.language.speak append('dwarvish')",
+                "self.language.write append('dwarvish')"
+              ],
+              "id": "_dnd5e:effects.language_dwarvish",
+              "name": "矮人语"
+            },
+            "type": "permanent"
+          },
+          {
+            "effect": {
+              "description": "你能使用精灵语进行沟通及写作。",
+              "expressions": [
+                "self.language.speak append('elvish')",
+                "self.language.write append('elvish')"
+              ],
+              "id": "_dnd5e:effects.language_elvish",
+              "name": "精灵语"
+            },
+            "type": "permanent"
+          },
+          {
+            "effect": {
+              "description": "你能使用巨人语进行沟通，用矮人语进行写作。",
+              "expressions": [
+                "self.language.speak append('giant')",
+                "self.language.write append('dwarvish')"
+              ],
+              "id": "_dnd5e:effects.language_giant",
+              "name": "巨人语"
+            },
+            "type": "permanent"
+          },
+          {
+            "effect": {
+              "description": "你能使用侏儒语进行沟通，用矮人语进行写作。",
+              "expressions": [
+                "self.language.speak append('gnomish')",
+                "self.language.write append('dwarvish')"
+              ],
+              "id": "_dnd5e:effects.language_gnomish",
+              "name": "侏儒语"
+            },
+            "type": "permanent"
+          },
+          {
+            "effect": {
+              "description": "你能使用地精语进行沟通，用矮人语进行写作。",
+              "expressions": [
+                "self.language.speak append('goblin')",
+                "self.language.write append('dwarvish')"
+              ],
+              "id": "_dnd5e:effects.language_goblin",
+              "name": "地精语"
+            },
+            "type": "permanent"
+          },
+          {
+            "effect": {
+              "description": "你能使用半身人语进行沟通，用通用语进行写作。",
+              "expressions": [
+                "self.language.speak append('halfling')",
+                "self.language.write append('common')"
+              ],
+              "id": "_dnd5e:effects.language_halfling",
+              "name": "半身人语"
+            },
+            "type": "permanent"
+          },
+          {
+            "effect": {
+              "description": "你能使用兽人语进行沟通，用矮人语进行写作。",
+              "expressions": [
+                "self.language.speak append('orc')",
+                "self.language.write append('dwarvish')"
+              ],
+              "id": "_dnd5e:effects.language_orc",
+              "name": "兽人语"
+            },
+            "type": "permanent"
+          }
+        ],
+        "choose": 2
+      },
+      "id": "_dnd5e:features.acolyte.languages",
+      "name": "语言"
+    }
+  ],
+  "id": "_dnd5e:backgrounds.acolyte",
+  "name": "侍僧"
+}
