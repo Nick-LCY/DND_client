@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
+import Start from '../components/createCharacter/Start.vue';
 import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
 import Backgrounds from '../components/createCharacter/Backgrounds.vue';
@@ -115,9 +116,7 @@ function nextStep() {
                 <div class="absolute top-2 bottom-2 left-0 w-full bg-slate-50"></div>
             </div>
             <div class="flex-grow flex justify-start overflow-x-hidden items-stretch">
-                <div class="step-card justify-center" :style="{ 'transform': stepTranslate }">
-                    <h1 class="text-4xl font-bold text-center">点击继续</h1>
-                </div>
+                <Start class="step-card" :style="{ 'transform': stepTranslate }"></Start>
                 <Races class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories"></Races>
                 <Classes class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
                 </Classes>
@@ -131,14 +130,18 @@ function nextStep() {
             <div class="mx-8 flex items-stretch h-10 shrink-0 gap-2 mb-8">
                 <button @click="prevStep"
                     class="leading-10 w-10 rounded-md bg-gray-400 transition hover:bg-gray-700">👈</button>
-                <button @click="nextStep"
+                <button v-if="currentStep > 0"@click="nextStep"
                     class="leading-10 flex-grow rounded-md bg-green-600 font-bold text-lg transition hover:bg-green-800">继续</button>
+                <button v-else @click="nextStep"
+                    class="leading-10 flex-grow rounded-md bg-green-600 font-bold text-lg transition hover:bg-green-800">开始车卡！</button>
             </div>
         </div>
         <div class="bg-slate-800 h-screen flex flex-col items-stretch">
-            <h2 class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">特质</h2>
+            <h2 v-if="currentStep > 0" class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">特质</h2>
+            <h2 v-else class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">简要说明</h2>
             <div class="flex overflow-x-hidden scroll-xs overflow-y-auto h-64 w-full flex-grow">
-                <div class="flex-shrink-0 w-full p-4" :style="{ 'transform': stepTranslate }">Welcome
+                <div class="flex-shrink-0 w-full p-4 text-4xl flex justify-center items-center" :style="{ 'transform': stepTranslate }">
+                    是饼🍪。
                 </div>
                 <div v-for="step in totalSteps" class="flex-shrink-0 w-full p-4"
                     :style="{ 'transform': stepTranslate }">

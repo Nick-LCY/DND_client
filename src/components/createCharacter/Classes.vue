@@ -15,6 +15,7 @@ const subclassAvailableLevel = ref(20)
 const subclasses = ref<Array<{id: string, name: string}>>([])
 watch(subclassAvailable, (_1, wasAvailable, _2) => {
     if (wasAvailable) {
+        classSelection.value.subclass = ""
         changeClass()
     }
 })
