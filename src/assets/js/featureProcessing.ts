@@ -1,5 +1,5 @@
 import { Categories, Feature } from "./categories";
-import markdownit from 'markdown-it';
+import { renderMD } from "./renderMarkdown";
 interface ProcessedData {
     categories: Categories
     description: string
@@ -49,12 +49,12 @@ function processFeatures(features: Array<OriginalFeature>): Categories {
     const categories: Categories = {};
     for (let feature of features) {
         if (!(feature.category in categories)) {
-            categories[feature.category] = { data: [], collapse: false }
+            categories[feature.category] = []
         }
         const data: Feature = {
             id: feature.id,
             name: feature.name,
-            description: md.render(feature.description)
+            description: renderMD(feature.description)
         }
         if (feature.effects != undefined) {
             let effects = feature.effects
@@ -68,17 +68,16 @@ function processFeatures(features: Array<OriginalFeature>): Categories {
                     data.selection.available.push({
                         id: effect.id,
                         name: effect.name,
-                        description: md.render(effect.description)
+                        description: renderMD(effect.description)
                     })
                 }
             }
         }
-        categories[feature.category].data.push(data)
+        categories[feature.category].push(data)
     }
     return categories
 }
 
-const md = markdownit()
 function updateCategories(originalData: OriginalData): ProcessedData {
     let categories = processFeatures(originalData.features)
     if (originalData.selectedSubclass != undefined) {
@@ -95,8 +94,8 @@ function updateCategories(originalData: OriginalData): ProcessedData {
     }
     return {
         categories: categories,
-        description: md.render(originalData.description)
+        description: renderMD(originalData.description)
     }
 }
 
-export { updateCategories }
+export { updateCategories, processFeatures }

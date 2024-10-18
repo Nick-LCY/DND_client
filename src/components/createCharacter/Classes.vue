@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { getById } from '../../api/getById';
-import { updateCategories } from '../../assets/js/generateCategories';
+import { processFeatures } from '../../assets/js/featureProcessing';
+import { renderMD } from '../../assets/js/renderMarkdown';
 import classes_data from "../../api/classes.json";
 
 const classes = ref(classes_data)
@@ -22,21 +23,22 @@ async function changeClass() {
     let classData = await getById(classSelection.value.id);
     subclassAvailableLevel.value = classData.subclasses_available_level
     subclasses.value = classData.subclasses
-    let { categories, description: descriptionHTML } = updateCategories(classData)
-    description.value = descriptionHTML
+    let categories = processFeatures(classData.features)
+    description.value = renderMD(classData.description)
     emit("change", categories)
 }
 
 async function changeSubclass() {
-    let classData = JSON.parse(JSON.stringify(await getById(classSelection.value.id)));
+    let classData = await getById(classSelection.value.id);
     let subclassId = classSelection.value.subclass
+    let features = classData.features
     for (let subclass of classData.subclasses) {
         if (subclass.id === subclassId) {
-            classData.selectedSubclass = subclass
+            features = [...features, ...subclass.features]
             break
         }
     }
-    let { categories, description: _ } = updateCategories(classData)
+    let categories = processFeatures(features)
     emit("change", categories)
 }
 

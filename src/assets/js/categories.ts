@@ -15,7 +15,7 @@ interface Feature {
     selection?: Selection
 }
 interface Categories {
-    [key: string]: { data: Array<Feature>, collapse: boolean }
+    [key: string]: Array<Feature>
 }
 
 export type {

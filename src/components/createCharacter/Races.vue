@@ -2,7 +2,8 @@
 import { ref } from 'vue';
 import { getById } from '../../api/getById';
 import races_data from "../../api/races.json";
-import { updateCategories } from '../../assets/js/generateCategories';
+import { processFeatures } from '../../assets/js/featureProcessing';
+import { renderMD } from '../../assets/js/renderMarkdown';
 const races = ref(races_data)
 const emit = defineEmits(["change"])
 const description = ref<string>("")
@@ -10,27 +11,29 @@ const subraces = ref<Array<{ id: string, name: string }>>([{ id: "none", name: "
 const raceSelection = ref<{ race: string, subrace: string }>({ race: "", subrace: "none" })
 
 async function changeRace() {
-    let raceData = JSON.parse(JSON.stringify(await getById(raceSelection.value.race)));
-    subraces.value = [{ id: "none", name: "无" }, ...raceData.subraces]
-    let { categories, description: descriptionHTML } = updateCategories(raceData)
-    description.value = descriptionHTML
+    let raceData = await getById(raceSelection.value.race);
+    raceSelection.value.subrace = "none"
+    subraces.value = [{id: "none", name: "无"}, ...raceData.subraces]
+    let categories = processFeatures(raceData.features)
+    description.value = renderMD(raceData.description)
     emit("change", categories)
 }
 
 async function changeSubrace() {
-    let raceData = JSON.parse(JSON.stringify(await getById(raceSelection.value.race)));
+    let raceData = await getById(raceSelection.value.race);
     let subraceId = raceSelection.value.subrace
     if (subraceId === "none") {
         changeRace()
         return
     }
+    let features = raceData.features
     for (let subrace of raceData.subraces) {
         if (subrace.id === subraceId) {
-            raceData.selectedSubrace = subrace
+            features = [...features, ...subrace.features]
             break
         }
     }
-    let { categories, description: _ } = updateCategories(raceData)
+    let categories = processFeatures(features)
     emit("change", categories)
 }
 </script>

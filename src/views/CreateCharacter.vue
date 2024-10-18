@@ -1,13 +1,18 @@
 <script lang="ts" setup>
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed } from 'vue';
 import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
 import { Categories } from '../assets/js/categories';
+import _ from "lodash";
+
 
 
 const categories = ref<{ [key: number]: Categories }>({});
-const currentCategories = computed(
-    () => currentStep.value in categories.value ? categories.value[currentStep.value] : {}
+const currentCategoryCollapse = computed(
+    () => {
+        if (!(currentStep.value in categoryCollapse.value)) categoryCollapse.value[currentStep.value] = {}
+        return categoryCollapse.value[currentStep.value]
+    }
 )
 const categoryMapping: { [key: string]: string } = {
     race_traits: "种族特质",
@@ -20,36 +25,62 @@ const categoryMapping: { [key: string]: string } = {
 }
 const currentStep = ref<number>(0);
 const totalSteps = ref<number>(5);
-const stepCardTranslate = computed(() => {
+const stepTranslate = computed(() => {
     return `translate(${currentStep.value * -100}%, 0)`
 })
 const featureSelections = ref<{ [key: string]: Array<string> }>({});
 const categoryRefs = ref<Array<HTMLElement>>([]);
-
-function recordCategoryHeight() {
-    for (let featureRef of categoryRefs.value) {
-        if (featureRef.style.getPropertyValue("height") === "") {
-            featureRef.style.setProperty("height", `${featureRef.offsetHeight}px`)
-        }
-    }
-}
+const categoryCollapse = ref<{ [step: number]: { [category: string]: boolean } }>({})
 
 function collapse(categoryName: string) {
-    categories.value[currentStep.value][categoryName].collapse
-        = !categories.value[currentStep.value][categoryName].collapse
+    let currentCollapse = currentCategoryCollapse.value[categoryName]
+    let targetElement: HTMLElement
+    for (let featureRef of categoryRefs.value) {
+        if (featureRef.id == categoryName) {
+            targetElement = featureRef
+            break
+        }
+    }
+    if (!currentCollapse) {
+        targetElement!.style.setProperty("height", `${targetElement!.offsetHeight}px`)
+    } else {
+        setTimeout(() => {
+            targetElement!.style.setProperty("height", "")
+        }, 151)
+    }
+    setTimeout(() => {
+        currentCategoryCollapse.value[categoryName] = !currentCollapse
+    }, 1)
 }
 
 function updateCategories(categories_data: Categories) {
     for (let key in categories_data) {
-        let features = categories_data[key].data
+        let features = categories_data[key]
         for (let feature of features) {
             if ("selection" in feature && !(feature.id in featureSelections.value)) {
                 featureSelections.value[feature.id] = []
             }
         }
+        if (key in currentCategoryCollapse.value) {
+            const oldObj = categories.value[currentStep.value][key]
+            const newObj = categories_data[key]
+            if (!_.isEqual(oldObj, newObj)) {
+                currentCategoryCollapse.value[key] = false
+                let targetElement: HTMLElement
+                for (let featureRef of categoryRefs.value) {
+                    if (featureRef.id == key) {
+                        targetElement = featureRef
+                        break
+                    }
+                }
+                targetElement!.style.setProperty("height", "")
+            }
+        } else currentCategoryCollapse.value[key] = false
+    }
+    for (let key in currentCategoryCollapse.value) {
+        if (!(key in categories_data)) delete currentCategoryCollapse.value[key]
     }
     categories.value[currentStep.value] = categories_data
-    nextTick(() => recordCategoryHeight())
 }
 
 function shouldCheckboxDisabled(checkboxValue: string, featureId: string, choose: number): boolean {
@@ -60,29 +91,14 @@ function shouldCheckboxDisabled(checkboxValue: string, featureId: string, choose
 
 function prevStep() {
     currentStep.value = Math.max(0, currentStep.value - 1)
-    for (let categoryName in categories.value[currentStep.value]) {
-        let category = categories.value[currentStep.value][categoryName]
-        category.collapse = false
-    }
-    nextTick(() => recordCategoryHeight())
 }
 
 function setStep(step: number) {
     currentStep.value = step
-    for (let categoryName in categories.value[currentStep.value]) {
-        let category = categories.value[currentStep.value][categoryName]
-        category.collapse = false
-    }
-    nextTick(() => recordCategoryHeight())
 }
 
 function nextStep() {
     currentStep.value++
-    for (let categoryName in categories.value[currentStep.value]) {
-        let category = categories.value[currentStep.value][categoryName]
-        category.collapse = false
-    }
-    nextTick(() => recordCategoryHeight())
 }
 </script>
 <template>
@@ -95,11 +111,11 @@ function nextStep() {
                 <div class="absolute top-2 bottom-2 left-0 w-full bg-slate-50"></div>
             </div>
             <div class="flex-grow flex justify-start overflow-x-hidden items-stretch">
-                <div class="step-card justify-center" :style="{ 'transform': stepCardTranslate }">
+                <div class="step-card justify-center" :style="{ 'transform': stepTranslate }">
                     <h1 class="text-4xl font-bold text-center">点击继续</h1>
                 </div>
-                <Races class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateCategories"></Races>
-                <Classes class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateCategories">
+                <Races class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories"></Races>
+                <Classes class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
                 </Classes>
                 <!-- <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
                 <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
@@ -115,39 +131,49 @@ function nextStep() {
         </div>
         <div class="bg-slate-800 h-screen flex flex-col items-stretch">
             <h2 class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">特质</h2>
-            <div class="scroll-xs overflow-y-scroll m-4 h-64 flex-grow pr-4">
-                <div v-for="(features, categoryName) in currentCategories" :key="categoryName"
-                    class=" border-2 border-gray-700 rounded-md mb-2">
-                    <button
-                        class="cursor-pointer hover:bg-slate-700 w-full text-left transition p-2 flex justify-between items-center"
-                        :class="{ 'bg-slate-700': !features.collapse }" @click="collapse(String(categoryName))">
-                        <h3 class="text-2xl font-bold"> {{ categoryMapping[categoryName] }} </h3>
-                        <div class="relative w-4 h-1 transition" :class="{ 'rotate-45': !features.collapse }">
-                            <div class="w-4 h-1 bg-slate-50"></div>
-                            <div class="w-4 h-1 bg-slate-50 absolute top-0 transition rotate-90"></div>
-                        </div>
-                    </button>
-                    <div class="collapse-container scroll-xs" :id="String(categoryName)" ref="categoryRefs"
-                        :class="{ collapsed: features.collapse }">
-                        <div v-for="feature, idx in features.data" :key="idx" class="mx-4 my-2">
-                            <h3 class="font-bold text-lg">{{ feature.name }}</h3>
-                            <p class="description" v-html="feature.description"></p>
-                            <div v-if="'selection' in feature" class="ml-4">
-                                <label v-for="option of feature.selection!.available" :key="option.id" :for="option.id"
-                                    class="cursor-pointer"
-                                    :class="{ 'checkbox-disabled': shouldCheckboxDisabled(option.id, feature.id, feature.selection!.choose) }">
-                                    <input type="checkbox" :id="option.id" :value="option.id" class="hidden"
-                                        v-model="featureSelections[feature.id]"
-                                        :disabled="shouldCheckboxDisabled(option.id, feature.id, feature.selection!.choose)">
-                                    <div class="flex items-center">
-                                        <div class="checkbox"></div>
-                                        <div> {{ option.name }}</div>
+            <div class="flex overflow-x-hidden scroll-xs overflow-y-auto h-64 w-full flex-grow">
+                <div class="flex-shrink-0 w-full p-4" :style="{ 'transform': stepTranslate }">Welcome
+                </div>
+                <div v-for="step in totalSteps" class="flex-shrink-0 w-full p-4"
+                    :style="{ 'transform': stepTranslate }">
+                    <template v-if="categories[step] != undefined">
+                        <div v-for="(features, categoryName) in categories[step]" :key="categoryName"
+                            class=" border-2 border-gray-700 rounded-md mb-2">
+                            <button
+                                class="cursor-pointer hover:bg-slate-700 w-full text-left transition p-2 flex justify-between items-center"
+                                :class="{ 'bg-slate-700': !categoryCollapse[step][categoryName] }"
+                                @click="collapse(String(categoryName))">
+                                <h3 class="text-2xl font-bold"> {{ categoryMapping[categoryName] }} </h3>
+                                <div class="relative w-4 h-1 transition"
+                                    :class="{ 'rotate-45': !categoryCollapse[step][categoryName] }">
+                                    <div class="w-4 h-1 bg-slate-50"></div>
+                                    <div class="w-4 h-1 bg-slate-50 absolute top-0 transition rotate-90"></div>
+                                </div>
+                            </button>
+                            <div class="collapse-container scroll-xs" :id="String(categoryName)" ref="categoryRefs"
+                                :class="{ collapsed: categoryCollapse[step][categoryName] }">
+                                <div v-for="feature, idx in features" :key="idx" class="mx-4 my-2">
+                                    <h3 class="font-bold text-lg">{{ feature.name }}</h3>
+                                    <p class="description" v-html="feature.description"></p>
+                                    <div v-if="'selection' in feature" class="ml-4">
+                                        <label v-for="option of feature.selection!.available" :key="option.id"
+                                            :for="option.id" class="cursor-pointer"
+                                            :class="{ 'checkbox-disabled': shouldCheckboxDisabled(option.id, feature.id, feature.selection!.choose) }">
+                                            <input type="checkbox" :id="option.id" :value="option.id" class="hidden"
+                                                v-model="featureSelections[feature.id]"
+                                                :disabled="shouldCheckboxDisabled(option.id, feature.id, feature.selection!.choose)">
+                                            <div class="flex items-center">
+                                                <div class="checkbox"></div>
+                                                <div> {{ option.name }}</div>
+                                            </div>
+                                            <div class="description pl-6 text-slate-400" v-html="option.description">
+                                            </div>
+                                        </label>
                                     </div>
-                                    <div class="description pl-6 text-slate-400" v-html="option.description"></div>
-                                </label>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </template>
                 </div>
             </div>
         </div>
