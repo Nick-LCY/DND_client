@@ -44,3 +44,7 @@
 .description li {
     @apply list-disc;
 }
+
+.description blockquote {
+    @apply bg-slate-700 p-2 rounded-md my-2;
+}

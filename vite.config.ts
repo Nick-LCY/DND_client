@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://dnd-core-flask-svc:5000",
+        target: "http://dnd-core-svc.default:8080",
         rewrite: (path) => path.replace(/^\/api/, "")
       }
     }
