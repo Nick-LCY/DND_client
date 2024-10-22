@@ -13,12 +13,7 @@ interface OriginalEffect {
 
 interface OriginalEffectSelection {
     choose: number
-    available: Array<OriginalEffectWrapper>
-}
-
-interface OriginalEffectWrapper {
-    type: string
-    effect: OriginalEffect
+    available: Array<OriginalEffect>
 }
 
 interface OriginalFeature {
@@ -63,8 +58,7 @@ function processFeatures(features: Array<OriginalFeature>): Categories {
                     choose: effects.choose,
                     available: []
                 }
-                for (let wrapper of effects.available) {
-                    let effect = wrapper.effect
+                for (let effect of effects.available) {
                     data.selection.available.push({
                         id: effect.id,
                         name: effect.name,
