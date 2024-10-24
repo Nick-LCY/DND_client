@@ -32,6 +32,7 @@ function processFeatures(features: OriginalFeature[]): Categories {
             id: feature.id,
             name: feature.name,
             description: renderMD(feature.description),
+            // Effect description rendering was done in EffectSelection.vue
             effects: feature.effects
         }
         categories[feature.category].push(data)

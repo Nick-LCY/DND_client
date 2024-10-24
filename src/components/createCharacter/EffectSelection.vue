@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { Effect, EffectSelection as EffectSelectionType, isEffect } from '../../assets/js/originalDataType';
+import { renderMD } from '../../assets/js/renderMarkdown';
 
 interface vModelSelection extends Array<string | vModelSelection> {
     [index: number]: string | vModelSelection
@@ -60,7 +61,7 @@ function shouldSubSelectionDisabled(selectionIdx: number, idx: number, choose: n
                         <div class="checkbox"></div>
                         <div> {{ option.name }}</div>
                     </div>
-                    <div class="description pl-6 text-slate-400" v-html="option.description">
+                    <div class="description pl-6 text-slate-400" v-html="renderMD(option.description)">
                     </div>
                 </label>
                 <EffectSelection v-else :effects="option"
