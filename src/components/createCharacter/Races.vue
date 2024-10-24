@@ -35,6 +35,15 @@ async function changeSubrace() {
     let features = raceData.features
     for (let subrace of raceData.subraces) {
         if (subrace.id === subraceId) {
+            if (subrace.remove_features != undefined) {
+                features = features.filter(feature => {
+                    let needToRemove = false
+                    subrace.remove_features?.forEach(v => {
+                        if (v.id == feature.id) needToRemove = true
+                    })
+                    return !needToRemove
+                })
+            }
             features = [...features, ...subrace.features]
             description.value.subrace = renderMD(subrace.description)
             break
