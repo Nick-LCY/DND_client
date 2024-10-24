@@ -1,27 +1,9 @@
+import { Feature as OriginalFeature } from "./originalDataType";
 import { Categories, Feature } from "./categories";
 import { renderMD } from "./renderMarkdown";
 interface ProcessedData {
     categories: Categories
     description: string
-}
-
-interface OriginalEffect {
-    id: string
-    name: string
-    description: string
-}
-
-interface OriginalEffectSelection {
-    choose: number
-    available: Array<OriginalEffect>
-}
-
-interface OriginalFeature {
-    id: string
-    name: string
-    description: string
-    category: string
-    effects?: OriginalEffectSelection
 }
 
 interface OriginalSubclass {
@@ -40,7 +22,7 @@ interface OriginalData {
     selectedSubrace?: OriginalSubrace
 }
 
-function processFeatures(features: Array<OriginalFeature>): Categories {
+function processFeatures(features: OriginalFeature[]): Categories {
     const categories: Categories = {};
     for (let feature of features) {
         if (!(feature.category in categories)) {
@@ -49,23 +31,8 @@ function processFeatures(features: Array<OriginalFeature>): Categories {
         const data: Feature = {
             id: feature.id,
             name: feature.name,
-            description: renderMD(feature.description)
-        }
-        if (feature.effects != undefined) {
-            let effects = feature.effects
-            if (Object.getPrototypeOf(effects) === Object.prototype) {
-                data.selection = {
-                    choose: effects.choose,
-                    available: []
-                }
-                for (let effect of effects.available) {
-                    data.selection.available.push({
-                        id: effect.id,
-                        name: effect.name,
-                        description: renderMD(effect.description)
-                    })
-                }
-            }
+            description: renderMD(feature.description),
+            effects: feature.effects
         }
         categories[feature.category].push(data)
     }

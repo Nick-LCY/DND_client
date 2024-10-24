@@ -5,6 +5,8 @@ import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
 import Backgrounds from '../components/createCharacter/Backgrounds.vue';
 import { Categories } from '../assets/js/categories';
+import { Effect, EffectSelection as EffectSelectionType, isEffect } from '../assets/js/originalDataType';
+import EffectSelection from '../components/createCharacter/EffectSelection.vue';
 import _ from "lodash";
 
 
@@ -33,7 +35,7 @@ const totalSteps = ref<number>(5);
 const stepTranslate = computed(() => {
     return `translate(${currentStep.value * -100}%, 0)`
 })
-const featureSelections = ref<{ [key: string]: Array<string> }>({});
+const featureSelections = ref<{ [key: string]: any }>({});
 const categoryRefs = ref<Array<HTMLElement>>([]);
 const categoryCollapse = ref<{ [step: number]: { [category: string]: boolean } }>({})
 
@@ -58,27 +60,56 @@ function collapse(categoryName: string) {
     }, 1)
 }
 
+interface vModelSelection extends Array<string | vModelSelection> {
+    [index: number]: string | vModelSelection
+}
+
+function visitEffects(effects: (EffectSelectionType | Effect)[] | EffectSelectionType, vModelObj: vModelSelection, inSelection: boolean = false) {
+    if (effects instanceof Array) {
+        for (let effect of effects) {
+            if (isEffect(effect)) {
+                if (!inSelection) vModelObj.push(effect.id)
+            } else {
+                const sublist: vModelSelection = []
+                vModelObj.push(sublist)
+                visitEffects(effect.available, sublist, true)
+            }
+        }
+    } else {
+        effects.available.sort((a, b) => {
+            if (isEffect(a) && isEffect(b)) {
+                return 0
+            } else if (isEffect(a)) {
+                return 1
+            } else {
+                return -1
+            }
+        })
+        const sublist: vModelSelection = []
+        vModelObj.push(sublist)
+        visitEffects(effects.available, vModelObj, true)
+    }
+}
+
 function updateCategories(categories_data: Categories) {
     for (let key in categories_data) {
         let features = categories_data[key]
         for (let feature of features) {
-            if ("selection" in feature && !(feature.id in featureSelections.value)) {
-                featureSelections.value[feature.id] = []
-            }
+            if (!(feature.id in featureSelections.value)) featureSelections.value[feature.id] = []
+            const selectionValues = featureSelections.value[feature.id]
+            visitEffects(feature.effects!, selectionValues)
         }
         if (key in currentCategoryCollapse.value) {
             const oldObj = categories.value[currentStep.value][key]
             const newObj = categories_data[key]
             if (!_.isEqual(oldObj, newObj)) {
                 currentCategoryCollapse.value[key] = false
-                let targetElement: HTMLElement
                 for (let featureRef of categoryRefs.value) {
                     if (featureRef.id == key) {
-                        targetElement = featureRef
+                        featureRef.style.setProperty("height", "")
                         break
                     }
                 }
-                targetElement!.style.setProperty("height", "")
             }
         } else currentCategoryCollapse.value[key] = false
     }
@@ -88,11 +119,6 @@ function updateCategories(categories_data: Categories) {
     categories.value[currentStep.value] = categories_data
 }
 
-function shouldCheckboxDisabled(checkboxValue: string, featureId: string, choose: number): boolean {
-    if (featureSelections.value[featureId].length < choose) return false
-    if (featureSelections.value[featureId].includes(checkboxValue)) return false
-    return true
-}
 
 function prevStep() {
     currentStep.value = Math.max(0, currentStep.value - 1)
@@ -130,17 +156,20 @@ function nextStep() {
             <div class="mx-8 flex items-stretch h-10 shrink-0 gap-2 mb-8">
                 <button @click="prevStep"
                     class="leading-10 w-10 rounded-md bg-gray-400 transition hover:bg-gray-700">👈</button>
-                <button v-if="currentStep > 0"@click="nextStep"
+                <button v-if="currentStep > 0" @click="nextStep"
                     class="leading-10 flex-grow rounded-md bg-green-600 font-bold text-lg transition hover:bg-green-800">继续</button>
                 <button v-else @click="nextStep"
                     class="leading-10 flex-grow rounded-md bg-green-600 font-bold text-lg transition hover:bg-green-800">开始车卡！</button>
             </div>
         </div>
         <div class="bg-slate-800 h-screen flex flex-col items-stretch">
-            <h2 v-if="currentStep > 0" class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">特质</h2>
-            <h2 v-else class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">简要说明</h2>
+            <h2 v-if="currentStep > 0"
+                class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">特质</h2>
+            <h2 v-else class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">
+                简要说明</h2>
             <div class="flex overflow-x-hidden scroll-xs overflow-y-auto h-64 w-full flex-grow">
-                <div class="flex-shrink-0 w-full p-4 text-4xl flex justify-center items-center" :style="{ 'transform': stepTranslate }">
+                <div class="flex-shrink-0 w-full p-4 text-4xl flex justify-center items-center"
+                    :style="{ 'transform': stepTranslate }">
                     是饼🍪。
                 </div>
                 <div v-for="step in totalSteps" class="flex-shrink-0 w-full p-4"
@@ -164,21 +193,8 @@ function nextStep() {
                                 <div v-for="feature, idx in features" :key="idx" class="mx-4 my-2">
                                     <h3 class="font-bold text-lg">{{ feature.name }}</h3>
                                     <p class="description" v-html="feature.description"></p>
-                                    <div v-if="'selection' in feature" class="ml-4">
-                                        <label v-for="option of feature.selection!.available" :key="option.id"
-                                            :for="option.id" class="cursor-pointer"
-                                            :class="{ 'checkbox-disabled': shouldCheckboxDisabled(option.id, feature.id, feature.selection!.choose) }">
-                                            <input type="checkbox" :id="option.id" :value="option.id" class="hidden"
-                                                v-model="featureSelections[feature.id]"
-                                                :disabled="shouldCheckboxDisabled(option.id, feature.id, feature.selection!.choose)">
-                                            <div class="flex items-center">
-                                                <div class="checkbox"></div>
-                                                <div> {{ option.name }}</div>
-                                            </div>
-                                            <div class="description pl-6 text-slate-400" v-html="option.description">
-                                            </div>
-                                        </label>
-                                    </div>
+                                    <EffectSelection :effects="feature.effects!"
+                                        v-model="featureSelections[feature.id]"></EffectSelection>
                                 </div>
                             </div>
                         </div>
@@ -212,24 +228,8 @@ main {
     @apply flex flex-col items-stretch flex-shrink-0 w-full transition-transform;
 }
 
-.checkbox {
-    @apply w-4 h-4 rounded-sm border border-slate-50 relative mr-2;
-}
-
-input[type="checkbox"]:checked+div>.checkbox::after {
-    content: " ";
-    @apply bg-slate-50 rounded-sm absolute;
-    top: 2px;
-    left: 2px;
-    bottom: 2px;
-    right: 2px;
-}
 
 .collapse-container {
     @apply overflow-hidden transition-all;
-}
-
-.checkbox-disabled {
-    @apply cursor-not-allowed text-gray-400;
 }
 </style>
