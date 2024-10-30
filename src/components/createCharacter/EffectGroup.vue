@@ -12,7 +12,11 @@ import { filterByType, isSelected, selectedCount } from '../../assets/js/selecti
 import EffectSelection from './EffectSelection.vue';
 
 const props = withDefaults(
-    defineProps<{ effects: EffectGroupType, disabled?: boolean, inSelection?: boolean }>(),
+    defineProps<{
+        effects: EffectGroupType,
+        idPrefix: string,
+        disabled?: boolean,
+        inSelection?: boolean }>(),
     { disabled: false, inSelection: false }
 )
 const selectionIndex = computed(
@@ -51,7 +55,7 @@ function addGroupToSelected() {
             <div class="flex items-start">
                 <div class="checkbox" v-if="inSelection" :class="{ checked: isSelected(model.selectedSelection[idx]) }">
                 </div>
-                <EffectSelection :disabled="disabled" v-model="model.selectedSelection[idx]" :effect="item">
+                <EffectSelection :idPrefix="idPrefix" :disabled="disabled" v-model="model.selectedSelection[idx]" :effect="item">
                 </EffectSelection>
             </div>
         </div>
@@ -59,7 +63,7 @@ function addGroupToSelected() {
             <div class="flex items-start">
                 <div class="checkbox" v-if="inSelection" :class="{ checked: isSelected(model.selectedGroup[idx]) }">
                 </div>
-                <EffectGroup :disabled="disabled" v-model="model.selectedGroup[idx]" :effects="item"
+                <EffectGroup :idPrefix="idPrefix" :disabled="disabled" v-model="model.selectedGroup[idx]" :effects="item"
                     :inSelection="inSelection">
                 </EffectGroup>
             </div>

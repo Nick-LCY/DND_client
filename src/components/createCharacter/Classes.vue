@@ -8,15 +8,20 @@ import { Class } from '../../assets/js/originalDataType';
 
 const classes = ref<Array<Class>>([])
 getByDataType<Class>("classes").then(data => {
-   classes.value = data
+    classes.value = data
 })
 const emit = defineEmits(["change"])
 const description = ref<string>("")
-const classSelection = ref<{ id: string, level: number, subclass: string }>({ id: "", level: 1, subclass: "" })
+const classSelection = ref<{
+    id: string,
+    level: number,
+    subclass: string,
+}>({ id: "", level: 1, subclass: ""})
+const subclassName = ref("子职业")
 const choosenClass = computed(() => classSelection.value.id != "")
 const subclassAvailable = computed(() => classSelection.value.level >= subclassAvailableLevel.value)
 const subclassAvailableLevel = ref(20)
-const subclasses = ref<Array<{id: string, name: string}>>([])
+const subclasses = ref<Array<{ id: string, name: string }>>([])
 watch(subclassAvailable, (_1, wasAvailable, _2) => {
     if (wasAvailable) {
         classSelection.value.subclass = ""
@@ -27,6 +32,7 @@ watch(subclassAvailable, (_1, wasAvailable, _2) => {
 async function changeClass() {
     let classData = await getById<Class>(classSelection.value.id);
     subclassAvailableLevel.value = classData.subclasses_available_level
+    subclassName.value = classData.subclass_name
     subclasses.value = classData.subclasses
     let categories = processFeatures(classData.features)
     description.value = renderMD(classData.description)
@@ -73,11 +79,12 @@ function levelUp() {
             <div class="w-0 flex flex-col overflow-hidden transition-all"
                 :class="{ 'ml-2': subclassAvailable, '!w-1/2': subclassAvailable }">
                 <span class="font-bold text-xl text-center mb-2 overflow-hidden h-0"
-                    :class="{ 'h-7': subclassAvailable }">子职业</span>
+                    :class="{ 'h-7': subclassAvailable }">{{ subclassName }}</span>
                 <div class="overflow-y-auto bg-slate-700 rounded-lg scroll-xs flex flex-col items-stretch flex-grow">
-                    <label class="option" v-for="subclass_obj in subclasses" :for="subclass_obj.id" :key="subclass_obj.id">
-                        <input type="radio" class="hidden" name="subclass" :id="subclass_obj.id" :value="subclass_obj.id"
-                            v-model="classSelection.subclass" @change="changeSubclass">
+                    <label class="option" v-for="subclass_obj in subclasses" :for="subclass_obj.id"
+                        :key="subclass_obj.id">
+                        <input type="radio" class="hidden" name="subclass" :id="subclass_obj.id"
+                            :value="subclass_obj.id" v-model="classSelection.subclass" @change="changeSubclass">
                         <div class="option-circle"></div>
                         {{ subclass_obj.name }}
                     </label>

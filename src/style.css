@@ -30,7 +30,15 @@
 }
 
 .description h3 {
-    @apply text-xl font-bold mb-2;
+    @apply text-xl font-bold mb-1;
+}
+
+.description h4 {
+    @apply text-lg font-bold mb-1;
+}
+
+.description p:last-child {
+    @apply mb-0;
 }
 
 .description p {
@@ -50,7 +58,7 @@
 }
 
 .description strong {
-    @apply text-lg;
+    @apply font-bold;
 }
 
 .description table {
