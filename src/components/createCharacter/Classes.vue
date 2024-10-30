@@ -4,9 +4,10 @@ import { processFeatures } from '../../assets/js/featureProcessing';
 import { renderMD } from '../../assets/js/renderMarkdown';
 import { getByDataType } from '../../assets/js/api/getByDataType';
 import { getById } from '../../assets/js/api/getById';
+import { Class } from '../../assets/js/originalDataType';
 
-const classes = ref<Array<{ id: string, name: string }>>([])
-getByDataType("classes").then(data => {
+const classes = ref<Array<Class>>([])
+getByDataType<Class>("classes").then(data => {
    classes.value = data
 })
 const emit = defineEmits(["change"])
@@ -24,7 +25,7 @@ watch(subclassAvailable, (_1, wasAvailable, _2) => {
 })
 
 async function changeClass() {
-    let classData = await getById(classSelection.value.id);
+    let classData = await getById<Class>(classSelection.value.id);
     subclassAvailableLevel.value = classData.subclasses_available_level
     subclasses.value = classData.subclasses
     let categories = processFeatures(classData.features)
@@ -33,7 +34,7 @@ async function changeClass() {
 }
 
 async function changeSubclass() {
-    let classData = await getById(classSelection.value.id);
+    let classData = await getById<Class>(classSelection.value.id);
     let subclassId = classSelection.value.subclass
     let features = classData.features
     for (let subclass of classData.subclasses) {

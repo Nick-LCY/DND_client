@@ -38,6 +38,22 @@ interface Race {
     subraces: Subrace[]
 }
 
+interface Subclass {
+    id: string
+    name: string
+    description: string
+    features: Feature[]
+}
+interface Class {
+    id: string
+    name: string
+    description: string
+    features: Feature[]
+    subclass_name: string
+    subclasses_available_level: number
+    subclasses: Subclass[]
+}
+
 function isEffect(obj: Effect | EffectSelection | EffectGroup): obj is Effect {
     return !isEffectGroup(obj) && !isEffectSelection(obj);
 }
@@ -62,6 +78,8 @@ export type {
     Feature,
     EffectSelection,
     EffectGroup,
-    Effect
+    Effect,
+    Class,
+    Subclass
 }
 

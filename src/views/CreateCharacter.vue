@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import Start from '../components/createCharacter/Start.vue';
 import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
-import Backgrounds from '../components/createCharacter/Backgrounds.vue';
+// import Backgrounds from '../components/createCharacter/Backgrounds.vue';
 import { Categories } from '../assets/js/categories';
 import { EffectGroup as EffectGroupType, isEffect, isEffectSelection } from '../assets/js/originalDataType';
 import { vModelSelection } from '../assets/js/selections';
@@ -148,8 +148,8 @@ function nextStep() {
                 <Races class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories"></Races>
                 <Classes class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
                 </Classes>
-                <Backgrounds class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
-                </Backgrounds>
+                <!-- <Backgrounds class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
+                </Backgrounds> -->
             </div>
             <div class="mx-8 flex items-stretch h-10 shrink-0 gap-2 mb-8">
                 <button @click="prevStep"

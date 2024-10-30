@@ -1,5 +1,4 @@
-import { Race } from "../originalDataType"
-function getById(id: string): Promise<Race> {
+function getById<T>(id: string): Promise<T> {
     return fetch(`/api/data/${id}`).then(res => res.json())
 }
 

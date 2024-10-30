@@ -4,9 +4,10 @@ import { processFeatures } from '../../assets/js/featureProcessing';
 import { renderMD } from '../../assets/js/renderMarkdown';
 import { getByDataType } from '../../assets/js/api/getByDataType';
 import { getById } from '../../assets/js/api/getById';
+import { Race } from '../../assets/js/originalDataType';
 
-const races = ref<Array<{ id: string, name: string }>>([])
-getByDataType("races").then(data => {
+const races = ref<Array<Race>>([])
+getByDataType<Race>("races").then(data => {
     races.value = data
 })
 const emit = defineEmits(["change"])
@@ -16,7 +17,7 @@ const description = ref<{ race: string, subrace: string }>({ race: "", subrace: 
 const currentDescription = ref<"race" | "subrace">("race")
 
 async function changeRace() {
-    let raceData = await getById(raceSelection.value.race);
+    let raceData = await getById<Race>(raceSelection.value.race);
     raceSelection.value.subrace = "none"
     subraces.value = [{ id: "none", name: "无" }, ...raceData.subraces]
     let categories = processFeatures(raceData.features)
@@ -25,7 +26,7 @@ async function changeRace() {
 }
 
 async function changeSubrace() {
-    let raceData = await getById(raceSelection.value.race);
+    let raceData = await getById<Race>(raceSelection.value.race);
     let subraceId = raceSelection.value.subrace
     if (subraceId === "none") {
         changeRace()
