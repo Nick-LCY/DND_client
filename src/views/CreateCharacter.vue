@@ -4,7 +4,7 @@ import Start from '../components/createCharacter/Start.vue';
 import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
 // import Backgrounds from '../components/createCharacter/Backgrounds.vue';
-import { Categories } from '../assets/js/categories';
+import { Categories, ConditionalFeature } from '../assets/js/categories';
 import { EffectGroup as EffectGroupType, isEffect, isEffectSelection } from '../assets/js/originalDataType';
 import { vModelSelection } from '../assets/js/selections';
 import EffectGroup from '../components/createCharacter/EffectGroup.vue';
@@ -104,6 +104,7 @@ function updateCategories(categories_data: Categories) {
         if (key in currentCategoryCollapse.value) {
             const oldObj = categories.value[currentStep.value][key]
             const newObj = categories_data[key]
+            // FIXME: compare between ConditionalFeatures always false
             if (!_.isEqual(oldObj, newObj)) {
                 currentCategoryCollapse.value[key] = false
                 for (let featureRef of categoryRefs.value) {
@@ -188,13 +189,16 @@ function nextStep() {
                             </button>
                             <div class="collapse-container scroll-xs" :id="String(categoryName)" ref="categoryRefs"
                                 :class="{ collapsed: categoryCollapse[step][categoryName] }">
-                                <div v-for="feature, idx in features" :key="idx" class="mx-4 my-2">
-                                    <h3 class="font-bold text-lg">{{ feature.name }}</h3>
-                                    <p class="description" v-html="feature.description"></p>
-                                    <EffectGroup :id-prefix="feature.id.split('.').slice(-1)[0]" :effects="feature.effects"
-                                        v-model="featureSelections[feature.id]">
-                                    </EffectGroup>
-                                </div>
+                                <template v-for="feature, idx in features" :key="idx">
+                                    <div v-if="(<ConditionalFeature>feature).condition === undefined || (<ConditionalFeature>feature).condition()"
+                                        class="mx-4 my-2">
+                                        <h3 class="font-bold text-lg">{{ feature.name }}</h3>
+                                        <p class="description" v-html="feature.description"></p>
+                                        <EffectGroup :id-prefix="feature.id.split('.').slice(-1)[0]"
+                                            :effects="feature.effects" v-model="featureSelections[feature.id]">
+                                        </EffectGroup>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </template>

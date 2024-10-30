@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { processFeatures } from '../../assets/js/featureProcessing';
+import { processFeatures, processLeveledFeatures, mergeCategories } from '../../assets/js/featureProcessing';
 import { renderMD } from '../../assets/js/renderMarkdown';
 import { getByDataType } from '../../assets/js/api/getByDataType';
 import { getById } from '../../assets/js/api/getById';
@@ -16,7 +16,7 @@ const classSelection = ref<{
     id: string,
     level: number,
     subclass: string,
-}>({ id: "", level: 1, subclass: ""})
+}>({ id: "", level: 1, subclass: "" })
 const subclassName = ref("子职业")
 const choosenClass = computed(() => classSelection.value.id != "")
 const subclassAvailable = computed(() => classSelection.value.level >= subclassAvailableLevel.value)
@@ -35,6 +35,8 @@ async function changeClass() {
     subclassName.value = classData.subclass_name
     subclasses.value = classData.subclasses
     let categories = processFeatures(classData.features)
+    let leveledFeatureCategories = processLeveledFeatures(classData.leveled_features, classSelection)
+    categories = mergeCategories(categories, leveledFeatureCategories)
     description.value = renderMD(classData.description)
     emit("change", categories)
 }
@@ -43,13 +45,18 @@ async function changeSubclass() {
     let classData = await getById<Class>(classSelection.value.id);
     let subclassId = classSelection.value.subclass
     let features = classData.features
+    let leveledFeatures = classData.leveled_features
     for (let subclass of classData.subclasses) {
         if (subclass.id === subclassId) {
             features = [...features, ...subclass.features]
+            leveledFeatures = [...leveledFeatures, ...subclass.leveled_features]
             break
         }
     }
-    let categories = processFeatures(features)
+    let categories = mergeCategories(
+        processFeatures(features),
+        processLeveledFeatures(leveledFeatures, classSelection)
+    )
     emit("change", categories)
 }
 

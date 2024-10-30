@@ -1,6 +1,7 @@
-import { Feature as OriginalFeature } from "./originalDataType";
-import { Categories, Feature } from "./categories";
+import { Feature as OriginalFeature, LeveledFeature } from "./originalDataType";
+import { Categories, ConditionalFeature, Feature } from "./categories";
 import { renderMD } from "./renderMarkdown";
+import { Ref } from "vue";
 interface ProcessedData {
     categories: Categories
     description: string
@@ -40,6 +41,43 @@ function processFeatures(features: OriginalFeature[]): Categories {
     return categories
 }
 
+function processLeveledFeatures(features: LeveledFeature[], selectionProxy: Ref<{ level: number }>): Categories {
+    const categories: Categories = {};
+    for (let leveledFeature of features) {
+        let feature = leveledFeature.feature
+        let conditionalFeature: ConditionalFeature = {
+            id: feature.id,
+            name: feature.name,
+            description: renderMD(feature.description),
+            // Effect description rendering is done in EffectSelection.vue
+            effects: feature.effects,
+            condition: () => {
+                return selectionProxy.value.level >= leveledFeature.start_level
+                    && (
+                        leveledFeature.end_level === undefined
+                        || selectionProxy.value.level < leveledFeature.end_level
+                    )
+            }
+        }
+        if (!(feature.category in categories)) {
+            categories[feature.category] = []
+        }
+        categories[feature.category].push(conditionalFeature)
+    }
+    return categories
+}
+
+function mergeCategories(...categoriesList: Categories[]): Categories {
+    const finalCategories: Categories = {}
+    for (let categories of categoriesList) {
+        for (let category in categories) {
+            if (!(category in finalCategories)) finalCategories[category] = []
+            finalCategories[category].push(...categories[category])
+        }
+    }
+    return finalCategories
+}
+
 function updateCategories(originalData: OriginalData): ProcessedData {
     let categories = processFeatures(originalData.features)
     if (originalData.selectedSubclass != undefined) {
@@ -60,4 +98,9 @@ function updateCategories(originalData: OriginalData): ProcessedData {
     }
 }
 
-export { updateCategories, processFeatures }
+export {
+    updateCategories,
+    processFeatures,
+    processLeveledFeatures,
+    mergeCategories
+}

@@ -38,17 +38,25 @@ interface Race {
     subraces: Subrace[]
 }
 
+interface LeveledFeature {
+    start_level: number
+    end_level?: number,
+    feature: Feature
+}
+
 interface Subclass {
     id: string
     name: string
     description: string
     features: Feature[]
+    leveled_features: LeveledFeature[]
 }
 interface Class {
     id: string
     name: string
     description: string
     features: Feature[]
+    leveled_features: LeveledFeature[]
     subclass_name: string
     subclasses_available_level: number
     subclasses: Subclass[]
@@ -76,6 +84,7 @@ export type {
     Race,
     Subrace,
     Feature,
+    LeveledFeature,
     EffectSelection,
     EffectGroup,
     Effect,

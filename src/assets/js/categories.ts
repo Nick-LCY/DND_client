@@ -18,13 +18,22 @@ interface Feature {
     // TODO: remove selection
     selection?: Selection
 }
+
+interface ConditionalFeature {
+    condition: () => boolean
+    id: string
+    name: string
+    description: string
+    effects: EffectGroup
+}
 interface Categories {
-    [key: string]: Array<Feature>
+    [key: string]: Array<Feature | ConditionalFeature>
 }
 
 export type {
     Categories,
     Feature,
+    ConditionalFeature,
     Selection,
     Option
 }
