@@ -58,7 +58,7 @@ function levelUp() {
         <h2 class="font-bold text-center text-3xl mt-8 mb-4 flex-shrink-0">选择职业</h2>
         <div class="h-48 mx-8 scroll-xs flex items-stretch flex-shrink-0">
             <div class="w-1/2 flex-grow flex flex-col transition-all" :class="{ 'mr-2': subclassAvailable }">
-                <span class="font-bold text-xl text-center mb-2 transition-all overflow-hidden h-0"
+                <span class="font-bold text-xl text-center mb-2 transition-all overflow-hidden h-0 flex-shrink-0"
                     :class="{ 'h-7': subclassAvailable }">主职业</span>
                 <div class="overflow-y-auto bg-slate-700 rounded-lg scroll-xs flex flex-col items-stretch flex-grow">
                     <label class="option" v-for="class_obj in classes" :for="class_obj.id" :key="class_obj.id">

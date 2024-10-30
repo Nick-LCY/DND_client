@@ -5,11 +5,10 @@ import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
 import Backgrounds from '../components/createCharacter/Backgrounds.vue';
 import { Categories } from '../assets/js/categories';
-import { Effect, EffectSelection as EffectSelectionType, isEffect } from '../assets/js/originalDataType';
-import EffectSelection from '../components/createCharacter/EffectSelection.vue';
+import { EffectGroup as EffectGroupType, isEffect, isEffectSelection } from '../assets/js/originalDataType';
+import { vModelSelection } from '../assets/js/selections';
+import EffectGroup from '../components/createCharacter/EffectGroup.vue';
 import _ from "lodash";
-
-
 
 const categories = ref<{ [key: number]: Categories }>({});
 const currentCategoryCollapse = computed(
@@ -22,8 +21,11 @@ const categoryMapping: { [key: string]: string } = {
     race_traits: "种族特质",
     race_proficiencies: "种族熟练项",
     class_traits: "职业特质",
+    class_level_traits: "职业等级特质",
     class_proficiencies: "职业熟练项",
+    class_equipments: "职业初始装备",
     subclass_traits: "子职业特质",
+    subclass_level_traits: "子职业等级特质",
     subclass_proficiencies: "子职业熟练项",
     subrace_traits: "亚种特质",
     subrace_proficiencies: "亚种熟练项",
@@ -35,7 +37,7 @@ const totalSteps = ref<number>(5);
 const stepTranslate = computed(() => {
     return `translate(${currentStep.value * -100}%, 0)`
 })
-const featureSelections = ref<{ [key: string]: any }>({});
+const featureSelections = ref<{ [key: string]: vModelSelection }>({});
 const categoryRefs = ref<Array<HTMLElement>>([]);
 const categoryCollapse = ref<{ [step: number]: { [category: string]: boolean } }>({})
 
@@ -51,6 +53,7 @@ function collapse(categoryName: string) {
     if (!currentCollapse) {
         targetElement!.style.setProperty("height", `${targetElement!.offsetHeight}px`)
     } else {
+        // 150ms == Tailwind default animation duration
         setTimeout(() => {
             targetElement!.style.setProperty("height", "")
         }, 151)
@@ -60,34 +63,27 @@ function collapse(categoryName: string) {
     }, 1)
 }
 
-interface vModelSelection extends Array<string | vModelSelection> {
-    [index: number]: string | vModelSelection
-}
-
-function visitEffects(effects: (EffectSelectionType | Effect)[] | EffectSelectionType, vModelObj: vModelSelection, inSelection: boolean = false) {
-    if (effects instanceof Array) {
-        for (let effect of effects) {
-            if (isEffect(effect)) {
-                if (!inSelection) vModelObj.push(effect.id)
-            } else {
-                const sublist: vModelSelection = []
-                vModelObj.push(sublist)
-                visitEffects(effect.available, sublist, true)
+function visitEffects(effects: EffectGroupType, vModelObj: vModelSelection, inSelection: boolean = false) {
+    for (let effect of effects) {
+        if (isEffect(effect)) {
+            if (!inSelection) vModelObj.selectedString.push(effect.id)
+        } else if (isEffectSelection(effect)) {
+            const subSelection: vModelSelection = {
+                selectedGroup: [],
+                selectedSelection: [],
+                selectedString: []
             }
+            vModelObj.selectedSelection.push(subSelection)
+            visitEffects(effect.available, subSelection, true)
+        } else {
+            const subSelection: vModelSelection = {
+                selectedGroup: [],
+                selectedSelection: [],
+                selectedString: []
+            }
+            vModelObj.selectedGroup.push(subSelection)
+            visitEffects(effect, subSelection, inSelection)
         }
-    } else {
-        effects.available.sort((a, b) => {
-            if (isEffect(a) && isEffect(b)) {
-                return 0
-            } else if (isEffect(a)) {
-                return 1
-            } else {
-                return -1
-            }
-        })
-        const sublist: vModelSelection = []
-        vModelObj.push(sublist)
-        visitEffects(effects.available, vModelObj, true)
     }
 }
 
@@ -95,9 +91,15 @@ function updateCategories(categories_data: Categories) {
     for (let key in categories_data) {
         let features = categories_data[key]
         for (let feature of features) {
-            if (!(feature.id in featureSelections.value)) featureSelections.value[feature.id] = []
+            if (!(feature.id in featureSelections.value)) {
+                featureSelections.value[feature.id] = {
+                    selectedGroup: [],
+                    selectedSelection: [],
+                    selectedString: []
+                }
+            }
             const selectionValues = featureSelections.value[feature.id]
-            visitEffects(feature.effects!, selectionValues)
+            visitEffects(feature.effects, selectionValues)
         }
         if (key in currentCategoryCollapse.value) {
             const oldObj = categories.value[currentStep.value][key]
@@ -148,10 +150,6 @@ function nextStep() {
                 </Classes>
                 <Backgrounds class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
                 </Backgrounds>
-                <!-- <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
-                <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
-                <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1>
-                <Step1 class="step-card" :style="{ 'transform': stepCardTranslate }" @change="updateRace"></Step1> -->
             </div>
             <div class="mx-8 flex items-stretch h-10 shrink-0 gap-2 mb-8">
                 <button @click="prevStep"
@@ -193,8 +191,8 @@ function nextStep() {
                                 <div v-for="feature, idx in features" :key="idx" class="mx-4 my-2">
                                     <h3 class="font-bold text-lg">{{ feature.name }}</h3>
                                     <p class="description" v-html="feature.description"></p>
-                                    <EffectSelection :effects="feature.effects!"
-                                        v-model="featureSelections[feature.id]"></EffectSelection>
+                                    <EffectGroup :effects="feature.effects" v-model="featureSelections[feature.id]">
+                                    </EffectGroup>
                                 </div>
                             </div>
                         </div>

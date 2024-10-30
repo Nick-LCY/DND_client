@@ -5,12 +5,13 @@ interface Effect {
     expressions: string[]
 }
 
+interface EffectGroup extends Array<Effect | EffectGroup | EffectSelection> {
+    [key: number]: Effect | EffectGroup | EffectSelection
+}
+
 interface EffectSelection {
     choose: number
-    available: (
-        | EffectSelection
-        | Effect
-    )[]
+    available: EffectGroup
 }
 
 interface Feature {
@@ -18,10 +19,7 @@ interface Feature {
     name: string
     description: string
     category: string
-    effects: (
-        | EffectSelection
-        | Effect
-    )[] | EffectSelection
+    effects: EffectGroup
 }
 
 interface Subrace {
@@ -40,12 +38,22 @@ interface Race {
     subraces: Subrace[]
 }
 
-function isEffect(obj: Effect | EffectSelection): obj is Effect{
-    return (<EffectSelection>obj).choose == undefined;
+function isEffect(obj: Effect | EffectSelection | EffectGroup): obj is Effect {
+    return !isEffectGroup(obj) && !isEffectSelection(obj);
+}
+
+function isEffectGroup(obj: Effect | EffectSelection | EffectGroup): obj is EffectGroup {
+    return obj instanceof Array
+}
+
+function isEffectSelection(obj: Effect | EffectSelection | EffectGroup): obj is EffectSelection {
+    return !isEffectGroup(obj) && (<EffectSelection>obj).choose != undefined
 }
 
 export {
-    isEffect
+    isEffect,
+    isEffectSelection,
+    isEffectGroup
 }
 
 export type {
@@ -53,6 +61,7 @@ export type {
     Subrace,
     Feature,
     EffectSelection,
+    EffectGroup,
     Effect
 }
 

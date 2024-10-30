@@ -1,4 +1,4 @@
-import { Effect, EffectSelection } from "./originalDataType"
+import { EffectGroup } from "./originalDataType"
 
 interface Option {
     id: string
@@ -14,7 +14,8 @@ interface Feature {
     id: string
     name: string
     description: string
-    effects: (EffectSelection | Effect)[] | EffectSelection
+    effects: EffectGroup
+    // TODO: remove selection
     selection?: Selection
 }
 interface Categories {
