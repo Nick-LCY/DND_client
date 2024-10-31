@@ -247,7 +247,7 @@ const activatedEffects = computed(() => {
                                         class="mx-4 my-2">
                                         <h3 class="font-bold text-lg">{{ feature.name }}</h3>
                                         <p class="description" v-html="feature.description"></p>
-                                        <EffectGroup :id-prefix="feature.id" :effects="feature.effects"
+                                        <EffectGroup :id-prefix="`${currentStep}-${categoryName}-${idx}`" :effects="feature.effects"
                                             v-model="featureSelections[feature.id]">
                                         </EffectGroup>
                                     </div>

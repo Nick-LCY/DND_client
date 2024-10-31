@@ -46,9 +46,9 @@ function shouldDisabled(selection: vModelSelection | string): boolean {
             :class="{ warning: selectedCount(model) < effect.choose, disabled: disabled }">
             [{{ selectedCount(model) }} / {{ effect.choose }}]
         </div>
-        <label v-for="{ idx, item } of effectIndex" :for="`${idPrefix}-${item.id.split('.').slice(-1)[0]}`" class="cursor-pointer block"
+        <label v-for="{ idx, item } of effectIndex" :for="`${idPrefix}-${idx}`" class="cursor-pointer block"
             :class="{ 'checkbox-disabled': shouldDisabled(item.id) }" :key="idx">
-            <input type="checkbox" :id="`${idPrefix}-${item.id.split('.').slice(-1)[0]}`" :disabled="shouldDisabled(item.id)" :value="item.id"
+            <input type="checkbox" :id="`${idPrefix}-${idx}`" :disabled="shouldDisabled(item.id)" :value="item.id"
                 v-model="model.selectedString" class="hidden">
             <div class="flex items-start">
                 <div class="checkbox flex-shrink-0"></div>
@@ -60,14 +60,14 @@ function shouldDisabled(selection: vModelSelection | string): boolean {
         <div v-for="{ idx, item } of selectionIndex" :key="idx">
             <div class="flex items-start">
                 <div class="checkbox" :class="{ checked: isSelected(model.selectedSelection[idx]) }"></div>
-                <EffectSelection :idPrefix="idPrefix" v-model="model.selectedSelection[idx]" :effect="item"
+                <EffectSelection :idPrefix="`${idPrefix}-${idx}`" v-model="model.selectedSelection[idx]" :effect="item"
                     :disabled="shouldDisabled(model.selectedSelection[idx])"></EffectSelection>
             </div>
         </div>
         <div v-for="{ idx, item } of groupIndex" :key="idx">
             <div class="flex items-start">
                 <div class="checkbox" :class="{ checked: isSelected(model.selectedGroup[idx]) }"></div>
-                <EffectGroup :idPrefix="idPrefix" v-model="model.selectedGroup[idx]" :effects="item"
+                <EffectGroup :idPrefix="`${idPrefix}-${idx}`" v-model="model.selectedGroup[idx]" :effects="item"
                     :disabled="shouldDisabled(model.selectedGroup[idx])" :inSelection="true"></EffectGroup>
             </div>
         </div>

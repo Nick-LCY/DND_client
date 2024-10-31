@@ -55,7 +55,7 @@ function addGroupToSelected() {
             <div class="flex items-start">
                 <div class="checkbox" v-if="inSelection" :class="{ checked: isSelected(model.selectedSelection[idx]) }">
                 </div>
-                <EffectSelection :idPrefix="idPrefix" :disabled="disabled" v-model="model.selectedSelection[idx]" :effect="item">
+                <EffectSelection :idPrefix="`${idPrefix}-${idx}`" :disabled="disabled" v-model="model.selectedSelection[idx]" :effect="item">
                 </EffectSelection>
             </div>
         </div>
@@ -63,7 +63,7 @@ function addGroupToSelected() {
             <div class="flex items-start">
                 <div class="checkbox" v-if="inSelection" :class="{ checked: isSelected(model.selectedGroup[idx]) }">
                 </div>
-                <EffectGroup :idPrefix="idPrefix" :disabled="disabled" v-model="model.selectedGroup[idx]" :effects="item"
+                <EffectGroup :idPrefix="`${idPrefix}-${idx}`" :disabled="disabled" v-model="model.selectedGroup[idx]" :effects="item"
                     :inSelection="inSelection">
                 </EffectGroup>
             </div>
