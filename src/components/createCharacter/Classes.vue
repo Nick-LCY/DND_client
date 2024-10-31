@@ -5,6 +5,7 @@ import { renderMD } from '../../assets/js/renderMarkdown';
 import { getByDataType } from '../../assets/js/api/getByDataType';
 import { getById } from '../../assets/js/api/getById';
 import { Class } from '../../assets/js/originalDataType';
+import { store } from '../../assets/js/store';
 
 const classes = ref<Array<Class>>([])
 getByDataType<Class>("classes").then(data => {
@@ -30,6 +31,7 @@ watch(subclassAvailable, (_1, isAvailable, _2) => {
 })
 
 async function changeClass() {
+    store.startLoad()
     let classData = await getById<Class>(classSelection.value.id);
     subclassAvailableLevel.value = classData.subclasses_available_level
     subclassName.value = classData.subclass_name
@@ -39,9 +41,11 @@ async function changeClass() {
     categories = mergeCategories(categories, leveledFeatureCategories)
     description.value = renderMD(classData.description)
     emit("change", categories)
+    store.endLoad()
 }
 
 async function changeSubclass() {
+    store.startLoad()
     let classData = await getById<Class>(classSelection.value.id);
     let subclassId = classSelection.value.subclass
     let features = classData.features
@@ -58,6 +62,7 @@ async function changeSubclass() {
         processLeveledFeatures(leveledFeatures, classSelection)
     )
     emit("change", categories)
+    store.endLoad()
 }
 
 function levelDown() {
@@ -118,7 +123,7 @@ function levelUp() {
                 </button>
             </div>
         </div>
-        <div class="description scroll-xs" v-html="description"></div>
+        <div class="description scroll-xs" :class="{ loading: store.loading }" v-html="description"></div>
     </div>
 </template>
 <style scoped>

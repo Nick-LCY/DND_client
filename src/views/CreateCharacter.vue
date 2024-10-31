@@ -15,6 +15,7 @@ import {
 import { vModelSelection } from '../assets/js/selections';
 import EffectGroup from '../components/createCharacter/EffectGroup.vue';
 import StatusBar from '../components/createCharacter/StatusBar.vue';
+import { store } from '../assets/js/store';
 import _ from "lodash";
 
 const categories = ref<{ [key: number]: Categories }>({});
@@ -182,7 +183,6 @@ const activatedEffects = computed(() => {
         if (feature === undefined) continue
         let selectedEffectIds = findSelectedEffectIds(featureSelections.value[featureId])
         let effectDict = findAllEffects(feature.effects)
-        console.log(selectedEffectIds)
         for (let effectId of selectedEffectIds) effects.push(effectDict[effectId])
     }
     return effects
@@ -219,12 +219,13 @@ const activatedEffects = computed(() => {
                 class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">特质</h2>
             <h2 v-else class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">
                 简要说明</h2>
-            <div class="flex overflow-x-hidden scroll-xs overflow-y-auto h-64 w-full flex-grow">
+            <div class="flex overflow-hidden h-64 w-full flex-grow"
+                :class="{ loading: store.loading }">
                 <div class="flex-shrink-0 w-full p-4 text-4xl flex justify-center items-center"
                     :style="{ 'transform': stepTranslate }">
                     是饼🍪。
                 </div>
-                <div v-for="step in totalSteps" class="flex-shrink-0 w-full p-4"
+                <div v-for="step in totalSteps" class="flex-shrink-0 w-full p-4 overflow-y-scroll scroll-xs"
                     :style="{ 'transform': stepTranslate }">
                     <template v-if="categories[step] != undefined">
                         <div v-for="(features, categoryName) in categories[step]" :key="categoryName"
@@ -247,8 +248,8 @@ const activatedEffects = computed(() => {
                                         class="mx-4 my-2">
                                         <h3 class="font-bold text-lg">{{ feature.name }}</h3>
                                         <p class="description" v-html="feature.description"></p>
-                                        <EffectGroup :id-prefix="`${currentStep}-${categoryName}-${idx}`" :effects="feature.effects"
-                                            v-model="featureSelections[feature.id]">
+                                        <EffectGroup :id-prefix="`${currentStep}-${categoryName}-${idx}`"
+                                            :effects="feature.effects" v-model="featureSelections[feature.id]">
                                         </EffectGroup>
                                     </div>
                                 </template>

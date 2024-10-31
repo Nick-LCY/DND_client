@@ -5,6 +5,7 @@ import { renderMD } from '../../assets/js/renderMarkdown';
 import { getByDataType } from '../../assets/js/api/getByDataType';
 import { getById } from '../../assets/js/api/getById';
 import { Race } from '../../assets/js/originalDataType';
+import { store } from '../../assets/js/store';
 
 const races = ref<Array<Race>>([])
 getByDataType<Race>("races").then(data => {
@@ -17,15 +18,18 @@ const description = ref<{ race: string, subrace: string }>({ race: "", subrace: 
 const currentDescription = ref<"race" | "subrace">("race")
 
 async function changeRace() {
+    store.startLoad()
     let raceData = await getById<Race>(raceSelection.value.race);
     raceSelection.value.subrace = "none"
     subraces.value = [{ id: "none", name: "无" }, ...raceData.subraces]
     let categories = processFeatures(raceData.features)
     description.value.race = renderMD(raceData.description)
     emit("change", categories)
+    store.endLoad()
 }
 
 async function changeSubrace() {
+    store.startLoad()
     let raceData = await getById<Race>(raceSelection.value.race);
     let subraceId = raceSelection.value.subrace
     if (subraceId === "none") {
@@ -52,6 +56,7 @@ async function changeSubrace() {
     }
     let categories = processFeatures(features)
     emit("change", categories)
+    store.endLoad()
 }
 
 function changeCurrentDescription() {
@@ -100,7 +105,8 @@ function changeCurrentDescription() {
                 </button>
             </div>
         </div>
-        <div class="description scroll-xs" v-html="description[currentDescription]"></div>
+        <div class="description scroll-xs" v-html="description[currentDescription]" :class="{ loading: store.loading }">
+        </div>
     </div>
 </template>
 <style scoped>
