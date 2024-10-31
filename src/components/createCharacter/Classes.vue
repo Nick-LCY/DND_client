@@ -22,8 +22,8 @@ const choosenClass = computed(() => classSelection.value.id != "")
 const subclassAvailable = computed(() => classSelection.value.level >= subclassAvailableLevel.value)
 const subclassAvailableLevel = ref(20)
 const subclasses = ref<Array<{ id: string, name: string }>>([])
-watch(subclassAvailable, (_1, wasAvailable, _2) => {
-    if (wasAvailable) {
+watch(subclassAvailable, (_1, isAvailable, _2) => {
+    if (isAvailable) {
         classSelection.value.subclass = ""
         changeClass()
     }

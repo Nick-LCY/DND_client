@@ -4,10 +4,17 @@ import Start from '../components/createCharacter/Start.vue';
 import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
 // import Backgrounds from '../components/createCharacter/Backgrounds.vue';
-import { Categories, ConditionalFeature } from '../assets/js/categories';
-import { EffectGroup as EffectGroupType, isEffect, isEffectSelection } from '../assets/js/originalDataType';
+import { Categories, ConditionalFeature, Feature } from '../assets/js/categories';
+import {
+    Effect as EffectType,
+    EffectGroup as EffectGroupType,
+    EffectSelection as EffectSelectionType,
+    isEffect,
+    isEffectSelection
+} from '../assets/js/originalDataType';
 import { vModelSelection } from '../assets/js/selections';
 import EffectGroup from '../components/createCharacter/EffectGroup.vue';
+import StatusBar from '../components/createCharacter/StatusBar.vue';
 import _ from "lodash";
 
 const categories = ref<{ [key: number]: Categories }>({});
@@ -97,9 +104,9 @@ function updateCategories(categories_data: Categories) {
                     selectedSelection: [],
                     selectedString: []
                 }
+                const selectionValues = featureSelections.value[feature.id]
+                visitEffects(feature.effects, selectionValues)
             }
-            const selectionValues = featureSelections.value[feature.id]
-            visitEffects(feature.effects, selectionValues)
         }
         if (key in currentCategoryCollapse.value) {
             const oldObj = categories.value[currentStep.value][key]
@@ -122,7 +129,6 @@ function updateCategories(categories_data: Categories) {
     categories.value[currentStep.value] = categories_data
 }
 
-
 function prevStep() {
     currentStep.value = Math.max(0, currentStep.value - 1)
 }
@@ -134,6 +140,53 @@ function setStep(step: number) {
 function nextStep() {
     currentStep.value++
 }
+
+const activatedEffects = computed(() => {
+    function findSelectedEffectIds(obj: vModelSelection): string[] {
+        const selectedEffects: string[] = [...obj.selectedString]
+        for (let selection of obj.selectedSelection) selectedEffects.push(...findSelectedEffectIds(selection))
+        for (let group of obj.selectedGroup) selectedEffects.push(...findSelectedEffectIds(group))
+        return selectedEffects
+    }
+    function findAllEffects(obj: EffectGroupType | EffectSelectionType): { [key: string]: EffectType } {
+        let effects: { [key: string]: EffectType } = {}
+        let list: EffectGroupType
+        if (isEffectSelection(obj)) list = obj.available
+        else list = obj
+        for (let i of list) {
+            if (isEffect(i)) effects[i.id] = i
+            else effects = {
+                ...effects,
+                ...findAllEffects(i)
+            }
+        }
+        return effects
+    }
+    function findFeature(id: string): Feature | undefined {
+        for (let step in categories.value) {
+            for (let category of Object.values(categories.value[step])) {
+                for (let feature of category) {
+                    if (id == feature.id) {
+                        if (
+                            (<ConditionalFeature>feature).condition === undefined
+                            || (<ConditionalFeature>feature).condition()
+                        ) return feature
+                    }
+                }
+            }
+        }
+    }
+    const effects: EffectType[] = []
+    for (let featureId in featureSelections.value) {
+        let feature = findFeature(featureId)
+        if (feature === undefined) continue
+        let selectedEffectIds = findSelectedEffectIds(featureSelections.value[featureId])
+        let effectDict = findAllEffects(feature.effects)
+        console.log(selectedEffectIds)
+        for (let effectId of selectedEffectIds) effects.push(effectDict[effectId])
+    }
+    return effects
+})
 </script>
 <template>
     <main>
@@ -194,8 +247,8 @@ function nextStep() {
                                         class="mx-4 my-2">
                                         <h3 class="font-bold text-lg">{{ feature.name }}</h3>
                                         <p class="description" v-html="feature.description"></p>
-                                        <EffectGroup :id-prefix="feature.id.split('.').slice(-1)[0]"
-                                            :effects="feature.effects" v-model="featureSelections[feature.id]">
+                                        <EffectGroup :id-prefix="feature.id" :effects="feature.effects"
+                                            v-model="featureSelections[feature.id]">
                                         </EffectGroup>
                                     </div>
                                 </template>
@@ -205,12 +258,13 @@ function nextStep() {
                 </div>
             </div>
         </div>
+        <StatusBar :activatedEffects="activatedEffects"></StatusBar>
     </main>
 </template>
 <style scoped>
 main {
     display: grid;
-    grid-template-columns: 500px 1fr;
+    grid-template-columns: 500px 1fr 50px;
     height: 100vh;
     @apply text-slate-50;
 }
