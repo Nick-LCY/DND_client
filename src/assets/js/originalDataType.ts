@@ -9,9 +9,19 @@ interface EffectGroup extends Array<Effect | EffectGroup | EffectSelection> {
     [key: number]: Effect | EffectGroup | EffectSelection
 }
 
+interface EffectGroupDict {
+    type: "group_dict"
+    name: string
+    description: string
+    group: EffectGroup
+}
+
 interface EffectSelection {
+    type: "selection"
     choose: number
     available: EffectGroup
+    name?: string
+    description?: string
     allow_repeat?: boolean
 }
 
@@ -20,7 +30,7 @@ interface Feature {
     name: string
     description: string
     category: string
-    effects: EffectGroup
+    effects: EffectGroup | EffectGroupDict
 }
 
 interface Subrace {
@@ -63,22 +73,43 @@ interface Class {
     subclasses: Subclass[]
 }
 
-function isEffect(obj: Effect | EffectSelection | EffectGroup): obj is Effect {
-    return !isEffectGroup(obj) && !isEffectSelection(obj);
+function isEffect(obj: Effect
+    | EffectSelection
+    | EffectGroup
+    | EffectGroupDict
+): obj is Effect {
+    return !isEffectGroup(obj) && !isEffectSelection(obj) && !isEffectGroupDict(obj);
 }
 
-function isEffectGroup(obj: Effect | EffectSelection | EffectGroup): obj is EffectGroup {
+function isEffectGroup(obj: Effect
+    | EffectSelection
+    | EffectGroup
+    | EffectGroupDict
+): obj is EffectGroup {
     return obj instanceof Array
 }
 
-function isEffectSelection(obj: Effect | EffectSelection | EffectGroup): obj is EffectSelection {
-    return !isEffectGroup(obj) && (<EffectSelection>obj).choose != undefined
+function isEffectGroupDict(obj: Effect
+    | EffectSelection
+    | EffectGroup
+    | EffectGroupDict
+): obj is EffectGroupDict {
+    return (<EffectGroupDict>obj).type === "group_dict"
+}
+
+function isEffectSelection(obj: Effect
+    | EffectSelection
+    | EffectGroup
+    | EffectGroupDict
+): obj is EffectSelection {
+    return (<EffectSelection>obj).type === "selection"
 }
 
 export {
     isEffect,
     isEffectSelection,
-    isEffectGroup
+    isEffectGroup,
+    isEffectGroupDict
 }
 
 export type {
@@ -88,6 +119,7 @@ export type {
     LeveledFeature,
     EffectSelection,
     EffectGroup,
+    EffectGroupDict,
     Effect,
     Class,
     Subclass

@@ -1,4 +1,4 @@
-import { EffectGroup } from "./originalDataType"
+import { EffectGroup, EffectGroupDict, isEffectGroupDict } from "./originalDataType"
 
 interface TypeIndex<T> {
     idx: number
@@ -6,11 +6,12 @@ interface TypeIndex<T> {
 }
 
 function filterByType<T>(
-    array: EffectGroup,
+    array: EffectGroup | EffectGroupDict,
     determineFunc: (item: any) => item is T
 ): TypeIndex<T>[] {
     const selections: TypeIndex<T>[] = []
     let idx = 0
+    if (isEffectGroupDict(array)) array = array.group
     for (let item of array) {
         if (!determineFunc(item)) continue
         selections.push({ idx, item })

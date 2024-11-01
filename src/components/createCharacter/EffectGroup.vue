@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import type {
+    EffectGroupDict as EffectGroupDictType,
     EffectGroup as EffectGroupType,
     EffectSelection as EffectSelectionType,
     Effect as EffectType
@@ -13,7 +14,7 @@ import EffectSelection from './EffectSelection.vue';
 
 const props = withDefaults(
     defineProps<{
-        effects: EffectGroupType,
+        effects: EffectGroupType | EffectGroupDictType,
         idPrefix: string,
         disabled?: boolean,
         inSelection?: boolean
@@ -28,6 +29,10 @@ const groupIndex = computed(
 )
 const effectIndex = computed(
     () => filterByType<EffectType>(props.effects, isEffect)
+)
+
+const groupLength = computed(
+    () => isEffectGroup(props.effects) ? props.effects.length : props.effects.group.length
 )
 const model = defineModel<vModelSelection>({ required: true })
 function addGroupToSelected() {
@@ -44,8 +49,8 @@ function addGroupToSelected() {
 <template>
     <div>
         <div v-if="inSelection" class="font-bold text-green-500"
-            :class="{ warning: selectedCount(model) < effects.length, disabled: disabled }">
-            [{{ selectedCount(model) }} / {{ effects.length }}]
+            :class="{ warning: selectedCount(model) < groupLength, disabled: disabled }">
+            [{{ selectedCount(model) }} / {{ groupLength }}]
         </div>
         <button v-if="inSelection" @click="addGroupToSelected" class="flex flex-col">
             <div v-for="{ idx, item } of effectIndex" :key="idx" :class="{ 'checkbox-disabled': disabled }">

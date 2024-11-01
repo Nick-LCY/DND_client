@@ -10,7 +10,9 @@ import {
     EffectGroup as EffectGroupType,
     EffectSelection as EffectSelectionType,
     isEffect,
-    isEffectSelection
+    isEffectSelection,
+    EffectGroupDict as EffectGroupDictType,
+    isEffectGroupDict
 } from '../assets/js/originalDataType';
 import { vModelSelection } from '../assets/js/selections';
 import EffectGroup from '../components/createCharacter/EffectGroup.vue';
@@ -71,7 +73,8 @@ function collapse(categoryName: string) {
     }, 1)
 }
 
-function visitEffects(effects: EffectGroupType, vModelObj: vModelSelection, inSelection: boolean = false) {
+function visitEffects(effects: EffectGroupType | EffectGroupDictType, vModelObj: vModelSelection, inSelection: boolean = false) {
+    if (isEffectGroupDict(effects)) effects = effects.group
     for (let effect of effects) {
         if (isEffect(effect)) {
             let value = 0
@@ -154,10 +157,11 @@ const activatedEffects = computed(() => {
         for (let group of obj.selectedGroup) selectedEffects.push(...findSelectedEffectIds(group))
         return selectedEffects
     }
-    function findAllEffects(obj: EffectGroupType | EffectSelectionType): { [key: string]: EffectType } {
+    function findAllEffects(obj: EffectGroupType | EffectSelectionType | EffectGroupDictType): { [key: string]: EffectType } {
         let effects: { [key: string]: EffectType } = {}
         let list: EffectGroupType
         if (isEffectSelection(obj)) list = obj.available
+        else if (isEffectGroupDict(obj)) list = obj.group
         else list = obj
         for (let i of list) {
             if (isEffect(i)) effects[i.id] = i
@@ -190,7 +194,6 @@ const activatedEffects = computed(() => {
         let effectDict = findAllEffects(feature.effects)
         for (let effectId of selectedEffectIds) effects.push(effectDict[effectId])
     }
-    console.log(effects)
     return effects
 })
 </script>
