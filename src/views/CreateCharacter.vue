@@ -47,7 +47,7 @@ const totalSteps = ref<number>(5);
 const stepTranslate = computed(() => {
     return `translate(${currentStep.value * -100}%, 0)`
 })
-const featureSelections = ref<{ [key: string]: vModelSelection }>({});
+const featureSelections = ref<{ [key: string]: {[key: number]: vModelSelection} }>({});
 const categoryRefs = ref<Array<HTMLElement>>([]);
 const categoryCollapse = ref<{ [step: number]: { [category: string]: boolean } }>({})
 
@@ -103,14 +103,17 @@ function visitEffects(effects: EffectGroupType | EffectGroupDictType, vModelObj:
 function updateCategories(categories_data: Categories) {
     for (let key in categories_data) {
         let features = categories_data[key]
-        for (let feature of features) {
+        for (let [idx, feature] of features.entries()) {
             if (!(feature.id in featureSelections.value)) {
-                featureSelections.value[feature.id] = {
+                featureSelections.value[feature.id] = []
+            }
+            if (!(idx in featureSelections.value[feature.id])) {
+                featureSelections.value[feature.id][idx] = {
                     selectedGroup: [],
                     selectedSelection: [],
                     selectedString: []
                 }
-                const selectionValues = featureSelections.value[feature.id]
+                const selectionValues = featureSelections.value[feature.id][idx]
                 visitEffects(feature.effects, selectionValues)
             }
         }
@@ -172,27 +175,30 @@ const activatedEffects = computed(() => {
         }
         return effects
     }
-    function findFeature(id: string): Feature | undefined {
+    function findFeatures(id: string): {idx: number, feature: Feature}[] {
+        const features: {idx: number, feature: Feature}[] = []
         for (let step in categories.value) {
             for (let category of Object.values(categories.value[step])) {
-                for (let feature of category) {
+                for (let [idx, feature] of category.entries()) {
                     if (id == feature.id) {
                         if (
                             (<ConditionalFeature>feature).condition === undefined
                             || (<ConditionalFeature>feature).condition()
-                        ) return feature
+                        ) features.push({idx, feature})
                     }
                 }
             }
         }
+        return features
     }
     const effects: EffectType[] = []
     for (let featureId in featureSelections.value) {
-        let feature = findFeature(featureId)
-        if (feature === undefined) continue
-        let selectedEffectIds = findSelectedEffectIds(featureSelections.value[featureId])
-        let effectDict = findAllEffects(feature.effects)
-        for (let effectId of selectedEffectIds) effects.push(effectDict[effectId])
+        let features = findFeatures(featureId)
+        for (let {idx, feature} of features) {
+            let selectedEffectIds = findSelectedEffectIds(featureSelections.value[featureId][idx])
+            let effectDict = findAllEffects(feature.effects)
+            for (let effectId of selectedEffectIds) effects.push(effectDict[effectId])
+        }
     }
     return effects
 })
@@ -257,7 +263,7 @@ const activatedEffects = computed(() => {
                                         <h3 class="font-bold text-lg">{{ feature.name }}</h3>
                                         <p class="description" v-html="feature.description"></p>
                                         <EffectGroup :id-prefix="`${currentStep}-${categoryName}-${idx}`"
-                                            :effects="feature.effects" v-model="featureSelections[feature.id]">
+                                            :effects="feature.effects" v-model="featureSelections[feature.id][idx]">
                                         </EffectGroup>
                                     </div>
                                 </template>
