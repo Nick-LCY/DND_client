@@ -74,7 +74,9 @@ function collapse(categoryName: string) {
 function visitEffects(effects: EffectGroupType, vModelObj: vModelSelection, inSelection: boolean = false) {
     for (let effect of effects) {
         if (isEffect(effect)) {
-            if (!inSelection) vModelObj.selectedString.push(effect.id)
+            let value = 0
+            if (!inSelection) value = 1
+            vModelObj.selectedString.push({ id: effect.id, value })
         } else if (isEffectSelection(effect)) {
             const subSelection: vModelSelection = {
                 selectedGroup: [],
@@ -144,7 +146,10 @@ function nextStep() {
 
 const activatedEffects = computed(() => {
     function findSelectedEffectIds(obj: vModelSelection): string[] {
-        const selectedEffects: string[] = [...obj.selectedString]
+        const selectedEffects: string[] = []
+        for (let selectedEffect of obj.selectedString) {
+            for (let i = 0; i < selectedEffect.value; i++) selectedEffects.push(selectedEffect.id)
+        }
         for (let selection of obj.selectedSelection) selectedEffects.push(...findSelectedEffectIds(selection))
         for (let group of obj.selectedGroup) selectedEffects.push(...findSelectedEffectIds(group))
         return selectedEffects
@@ -185,6 +190,7 @@ const activatedEffects = computed(() => {
         let effectDict = findAllEffects(feature.effects)
         for (let effectId of selectedEffectIds) effects.push(effectDict[effectId])
     }
+    console.log(effects)
     return effects
 })
 </script>
@@ -219,8 +225,7 @@ const activatedEffects = computed(() => {
                 class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">特质</h2>
             <h2 v-else class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">
                 简要说明</h2>
-            <div class="flex overflow-hidden h-64 w-full flex-grow"
-                :class="{ loading: store.loading }">
+            <div class="flex overflow-hidden h-64 w-full flex-grow" :class="{ loading: store.loading }">
                 <div class="flex-shrink-0 w-full p-4 text-4xl flex justify-center items-center"
                     :style="{ 'transform': stepTranslate }">
                     是饼🍪。

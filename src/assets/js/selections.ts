@@ -20,13 +20,15 @@ function filterByType<T>(
 }
 
 interface vModelSelection {
-    selectedString: string[],
+    selectedString: { id: string, value: number }[],
     selectedSelection: vModelSelection[],
     selectedGroup: vModelSelection[],
 }
 
 function isSelected(selection: vModelSelection): boolean {
-    if (selection.selectedString.length > 0) return true
+    for (let selectedEffect of selection.selectedString) {
+        if (selectedEffect.value > 0) return true
+    }
     for (let group of selection.selectedGroup) {
         if (isSelected(group)) return true
     }
@@ -38,7 +40,7 @@ function isSelected(selection: vModelSelection): boolean {
 
 function selectedCount(selection: vModelSelection): number {
     let counter = 0
-    counter += selection.selectedString.length
+    counter += selection.selectedString.reduce((o, n) => o + n.value, 0)
     for (let group of selection.selectedGroup) {
         if (isSelected(group)) counter += 1
     }

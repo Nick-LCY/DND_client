@@ -16,7 +16,8 @@ const props = withDefaults(
         effects: EffectGroupType,
         idPrefix: string,
         disabled?: boolean,
-        inSelection?: boolean }>(),
+        inSelection?: boolean
+    }>(),
     { disabled: false, inSelection: false }
 )
 const selectionIndex = computed(
@@ -32,7 +33,9 @@ const model = defineModel<vModelSelection>({ required: true })
 function addGroupToSelected() {
     if (props.disabled) return
     if (model.value.selectedString.length === 0) {
-        model.value.selectedString.push(...effectIndex.value.map(x => x.item.id))
+        model.value.selectedString.push(...effectIndex.value.map(
+            x => { return { id: x.item.id, value: 1 } })
+        )
     } else {
         model.value.selectedString.splice(0, model.value.selectedString.length)
     }
@@ -55,7 +58,8 @@ function addGroupToSelected() {
             <div class="flex items-start">
                 <div class="checkbox" v-if="inSelection" :class="{ checked: isSelected(model.selectedSelection[idx]) }">
                 </div>
-                <EffectSelection :idPrefix="`${idPrefix}-${idx}`" :disabled="disabled" v-model="model.selectedSelection[idx]" :effect="item">
+                <EffectSelection :idPrefix="`${idPrefix}-${idx}`" :disabled="disabled"
+                    v-model="model.selectedSelection[idx]" :effect="item">
                 </EffectSelection>
             </div>
         </div>
@@ -63,8 +67,8 @@ function addGroupToSelected() {
             <div class="flex items-start">
                 <div class="checkbox" v-if="inSelection" :class="{ checked: isSelected(model.selectedGroup[idx]) }">
                 </div>
-                <EffectGroup :idPrefix="`${idPrefix}-${idx}`" :disabled="disabled" v-model="model.selectedGroup[idx]" :effects="item"
-                    :inSelection="inSelection">
+                <EffectGroup :idPrefix="`${idPrefix}-${idx}`" :disabled="disabled" v-model="model.selectedGroup[idx]"
+                    :effects="item" :inSelection="inSelection">
                 </EffectGroup>
             </div>
         </div>

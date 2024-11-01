@@ -12,6 +12,7 @@ interface EffectGroup extends Array<Effect | EffectGroup | EffectSelection> {
 interface EffectSelection {
     choose: number
     available: EffectGroup
+    allow_repeat?: boolean
 }
 
 interface Feature {
