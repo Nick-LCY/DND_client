@@ -6,7 +6,7 @@ import type {
     EffectSelection as EffectSelectionType,
     Effect as EffectType
 } from '../../assets/js/originalDataType';
-import { isEffectGroup, isEffectSelection, isEffect } from '../../assets/js/originalDataType';
+import { isEffectGroup, isEffectSelection, isEffect, isEffectGroupOrEffectGroupDict } from '../../assets/js/originalDataType';
 import { renderMD } from '../../assets/js/renderMarkdown';
 import type { vModelSelection } from '../../assets/js/selections';
 import { filterByType, isSelected, selectedCount } from '../../assets/js/selections';
@@ -25,7 +25,9 @@ const selectionIndex = computed(
     () => filterByType<EffectSelectionType>(props.effects, isEffectSelection)
 )
 const groupIndex = computed(
-    () => filterByType<EffectGroupType>(props.effects, isEffectGroup)
+    () => filterByType<EffectGroupType | EffectGroupDictType>(
+        props.effects, isEffectGroupOrEffectGroupDict
+    )
 )
 const effectIndex = computed(
     () => filterByType<EffectType>(props.effects, isEffect)
@@ -80,29 +82,5 @@ function addGroupToSelected() {
     </div>
 </template>
 <style scoped>
-.checkbox-disabled {
-    @apply cursor-not-allowed text-gray-400;
-}
-
-.checkbox {
-    @apply w-4 h-4 rounded-sm border border-slate-50 relative mr-2 mt-1;
-}
-
-.checked::after,
-input[type="checkbox"]:checked+div>.checkbox::after {
-    content: " ";
-    @apply bg-slate-50 rounded-sm absolute;
-    top: 2px;
-    left: 2px;
-    bottom: 2px;
-    right: 2px;
-}
-
-.warning {
-    @apply text-yellow-400;
-}
-
-.disabled {
-    @apply text-gray-400;
-}
+@import url("../../assets/css/selection.css");
 </style>

@@ -97,6 +97,14 @@ function isEffectGroupDict(obj: Effect
     return (<EffectGroupDict>obj).type === "group_dict"
 }
 
+function isEffectGroupOrEffectGroupDict(obj: Effect
+    | EffectSelection
+    | EffectGroup
+    | EffectGroupDict
+): obj is (EffectGroupDict | EffectGroup) {
+    return !isEffect(obj) && !isEffectSelection(obj)
+}
+
 function isEffectSelection(obj: Effect
     | EffectSelection
     | EffectGroup
@@ -109,7 +117,8 @@ export {
     isEffect,
     isEffectSelection,
     isEffectGroup,
-    isEffectGroupDict
+    isEffectGroupDict,
+    isEffectGroupOrEffectGroupDict,
 }
 
 export type {
