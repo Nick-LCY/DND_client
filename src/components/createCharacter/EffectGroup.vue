@@ -39,12 +39,9 @@ const groupLength = computed(
 const model = defineModel<vModelSelection>({ required: true })
 function addGroupToSelected() {
     if (props.disabled) return
-    if (model.value.selectedString.length === 0) {
-        model.value.selectedString.push(...effectIndex.value.map(
-            x => { return { id: x.item.id, value: 1 } })
-        )
-    } else {
-        model.value.selectedString.splice(0, model.value.selectedString.length)
+    for (let item of model.value.selectedString) {
+        if (item.value === 0) item.value = 1
+        else item.value = 0
     }
 }
 </script>
