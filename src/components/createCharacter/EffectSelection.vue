@@ -59,13 +59,13 @@ function selectionMinus(idx: number) {
 </script>
 <template>
     <div>
-        <div class="font-bold text-green-500"
-            :class="{ warning: selectedCount(model) < effect.choose, disabled }">
+        <div class="font-bold text-green-500" :class="{ warning: selectedCount(model) < effect.choose, disabled }">
             [{{ selectedCount(model) }} / {{ effect.choose }}]
         </div>
         <template v-for="{ idx, item } of effectIndex">
             <label v-if="!effect.allow_repeat" :for="`${idPrefix}-${idx}`"
-                class="flex flex-col items-start cursor-pointer" :key="idx">
+                class="flex flex-col items-start cursor-pointer" :class="{ 'disabled': shouldDisabled(item.id) }"
+                :key="idx">
                 <input type="checkbox" :id="`${idPrefix}-${idx}`" :disabled="shouldDisabled(item.id)" :value="1"
                     v-model="model.selectedString[idx].value" class="hidden" v-if="!effect.allow_repeat">
                 <div class="flex items-start">

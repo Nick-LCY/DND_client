@@ -1,7 +1,3 @@
-.checkbox-disabled {
-    @apply cursor-not-allowed text-gray-400;
-}
-
 .checkbox {
     @apply w-4 h-4 rounded-sm border border-slate-50 relative mr-2 mt-1;
 }
@@ -21,7 +17,7 @@ input[type="checkbox"]:checked+div>.checkbox::after {
 }
 
 .disabled {
-    @apply text-gray-400;
+    @apply text-gray-400 cursor-not-allowed;
 }
 
 button:disabled div {
