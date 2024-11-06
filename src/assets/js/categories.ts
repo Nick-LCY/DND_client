@@ -15,8 +15,7 @@ interface Feature {
     name: string
     description: string
     effects: EffectGroup | EffectGroupDict
-    // TODO: remove selection
-    selection?: Selection
+    sources: string[]
 }
 
 interface ConditionalFeature {
@@ -25,6 +24,7 @@ interface ConditionalFeature {
     name: string
     description: string
     effects: EffectGroup | EffectGroupDict
+    sources: string[]
 }
 interface Categories {
     [key: string]: Array<Feature | ConditionalFeature>

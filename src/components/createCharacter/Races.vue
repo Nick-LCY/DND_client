@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { processFeatures } from '../../assets/js/featureProcessing';
+import { mergeCategories, processFeatures } from '../../assets/js/featureProcessing';
 import { renderMD } from '../../assets/js/renderMarkdown';
 import { getByDataType } from '../../assets/js/api/getByDataType';
 import { getById } from '../../assets/js/api/getById';
@@ -22,7 +22,7 @@ async function changeRace() {
     let raceData = await getById<Race>(raceSelection.value.race);
     raceSelection.value.subrace = "none"
     subraces.value = [{ id: "none", name: "无" }, ...raceData.subraces]
-    let categories = processFeatures(raceData.features)
+    let categories = processFeatures(raceData.features, [raceSelection.value.race])
     description.value.race = renderMD(raceData.description)
     emit("change", categories)
     store.endLoad()
@@ -37,11 +37,11 @@ async function changeSubrace() {
         currentDescription.value = "race"
         return
     }
-    let features = raceData.features
+    let raceFeatures = raceData.features
     for (let subrace of raceData.subraces) {
         if (subrace.id === subraceId) {
             if (subrace.remove_features != undefined) {
-                features = features.filter(feature => {
+                raceFeatures = raceFeatures.filter(feature => {
                     let needToRemove = false
                     subrace.remove_features?.forEach(v => {
                         if (v.id == feature.id) needToRemove = true
@@ -49,14 +49,22 @@ async function changeSubrace() {
                     return !needToRemove
                 })
             }
-            features = [...features, ...subrace.features]
+            let categories = mergeCategories(
+                processFeatures(raceFeatures, [raceSelection.value.race]),
+                processFeatures(
+                    subrace.features,
+                    [
+                        raceSelection.value.race,
+                        raceSelection.value.subrace
+                    ]
+                )
+            )
             description.value.subrace = renderMD(subrace.description)
-            break
+            emit("change", categories)
+            store.endLoad()
+            return
         }
     }
-    let categories = processFeatures(features)
-    emit("change", categories)
-    store.endLoad()
 }
 
 function changeCurrentDescription() {

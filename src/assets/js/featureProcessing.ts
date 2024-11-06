@@ -2,28 +2,8 @@ import { Feature as OriginalFeature, LeveledFeature } from "./originalDataType";
 import { Categories, ConditionalFeature, Feature } from "./categories";
 import { renderMD } from "./renderMarkdown";
 import { Ref } from "vue";
-interface ProcessedData {
-    categories: Categories
-    description: string
-}
 
-interface OriginalSubclass {
-    features: Array<OriginalFeature>
-}
-
-interface OriginalSubrace {
-    features: Array<OriginalFeature>
-}
-
-
-interface OriginalData {
-    description: string
-    features: Array<OriginalFeature>
-    selectedSubclass?: OriginalSubclass
-    selectedSubrace?: OriginalSubrace
-}
-
-function processFeatures(features: OriginalFeature[]): Categories {
+function processFeatures(features: OriginalFeature[], sources: string[]): Categories {
     const categories: Categories = {};
     for (let feature of features) {
         if (!(feature.category in categories)) {
@@ -34,14 +14,15 @@ function processFeatures(features: OriginalFeature[]): Categories {
             name: feature.name,
             description: renderMD(feature.description),
             // Effect description rendering is done in EffectSelection.vue
-            effects: feature.effects
+            effects: feature.effects,
+            sources
         }
         categories[feature.category].push(data)
     }
     return categories
 }
 
-function processLeveledFeatures(features: LeveledFeature[], selectionProxy: Ref<{ level: number }>): Categories {
+function processLeveledFeatures(features: LeveledFeature[], selectionProxy: Ref<{ level: number }>, sources: string[]): Categories {
     const categories: Categories = {};
     for (let leveledFeature of features) {
         let feature = leveledFeature.feature
@@ -57,7 +38,8 @@ function processLeveledFeatures(features: LeveledFeature[], selectionProxy: Ref<
                         leveledFeature.end_level === undefined
                         || selectionProxy.value.level < leveledFeature.end_level
                     )
-            }
+            },
+            sources
         }
         if (!(feature.category in categories)) {
             categories[feature.category] = []
@@ -78,28 +60,7 @@ function mergeCategories(...categoriesList: Categories[]): Categories {
     return finalCategories
 }
 
-function updateCategories(originalData: OriginalData): ProcessedData {
-    let categories = processFeatures(originalData.features)
-    if (originalData.selectedSubclass != undefined) {
-        categories = {
-            ...categories,
-            ...processFeatures(originalData.selectedSubclass.features)
-        }
-    }
-    if (originalData.selectedSubrace != undefined) {
-        categories = {
-            ...categories,
-            ...processFeatures(originalData.selectedSubrace.features)
-        }
-    }
-    return {
-        categories: categories,
-        description: renderMD(originalData.description)
-    }
-}
-
 export {
-    updateCategories,
     processFeatures,
     processLeveledFeatures,
     mergeCategories

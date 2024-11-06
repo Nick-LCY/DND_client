@@ -9,15 +9,16 @@ import {
     Effect as EffectType,
     EffectGroup as EffectGroupType,
     EffectSelection as EffectSelectionType,
+    EffectGroupDict as EffectGroupDictType,
     isEffect,
     isEffectSelection,
-    EffectGroupDict as EffectGroupDictType,
     isEffectGroupDict
 } from '../assets/js/originalDataType';
 import { vModelSelection } from '../assets/js/selections';
 import EffectGroup from '../components/createCharacter/EffectGroup.vue';
 import StatusBar from '../components/createCharacter/StatusBar.vue';
 import { store } from '../assets/js/store';
+import { SourcedEffectType } from '../assets/js/context/dataType';
 import _ from "lodash";
 
 const categories = ref<{ [key: number]: Categories }>({});
@@ -47,7 +48,7 @@ const totalSteps = ref<number>(5);
 const stepTranslate = computed(() => {
     return `translate(${currentStep.value * -100}%, 0)`
 })
-const featureSelections = ref<{ [key: string]: {[key: number]: vModelSelection} }>({});
+const featureSelections = ref<{ [key: string]: { [key: number]: vModelSelection } }>({});
 const categoryRefs = ref<Array<HTMLElement>>([]);
 const categoryCollapse = ref<{ [step: number]: { [category: string]: boolean } }>({})
 
@@ -175,8 +176,8 @@ const activatedEffects = computed(() => {
         }
         return effects
     }
-    function findFeatures(id: string): {idx: number, feature: Feature}[] {
-        const features: {idx: number, feature: Feature}[] = []
+    function findFeatures(id: string): { idx: number, feature: Feature }[] {
+        const features: { idx: number, feature: Feature }[] = []
         for (let step in categories.value) {
             for (let category of Object.values(categories.value[step])) {
                 for (let [idx, feature] of category.entries()) {
@@ -184,20 +185,21 @@ const activatedEffects = computed(() => {
                         if (
                             (<ConditionalFeature>feature).condition === undefined
                             || (<ConditionalFeature>feature).condition()
-                        ) features.push({idx, feature})
+                        ) features.push({ idx, feature })
                     }
                 }
             }
         }
         return features
     }
-    const effects: EffectType[] = []
+    const effects: SourcedEffectType[] = []
     for (let featureId in featureSelections.value) {
         let features = findFeatures(featureId)
-        for (let {idx, feature} of features) {
+        for (let { idx, feature } of features) {
             let selectedEffectIds = findSelectedEffectIds(featureSelections.value[featureId][idx])
             let effectDict = findAllEffects(feature.effects)
-            for (let effectId of selectedEffectIds) effects.push(effectDict[effectId])
+            for (let effectId of selectedEffectIds)
+                effects.push({ sources: feature.sources, effect: effectDict[effectId] })
         }
     }
     return effects

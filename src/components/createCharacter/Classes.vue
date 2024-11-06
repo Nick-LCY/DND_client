@@ -36,8 +36,10 @@ async function changeClass() {
     subclassAvailableLevel.value = classData.subclasses_available_level
     subclassName.value = classData.subclass_name
     subclasses.value = classData.subclasses
-    let categories = processFeatures(classData.features)
-    let leveledFeatureCategories = processLeveledFeatures(classData.leveled_features, classSelection)
+    let categories = processFeatures(classData.features, [classSelection.value.id])
+    let leveledFeatureCategories = processLeveledFeatures(
+        classData.leveled_features, classSelection, [classSelection.value.id]
+    )
     categories = mergeCategories(categories, leveledFeatureCategories)
     description.value = renderMD(classData.description)
     emit("change", categories)
@@ -48,21 +50,42 @@ async function changeSubclass() {
     store.startLoad()
     let classData = await getById<Class>(classSelection.value.id);
     let subclassId = classSelection.value.subclass
-    let features = classData.features
-    let leveledFeatures = classData.leveled_features
+    let classFeatures = classData.features
+    let subclassFeatures
+    let classLeveledFeatures = classData.leveled_features
+    let subclassLeveledFeatures
     for (let subclass of classData.subclasses) {
         if (subclass.id === subclassId) {
-            features = [...features, ...subclass.features]
-            leveledFeatures = [...leveledFeatures, ...subclass.leveled_features]
-            break
+            subclassFeatures = subclass.features
+            subclassLeveledFeatures = subclass.leveled_features
+            let categories = mergeCategories(
+                processFeatures(classFeatures, [classSelection.value.id]),
+                processLeveledFeatures(
+                    classLeveledFeatures,
+                    classSelection,
+                    [classSelection.value.id]
+                ),
+                processFeatures(
+                    subclassFeatures,
+                    [
+                        classSelection.value.id,
+                        classSelection.value.subclass
+                    ]
+                ),
+                processLeveledFeatures(
+                    subclassLeveledFeatures,
+                    classSelection,
+                    [
+                        classSelection.value.id,
+                        classSelection.value.subclass
+                    ]
+                ),
+            )
+            emit("change", categories)
+            store.endLoad()
+            return
         }
     }
-    let categories = mergeCategories(
-        processFeatures(features),
-        processLeveledFeatures(leveledFeatures, classSelection)
-    )
-    emit("change", categories)
-    store.endLoad()
 }
 
 function levelDown() {
