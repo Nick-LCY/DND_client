@@ -1,8 +1,17 @@
+interface Expression {
+    target: string
+    operation: ("+" | "+=" | "-" | "-=" | "=")
+    values: (
+        Expression |
+        boolean |
+        number |
+        string)[]
+}
 interface Effect {
     id: string
     name: string
     description: string
-    expressions: string[]
+    expressions: Expression[]
 }
 
 interface EffectGroup extends Array<Effect | EffectGroup | EffectSelection> {
@@ -130,6 +139,7 @@ export type {
     EffectGroup,
     EffectGroupDict,
     Effect,
+    Expression,
     Class,
     Subclass
 }

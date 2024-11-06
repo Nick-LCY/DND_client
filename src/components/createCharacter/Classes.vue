@@ -36,9 +36,9 @@ async function changeClass() {
     subclassAvailableLevel.value = classData.subclasses_available_level
     subclassName.value = classData.subclass_name
     subclasses.value = classData.subclasses
-    let categories = processFeatures(classData.features, [classSelection.value.id])
+    let categories = processFeatures(classData.features, [classData.name])
     let leveledFeatureCategories = processLeveledFeatures(
-        classData.leveled_features, classSelection, [classSelection.value.id]
+        classData.leveled_features, classSelection, [classData.name]
     )
     categories = mergeCategories(categories, leveledFeatureCategories)
     description.value = renderMD(classData.description)
@@ -50,6 +50,7 @@ async function changeSubclass() {
     store.startLoad()
     let classData = await getById<Class>(classSelection.value.id);
     let subclassId = classSelection.value.subclass
+    let subclassName = classData.subclasses.filter(v => v.id === subclassId)[0].name
     let classFeatures = classData.features
     let subclassFeatures
     let classLeveledFeatures = classData.leveled_features
@@ -59,26 +60,20 @@ async function changeSubclass() {
             subclassFeatures = subclass.features
             subclassLeveledFeatures = subclass.leveled_features
             let categories = mergeCategories(
-                processFeatures(classFeatures, [classSelection.value.id]),
+                processFeatures(classFeatures, [classData.name]),
                 processLeveledFeatures(
                     classLeveledFeatures,
                     classSelection,
-                    [classSelection.value.id]
+                    [classData.name]
                 ),
                 processFeatures(
                     subclassFeatures,
-                    [
-                        classSelection.value.id,
-                        classSelection.value.subclass
-                    ]
+                    [classData.name, subclassName]
                 ),
                 processLeveledFeatures(
                     subclassLeveledFeatures,
                     classSelection,
-                    [
-                        classSelection.value.id,
-                        classSelection.value.subclass
-                    ]
+                    [classData.name, subclassName]
                 ),
             )
             emit("change", categories)

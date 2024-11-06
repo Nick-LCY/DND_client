@@ -1,24 +1,94 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { Effect as EffectType } from '../../assets/js/originalDataType';
-import Character from '../../assets/js/context/character';
+import { ref, watch } from 'vue';
+import { SourcedEffectType } from '../../assets/js/context/dataType';
+import { Expression } from '../../assets/js/originalDataType';
+import { character, Character, CharacterStack } from '../../assets/js/context/template';
+import { findTarget, findBeforeTarget, deepCopy } from '../../assets/js/context/utils';
 
-const props = defineProps<{ activatedEffects: EffectType[] }>()
-const expressions = computed(
-    () => props.activatedEffects.reduce(
-        (prev: string[], current: EffectType): string[] => [...prev, ...current.expressions],
-        []
-    )
-)
+const props = defineProps<{ activatedEffects: SourcedEffectType[] }>()
 
-const character = ref(new Character())
-watch(expressions, () => {
-    character.value.reset()
-    function callInContext(js: string) {
-        return function (js: string) { return eval(js) }.call({ character: character.value }, js)
+function findRootObject(target: string): any {
+    let root = target.split(".")[0]
+    switch (root) {
+        case "character":
+            return processedCharacter.value
     }
-    for (let expression of expressions.value) {
-        callInContext(expression)
+}
+
+function processExpression(expression: Expression): any {
+    let { target, operation, values } = expression
+    // Step1, find target
+    const root = findRootObject(target)
+    const splitedTarget = target.split(".")
+    let child: string
+    let parent: any
+    if (splitedTarget.length == 2) {
+        parent = root
+        child = splitedTarget[1]
+    } else {
+        parent = findBeforeTarget(splitedTarget.slice(1).join("."), root)
+        child = splitedTarget.slice(-1)[0]
+    }
+    // Step2, compute value
+    const computedValues = []
+    for (let v of values) {
+        if (typeof v === "object") computedValues.push(processExpression(v))
+        else computedValues.push(v)
+    }
+    // Step3, process operation
+    switch (operation) {
+        case "+=":
+            parent[child] += Number(computedValues[0])
+            break
+        case "-=":
+            parent[child] -= Number(computedValues[0])
+            break
+        case "=":
+            parent[child] = computedValues[0]
+            break
+        case "+":
+            return parent[child] + Number(computedValues[0])
+        case "-":
+            return parent[child] - Number(computedValues[0])
+    }
+}
+
+const processedCharacter = ref<Character>(deepCopy<Character>(character, {}))
+const characterStack = ref<CharacterStack>({
+    abilities: { str: [], dex: [], con: [], wis: [], int: [], cha: [] },
+    saves: { str: [], dex: [], con: [], wis: [], int: [], cha: [] }
+})
+
+watch(() => props.activatedEffects, (v) => {
+    // Clean
+    deepCopy(character, processedCharacter.value)
+    for (let entry of Object.values(characterStack.value)) {
+        for (let abilityEntry of Object.values(entry)) {
+            abilityEntry.splice(0)
+        }
+    }
+    // Push
+    for (let sourcedEffect of v) {
+        for (let expression of sourcedEffect.effect.expressions) {
+            const { target } = expression
+            let target_obj = target.split(".")[0]
+            switch (target_obj) {
+                case "character":
+                    findTarget(target.split(".").slice(1).join("."), characterStack.value).push({
+                        sources: sourcedEffect.sources,
+                        expression
+                    })
+            }
+        }
+    }
+    // Compute
+    for (let entry of Object.values(characterStack.value)) {
+        for (let abilityEntry of Object.values(entry)) {
+            for (let { expression, sources } of abilityEntry) {
+                processExpression(expression)
+                console.log(sources)
+            }
+        }
     }
 })
 
@@ -30,19 +100,18 @@ const nameMapping = {
     wis: "感",
     cha: "魅",
 }
-
 </script>
 <template>
     <div class="bg-slate-700 flex flex-col items-stretch justify-center px-1">
         <div class="text-center font-bold text-lg py-1">属性</div>
-        <div v-for="(value, ability) in character.abilities"
+        <div v-for="(displayName, abilityName) of nameMapping"
             class="text-center flex items-center justify-center border-t border-slate-50 py-2 last:border-b">
             <div class="flex flex-col">
                 <div>
-                    <span>{{ nameMapping[ability] }}</span>
-                    <span v-if="character.saves[ability]">*</span>
+                    <span>{{ displayName }}</span>
+                    <span v-if="processedCharacter.saves[abilityName]">*</span>
                 </div>
-                <span class="text-xl">{{ value }}</span>
+                <span class="text-xl">{{ processedCharacter.abilities[abilityName] }}</span>
             </div>
         </div>
     </div>

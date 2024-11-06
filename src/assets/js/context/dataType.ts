@@ -1,7 +1,12 @@
-import { Effect } from "../originalDataType"
+import { Effect, Expression } from "../originalDataType"
 interface SourcedEffectType {
     sources: string[]
     effect: Effect
 }
 
-export type { SourcedEffectType }
+interface SourcedExpressionType {
+    sources: string[]
+    expression: Expression
+}
+
+export type { SourcedEffectType, SourcedExpressionType }
