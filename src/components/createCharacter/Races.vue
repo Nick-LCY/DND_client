@@ -22,7 +22,7 @@ async function changeRace() {
     let raceData = await getById<Race>(raceSelection.value.race);
     raceSelection.value.subrace = "none"
     subraces.value = [{ id: "none", name: "无" }, ...raceData.subraces]
-    let categories = processFeatures(raceData.features, [raceData.name])
+    let categories = processFeatures(raceData.features, ["种族", raceData.name])
     description.value.race = renderMD(raceData.description)
     emit("change", categories)
     store.endLoad()
@@ -50,10 +50,10 @@ async function changeSubrace() {
                 })
             }
             let categories = mergeCategories(
-                processFeatures(raceFeatures, [raceData.name]),
+                processFeatures(raceFeatures, ["种族", raceData.name]),
                 processFeatures(
                     subrace.features,
-                    [raceData.name, subrace.name]
+                    ["种族", raceData.name, subrace.name]
                 )
             )
             description.value.subrace = renderMD(subrace.description)

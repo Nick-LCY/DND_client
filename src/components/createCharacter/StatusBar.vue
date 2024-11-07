@@ -3,7 +3,7 @@ import { ref, watch } from 'vue';
 import { SourcedEffectType } from '../../assets/js/context/dataType';
 import { Expression } from '../../assets/js/originalDataType';
 import { character, Character, CharacterStack } from '../../assets/js/context/template';
-import { findTarget, findBeforeTarget, deepCopy } from '../../assets/js/context/utils';
+import { findTarget, findBeforeTarget, deepReset } from '../../assets/js/context/utils';
 
 const props = defineProps<{ activatedEffects: SourcedEffectType[] }>()
 
@@ -15,8 +15,12 @@ function findRootObject(target: string): any {
     }
 }
 
-function processExpression(expression: Expression): any {
+function processExpression(
+    expression: Expression,
+    reportResult?: {result: string} | undefined
+): any {
     let { target, operation, values } = expression
+    const localReportResult = reportResult === undefined ? {result: ""} : reportResult
     // Step1, find target
     const root = findRootObject(target)
     const splitedTarget = target.split(".")
@@ -39,21 +43,25 @@ function processExpression(expression: Expression): any {
     switch (operation) {
         case "+=":
             parent[child] += Number(computedValues[0])
+            localReportResult.result = `+${Number(computedValues[0])}`
             break
         case "-=":
             parent[child] -= Number(computedValues[0])
+            localReportResult.result = `-${Number(computedValues[0])}`
             break
         case "=":
             parent[child] = computedValues[0]
+            localReportResult.result = `=${computedValues[0]}`
             break
         case "+":
             return parent[child] + Number(computedValues[0])
         case "-":
             return parent[child] - Number(computedValues[0])
     }
+
 }
 
-const processedCharacter = ref<Character>(deepCopy<Character>(character, {}))
+const processedCharacter = ref<Character>(deepReset<Character>(character, {}))
 const characterStack = ref<CharacterStack>({
     abilities: { str: [], dex: [], con: [], wis: [], int: [], cha: [] },
     saves: { str: [], dex: [], con: [], wis: [], int: [], cha: [] }
@@ -61,7 +69,7 @@ const characterStack = ref<CharacterStack>({
 
 watch(() => props.activatedEffects, (v) => {
     // Clean
-    deepCopy(character, processedCharacter.value)
+    deepReset(character, processedCharacter.value)
     for (let entry of Object.values(characterStack.value)) {
         for (let abilityEntry of Object.values(entry)) {
             abilityEntry.splice(0)
@@ -85,8 +93,9 @@ watch(() => props.activatedEffects, (v) => {
     for (let entry of Object.values(characterStack.value)) {
         for (let abilityEntry of Object.values(entry)) {
             for (let { expression, sources } of abilityEntry) {
-                processExpression(expression)
-                console.log(sources)
+                const reportResult = {result: ""}
+                processExpression(expression, reportResult)
+                console.log(sources, reportResult.result)
             }
         }
     }

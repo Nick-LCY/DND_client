@@ -36,9 +36,9 @@ async function changeClass() {
     subclassAvailableLevel.value = classData.subclasses_available_level
     subclassName.value = classData.subclass_name
     subclasses.value = classData.subclasses
-    let categories = processFeatures(classData.features, [classData.name])
+    let categories = processFeatures(classData.features, ["职业", classData.name])
     let leveledFeatureCategories = processLeveledFeatures(
-        classData.leveled_features, classSelection, [classData.name]
+        classData.leveled_features, classSelection, ["职业", classData.name]
     )
     categories = mergeCategories(categories, leveledFeatureCategories)
     description.value = renderMD(classData.description)
@@ -60,20 +60,20 @@ async function changeSubclass() {
             subclassFeatures = subclass.features
             subclassLeveledFeatures = subclass.leveled_features
             let categories = mergeCategories(
-                processFeatures(classFeatures, [classData.name]),
+                processFeatures(classFeatures, ["职业", classData.name]),
                 processLeveledFeatures(
                     classLeveledFeatures,
                     classSelection,
-                    [classData.name]
+                    ["职业", classData.name]
                 ),
                 processFeatures(
                     subclassFeatures,
-                    [classData.name, subclassName]
+                    ["职业", classData.name, subclassName]
                 ),
                 processLeveledFeatures(
                     subclassLeveledFeatures,
                     classSelection,
-                    [classData.name, subclassName]
+                    ["职业", classData.name, subclassName]
                 ),
             )
             emit("change", categories)

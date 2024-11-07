@@ -176,16 +176,16 @@ const activatedEffects = computed(() => {
         }
         return effects
     }
-    function findFeatures(id: string): { idx: number, feature: Feature }[] {
-        const features: { idx: number, feature: Feature }[] = []
+    function findFeatures(id: string): { idx: number, feature: Feature, categoryName: string }[] {
+        const features: { idx: number, feature: Feature, categoryName: string }[] = []
         for (let step in categories.value) {
-            for (let category of Object.values(categories.value[step])) {
+            for (let [categoryName, category] of Object.entries(categories.value[step])) {
                 for (let [idx, feature] of category.entries()) {
                     if (id == feature.id) {
                         if (
                             (<ConditionalFeature>feature).condition === undefined
                             || (<ConditionalFeature>feature).condition()
-                        ) features.push({ idx, feature })
+                        ) features.push({ idx, feature, categoryName })
                     }
                 }
             }
@@ -195,11 +195,11 @@ const activatedEffects = computed(() => {
     const effects: SourcedEffectType[] = []
     for (let featureId in featureSelections.value) {
         let features = findFeatures(featureId)
-        for (let { idx, feature } of features) {
+        for (let { idx, feature, categoryName } of features) {
             let selectedEffectIds = findSelectedEffectIds(featureSelections.value[featureId][idx])
             let effectDict = findAllEffects(feature.effects)
             for (let effectId of selectedEffectIds)
-                effects.push({ sources: feature.sources, effect: effectDict[effectId] })
+                effects.push({ sources: [...feature.sources, categoryMapping[categoryName], feature.name], effect: effectDict[effectId] })
         }
     }
     return effects
