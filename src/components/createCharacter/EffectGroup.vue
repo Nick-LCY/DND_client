@@ -51,10 +51,10 @@ function addGroupToSelected() {
             :class="{ warning: selectedCount(model) < groupLength, disabled: disabled }">
             [{{ selectedCount(model) }} / {{ groupLength }}]
         </div>
-        <button v-if="inSelection" @click="addGroupToSelected" class="flex flex-col">
+        <button v-if="inSelection" @click="addGroupToSelected" class="flex flex-col text-left">
             <div v-for="{ idx, item } of effectIndex" :key="idx" :class="{ 'disabled': disabled }">
                 <div class="break-all">{{ item.name ? item.name : item.id }}</div>
-                <div class="description pl-6 text-slate-400" v-html="renderMD(item.description)">
+                <div class="description text-slate-400" v-html="renderMD(item.description)">
                 </div>
             </div>
         </button>

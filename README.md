@@ -1,5 +1,33 @@
-# Vue 3 + TypeScript + Vite
-
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
-
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+# DND Client
+为DND玩家设计的网页客户端。
+## 概述 
+该项目目前的目标是为DND5e提供一个现代化的、基于网页的车卡工具。附带目标则为对DND5e的规则进行结构化的存储。目前项目提供了一个测试用的网页，可以通过以下网址访问：[https://dnd5e.nicklin.work/create-character](https://dnd5e.nicklin.work/create-character)，如果在测试过程中发现了任何问题，欢迎与我联系。
+## TODO
+项目目前仍处于早期阶段，所以不会有正式的版本号，以下列出了已经实现的功能以及计划实现的功能。如果你希望为DND的结构化数据做出贡献，欢迎移步[DND_core](https://github.com/Nick-LCY/DND_core)仓库参观。
+- [ ] 网页设计
+  - [x] 种族选择
+  - [x] 职业选择
+  - [ ] 背景选择
+  - [ ] 属性购点
+  - [ ] 特长、法表、装备
+- [ ] 数据
+  - [ ] 种族
+    - [x] 提夫林
+    - [x] 半身人
+    - [x] 侏儒
+    - [x] 精灵
+    - [x] 人类
+    - [x] 矮人
+    - [x] 半精灵
+    - [x] 龙裔
+    - [x] 半兽人
+    - [ ] 校对
+  - [ ] 职业
+    - [x] 游侠
+    - [x] 吟游诗人
+    - [x] 德鲁伊
+    - [ ] 其他9个职业 - 进行中
+    - [ ] 校对
+  - [ ] 背景
+  - [ ] 物品
+  - [ ] 法术、戏法
