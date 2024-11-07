@@ -95,6 +95,6 @@
     background-repeat: no-repeat;
     background-position: center;
     animation: show 150ms ease;
-    @apply z-50;
+    @apply z-10;
 }
 

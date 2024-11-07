@@ -24,5 +24,5 @@ const character: Character = {
     }
 }
 
-export type { Character, CharacterStack }
+export type { Character, CharacterStack, AbilityKeys }
 export { character }

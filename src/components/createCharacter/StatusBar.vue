@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { SourcedEffectType } from '../../assets/js/context/dataType';
 import { Expression } from '../../assets/js/originalDataType';
-import { character, Character, CharacterStack } from '../../assets/js/context/template';
+import type { Character, CharacterStack, AbilityKeys } from '../../assets/js/context/template';
+import { character } from '../../assets/js/context/template';
 import { findTarget, findBeforeTarget, deepReset } from '../../assets/js/context/utils';
+import { shortNameMapping, nameMapping } from '../../assets/js/mappings';
+import { store } from '../../assets/js/store';
 
 const props = defineProps<{ activatedEffects: SourcedEffectType[] }>()
 
@@ -17,10 +20,10 @@ function findRootObject(target: string): any {
 
 function processExpression(
     expression: Expression,
-    reportResult?: {result: string} | undefined
+    reportResult?: { result: string } | undefined
 ): any {
     let { target, operation, values } = expression
-    const localReportResult = reportResult === undefined ? {result: ""} : reportResult
+    const localReportResult = reportResult === undefined ? { result: "" } : reportResult
     // Step1, find target
     const root = findRootObject(target)
     const splitedTarget = target.split(".")
@@ -61,8 +64,20 @@ function processExpression(
 
 }
 
+interface sourceRepresentation {
+    sources: string[]
+    result: string
+}
+
 const processedCharacter = ref<Character>(deepReset<Character>(character, {}))
 const characterStack = ref<CharacterStack>({
+    abilities: { str: [], dex: [], con: [], wis: [], int: [], cha: [] },
+    saves: { str: [], dex: [], con: [], wis: [], int: [], cha: [] }
+})
+const effectSources = ref<{
+    abilities: Record<AbilityKeys, sourceRepresentation[]>
+    saves: Record<AbilityKeys, sourceRepresentation[]>
+}>({
     abilities: { str: [], dex: [], con: [], wis: [], int: [], cha: [] },
     saves: { str: [], dex: [], con: [], wis: [], int: [], cha: [] }
 })
@@ -71,6 +86,11 @@ watch(() => props.activatedEffects, (v) => {
     // Clean
     deepReset(character, processedCharacter.value)
     for (let entry of Object.values(characterStack.value)) {
+        for (let abilityEntry of Object.values(entry)) {
+            abilityEntry.splice(0)
+        }
+    }
+    for (let entry of Object.values(effectSources.value)) {
         for (let abilityEntry of Object.values(entry)) {
             abilityEntry.splice(0)
         }
@@ -90,38 +110,110 @@ watch(() => props.activatedEffects, (v) => {
         }
     }
     // Compute
-    for (let entry of Object.values(characterStack.value)) {
-        for (let abilityEntry of Object.values(entry)) {
+    for (let [key, entry] of Object.entries(characterStack.value)) {
+        for (let [abilityKey, abilityEntry] of Object.entries(entry)) {
             for (let { expression, sources } of abilityEntry) {
-                const reportResult = {result: ""}
+                const reportResult = { result: "" }
                 processExpression(expression, reportResult)
-                console.log(sources, reportResult.result)
+                effectSources.value[key as keyof typeof effectSources.value][abilityKey as AbilityKeys].push(
+                    { sources, result: reportResult.result }
+                )
             }
         }
     }
 })
 
-const nameMapping = {
-    str: "力",
-    dex: "敏",
-    con: "体",
-    int: "智",
-    wis: "感",
-    cha: "魅",
+
+const popoutHidden = ref(true)
+const sections = computed(() => {
+    const localSections: Record<AbilityKeys, { name: string, content: sourceRepresentation[] }[]> = {
+        str: [], dex: [], con: [],
+        wis: [], int: [], cha: [],
+    }
+    for (let [entryName, entry] of Object.entries(effectSources.value)) {
+        for (let [abilityKey, abilityEntries] of Object.entries(entry)) {
+            let content = abilityEntries.slice(0)
+            switch (entryName) {
+                case "abilities":
+                    localSections[abilityKey as AbilityKeys].push(
+                        { "name": "数值", content }
+                    )
+                    break
+                case "saves":
+                    localSections[abilityKey as AbilityKeys].push(
+                        { "name": "豁免熟练项", content }
+                    )
+                    break
+            }
+        }
+    }
+    return localSections
+})
+const selectedSections = computed(() => sections.value[currentOpen.value])
+const currentOpen = ref<AbilityKeys>("str")
+function openPopout(abilityName: AbilityKeys) {
+    if (abilityName === currentOpen.value && !popoutHidden.value) {
+        popoutHidden.value = true
+    } else {
+        popoutHidden.value = false
+        currentOpen.value = abilityName
+    }
 }
 </script>
 <template>
-    <div class="bg-slate-700 flex flex-col items-stretch justify-center px-1">
-        <div class="text-center font-bold text-lg py-1">属性</div>
-        <div v-for="(displayName, abilityName) of nameMapping"
-            class="text-center flex items-center justify-center border-t border-slate-50 py-2 last:border-b">
-            <div class="flex flex-col">
-                <div>
-                    <span>{{ displayName }}</span>
-                    <span v-if="processedCharacter.saves[abilityName]">*</span>
+    <div class="relative">
+        <div class="bg-slate-700 flex flex-col items-stretch justify-center px-1 w-full h-full relative z-20">
+            <div class="text-center font-bold text-lg py-1">属性</div>
+            <div v-for="(displayName, abilityName) of shortNameMapping"
+                class="text-center flex justify-center border-t border-slate-50 py-1 last:border-b">
+                <button
+                    class="flex flex-col items-center cursor-pointer select-none w-full hover:bg-slate-500 rounded-sm transition-colors py-1"
+                    @click="openPopout(abilityName)">
+                    <div>
+                        <span>{{ displayName }}</span>
+                        <span v-if="processedCharacter.saves[abilityName]">*</span>
+                    </div>
+                    <span class="text-xl">{{ processedCharacter.abilities[abilityName] }}</span>
+                </button>
+            </div>
+        </div>
+        <div class="popout flex flex-col items-stretch" :class="{ 'popout-hidden': popoutHidden }">
+            <button
+                class="cursor-pointer select-none text-center flex-shrink-0 bg-slate-600 transition hover:bg-slate-500 text-3xl"
+                @click="popoutHidden = true">
+                ×
+            </button>
+            <div class="h-1 flex-grow flex flex-col" :class="{ loading: store.loading }">
+                <div class="text-xl text-center mt-2 flex-shrink-0">{{ nameMapping[currentOpen] }}构成</div>
+                <div class="scroll-xs overflow-y-auto p-2">
+                    <div v-for="(section, idx) of selectedSections" :key="idx" class="mb-2">
+                        <div class="text-lg font-bold">{{ section.name }}</div>
+                        <template v-if="section.content.length !== 0">
+                            <div v-for="content of section.content" class="section-content">
+                                <div class="text-sm"> {{ content.sources.join(">") }} </div>
+                                <div> {{ content.result }} </div>
+                            </div>
+                        </template>
+                        <div v-else class="text-sm section-content">无相关特性</div>
+                    </div>
                 </div>
-                <span class="text-xl">{{ processedCharacter.abilities[abilityName] }}</span>
             </div>
         </div>
     </div>
 </template>
+<style scoped>
+.popout {
+    @apply absolute z-10 w-64 h-96 top-4 bg-slate-800 rounded-lg shadow-lg;
+    @apply border-2 border-slate-600;
+    @apply transition-all overflow-hidden;
+    left: -17.3rem;
+}
+
+.popout-hidden {
+    left: 0;
+}
+
+.section-content {
+    @apply hover:bg-slate-700 p-1 rounded-sm transition-colors;
+}
+</style>

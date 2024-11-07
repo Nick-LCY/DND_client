@@ -206,7 +206,7 @@ const activatedEffects = computed(() => {
 })
 </script>
 <template>
-    <main>
+    <main class="overflow-hidden">
         <div class="bg-slate-600 flex flex-col justify-start items-stretch h-screen">
             <div class="flex mx-8 mt-4 justify-between items-center relative">
                 <button v-for="i in totalSteps" :key="i" @click="setStep(i)" class="step-circle"
