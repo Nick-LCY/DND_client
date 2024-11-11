@@ -108,7 +108,7 @@ function levelUp() {
             </div>
             <div class="w-0 flex flex-col overflow-hidden transition-all"
                 :class="{ 'ml-2': subclassAvailable, '!w-1/2': subclassAvailable }">
-                <span class="font-bold text-xl text-center mb-2 overflow-hidden h-0"
+                <span class="font-bold text-xl text-center mb-2 overflow-hidden h-0 flex-shrink-0"
                     :class="{ 'h-7': subclassAvailable }">{{ subclassName }}</span>
                 <div class="overflow-y-auto bg-slate-700 rounded-lg scroll-xs flex flex-col items-stretch flex-grow">
                     <label class="option" v-for="subclass_obj in subclasses" :for="subclass_obj.id"
