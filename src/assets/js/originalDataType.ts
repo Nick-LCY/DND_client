@@ -33,7 +33,7 @@ interface EffectGroupDict {
 
 interface EffectSelection {
     type: "selection"
-    choose: number
+    choose: number | string
     available: EffectGroup
     name?: string
     description?: string

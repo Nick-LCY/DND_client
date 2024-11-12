@@ -30,7 +30,7 @@ const groupIndex = computed(
 const effectIndex = computed(
     () => filterByType<EffectType>(props.effect.available, isEffect)
 )
-const isFull = computed(() => selectedCount(model.value) >= props.effect.choose)
+const isFull = computed(() => selectedCount(model.value) >= Number(props.effect.choose))
 function shouldDisabled(selection: vModelSelection | string): boolean {
     if (props.disabled) return true
     if (isFull.value) {
@@ -59,7 +59,8 @@ function selectionMinus(idx: number) {
 </script>
 <template>
     <div>
-        <div class="font-bold text-green-500" :class="{ warning: selectedCount(model) < effect.choose, disabled }">
+        <div class="font-bold text-green-500"
+            :class="{ warning: selectedCount(model) < Number(effect.choose), disabled }">
             [{{ selectedCount(model) }} / {{ effect.choose }}]
         </div>
         <template v-for="{ idx, item } of effectIndex">
@@ -86,7 +87,7 @@ function selectionMinus(idx: number) {
                     <button
                         class="w-5 h-5 flex justify-center items-center border rounded-sm border-transparent transition hover:border-slate-500"
                         @click="selectionAdd(idx)"
-                        :disabled="shouldDisabled(item.id) || model.selectedString[idx].value >= effect.choose">
+                        :disabled="shouldDisabled(item.id) || model.selectedString[idx].value >= Number(effect.choose)">
                         <div class="relative">
                             <div class="w-2 h-0.5 bg-slate-50"></div>
                             <div class="absolute top-0 left-0 w-2 h-0.5 bg-slate-50 rotate-90"></div>

@@ -302,7 +302,7 @@ const statusPannelOpen = ref(false)
 }
 
 .open {
-    width: 300px;
+    width: 350px;
 }
 
 
@@ -316,7 +316,7 @@ const statusPannelOpen = ref(false)
 
 .status-pannel {
     @apply relative z-20 w-full bg-slate-700 pr-1 flex-shrink-0 flex flex-col items-stretch;
-    width: 250px;
+    width: 300px;
 }
 
 .skill-container {
