@@ -2,7 +2,7 @@
 import { ref, watch, computed } from 'vue';
 import { SourcedEffectType } from '../../assets/js/context/dataType';
 import { Expression, isValue } from '../../assets/js/originalDataType';
-import type { Character, CharacterStack, AbilityKeys } from '../../assets/js/context/template';
+import type { Character, CharacterStack, AbilityKeys, SkillKeys } from '../../assets/js/context/template';
 import { character } from '../../assets/js/context/template';
 import { findTarget, findBeforeTarget, deepReset } from '../../assets/js/context/utils';
 import { shortNameMapping, nameMapping, skillMapping } from '../../assets/js/mappings';
@@ -160,7 +160,14 @@ watch(() => props.activatedEffects, (v) => {
         }
     }
 })
-const skillLength = computed(() => Object.values(processedCharacter.value.skills).filter(v => v != 0).length)
+const skillCategory = {
+    str: ["athletics"],
+    dex: ["acrobatics", "sleight_of_hand", "stealth"],
+    con: [],
+    int: ["arcana", "history", "investigation", "religion", "nature"],
+    wis: ["animal_handling", "insight", "medicine", "survival", "perception"],
+    cha: ["deception", "intimidation", "performance", "persuasion"]
+}
 
 
 const popoutHidden = ref(true)
@@ -199,50 +206,67 @@ function openPopout(abilityName: AbilityKeys) {
         currentOpen.value = abilityName
     }
 }
+
+const statusPannelOpen = ref(false)
 </script>
 <template>
-    <div class="relative">
-        <div class="bg-slate-700 flex flex-col items-stretch px-1 w-full h-full relative z-20">
-            <div class="text-center font-bold text-lg py-1">属性</div>
-            <div v-for="(displayName, abilityName) of shortNameMapping"
-                class="text-center flex justify-center border-t border-slate-50 py-1 last:border-b">
-                <button
-                    class="flex flex-col items-center cursor-pointer select-none w-full hover:bg-slate-500 rounded-sm transition-colors py-1"
-                    @click="openPopout(abilityName)">
-                    <div>
-                        <span>{{ displayName }}</span>
-                        <span v-if="processedCharacter.saves[abilityName]">*</span>
-                    </div>
-                    <span class="text-xl">{{ processedCharacter.abilities[abilityName] }}</span>
-                </button>
+    <div class="status-container" :class="{ open: statusPannelOpen }">
+        <div class="status-bar">
+            <div class="relative z-20 px-1 bg-slate-700">
+                <div class="text-center font-bold text-lg py-1">属性</div>
+                <div v-for="(displayName, abilityName) of shortNameMapping"
+                    class="text-center flex justify-center border-t border-slate-50 py-1 last:border-b">
+                    <button
+                        class="flex flex-col items-center cursor-pointer select-none w-full hover:bg-slate-500 rounded-sm transition-colors py-1 gap-1"
+                        @click="openPopout(abilityName)">
+                        <div>
+                            <span>{{ displayName }}</span>
+                            <span v-if="processedCharacter.saves[abilityName]">*</span>
+                        </div>
+                        <span class="text-xl">{{ processedCharacter.abilities[abilityName] }}</span>
+                    </button>
+                </div>
             </div>
-            <div class="border-t text-center font-bold text-lg py-1">技能</div>
-            <template v-for="skillValue, skillName in processedCharacter.skills">
-                <div class="text-center" v-if="skillValue !== 0">{{ `${skillMapping[skillName]}×${skillValue}` }}</div>
-            </template>
-            <div v-if="skillLength === 0" class="text-center">无</div>
-        </div>
-        <div class="popout flex flex-col items-stretch" :class="{ 'popout-hidden': popoutHidden }">
-            <button
-                class="cursor-pointer select-none text-center flex-shrink-0 bg-slate-600 transition hover:bg-slate-500 text-3xl"
-                @click="popoutHidden = true">
-                ×
-            </button>
-            <div class="h-1 flex-grow flex flex-col" :class="{ loading: store.loading }">
-                <div class="text-xl text-center mt-2 flex-shrink-0">{{ nameMapping[currentOpen] }}构成</div>
-                <div class="scroll-xs overflow-y-auto p-2">
-                    <div v-for="(section, idx) of selectedSections" :key="idx" class="mb-2">
-                        <div class="text-lg font-bold">{{ section.name }}</div>
-                        <template v-if="section.content.length !== 0">
-                            <div v-for="content of section.content" class="section-content">
-                                <div class="text-sm"> {{ content.sources.join(">") }} </div>
-                                <div> {{ content.result }} </div>
-                            </div>
-                        </template>
-                        <div v-else class="text-sm section-content">无相关特性</div>
+            <div class="popout flex flex-col items-stretch" :class="{ 'popout-hidden': popoutHidden }">
+                <button
+                    class="cursor-pointer select-none text-center flex-shrink-0 bg-slate-600 transition hover:bg-slate-500 text-3xl"
+                    @click="popoutHidden = true">
+                    ×
+                </button>
+                <div class="h-1 flex-grow flex flex-col" :class="{ loading: store.loading }">
+                    <div class="text-xl text-center mt-2 flex-shrink-0">{{ nameMapping[currentOpen] }}构成</div>
+                    <div class="scroll-xs overflow-y-auto p-2">
+                        <div v-for="(section, idx) of selectedSections" :key="idx" class="mb-2">
+                            <div class="text-lg font-bold">{{ section.name }}</div>
+                            <template v-if="section.content.length !== 0">
+                                <div v-for="content of section.content" class="section-content">
+                                    <div class="text-sm"> {{ content.sources.join(">") }} </div>
+                                    <div> {{ content.result }} </div>
+                                </div>
+                            </template>
+                            <div v-else class="text-sm section-content">无相关特性</div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="status-pannel">
+            <div class="font-bold text-center text-lg border-b py-1">技能</div>
+            <div v-for="value, categoryKey of skillCategory" :key="categoryKey" class="flex flex-col items-stretch flex-grow basis-1">
+                <div class="skill-container">
+                    <div v-for="skillKey of value" :key="skillKey" class="basis-1/3 flex-shrink-0">
+                        {{ skillMapping[skillKey as SkillKeys] }}
+                        ×{{ processedCharacter.skills[skillKey as SkillKeys] }}</div>
+                </div>
+            </div>
+        </div>
+        <div></div>
+        <div></div>
+        <div class="flex flex-col items-stretch pb-2 gap-2 px-1">
+            <button @click="statusPannelOpen = !statusPannelOpen" class="button">
+                {{ statusPannelOpen ? "折叠" : "展开" }}
+            </button>
+            <button class="button">设置</button>
         </div>
     </div>
 </template>
@@ -260,5 +284,42 @@ function openPopout(abilityName: AbilityKeys) {
 
 .section-content {
     @apply hover:bg-slate-700 p-1 rounded-sm transition-colors;
+}
+
+.button {
+    @apply py-2 font-bold border-2 rounded-md border-slate-500;
+    @apply flex items-center justify-center;
+    @apply transition hover:bg-slate-500;
+    @apply select-none cursor-pointer;
+}
+
+.status-container {
+    @apply bg-slate-700 grid;
+    grid-template-columns: 50px 250px;
+    grid-template-rows: auto 1fr auto;
+    transition: width 150ms ease;
+    width: 50px;
+}
+
+.open {
+    width: 300px;
+}
+
+
+.status-bar {
+    @apply relative flex-shrink-0;
+    width: 50px;
+}
+.open > .status-bar > div {
+    @apply pr-0;
+}
+
+.status-pannel {
+    @apply relative z-20 w-full bg-slate-700 pr-1 flex-shrink-0 flex flex-col items-stretch;
+    width: 250px;
+}
+
+.skill-container {
+    @apply border-b pl-4 py-1 flex flex-wrap gap-y-1 items-center flex-grow;
 }
 </style>

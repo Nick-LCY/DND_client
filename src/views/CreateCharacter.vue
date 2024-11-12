@@ -281,7 +281,7 @@ const activatedEffects = computed(() => {
 <style scoped>
 main {
     display: grid;
-    grid-template-columns: 500px 1fr 50px;
+    grid-template-columns: 500px minmax(0, 1fr) auto;
     height: 100vh;
     @apply text-slate-50;
 }
