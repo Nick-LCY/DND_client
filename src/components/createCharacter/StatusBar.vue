@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import { SourcedEffectType } from '../../assets/js/context/dataType';
-import { Expression } from '../../assets/js/originalDataType';
+import { Expression, isValue } from '../../assets/js/originalDataType';
 import type { Character, CharacterStack, AbilityKeys } from '../../assets/js/context/template';
 import { character } from '../../assets/js/context/template';
 import { findTarget, findBeforeTarget, deepReset } from '../../assets/js/context/utils';
-import { shortNameMapping, nameMapping } from '../../assets/js/mappings';
+import { shortNameMapping, nameMapping, skillMapping } from '../../assets/js/mappings';
 import { store } from '../../assets/js/store';
+import { isExpression } from "../../assets/js/originalDataType";
 
 const props = defineProps<{ activatedEffects: SourcedEffectType[] }>()
 
@@ -39,27 +40,39 @@ function processExpression(
     // Step2, compute value
     const computedValues = []
     for (let v of values) {
-        if (typeof v === "object") computedValues.push(processExpression(v))
+        if (isExpression(v)) computedValues.push(processExpression(v))
+        else if (isValue(v)) {
+            switch (v.type) {
+                case "number":
+                    computedValues.push(Number(v.value))
+                    break
+                case "boolean":
+                    computedValues.push(v.value === "true" ? true : false)
+                    break
+                case "string":
+                    computedValues.push(v.value)
+            }
+        }
         else computedValues.push(v)
     }
     // Step3, process operation
     switch (operation) {
         case "+=":
-            parent[child] += Number(computedValues[0])
-            localReportResult.result = `+${Number(computedValues[0])}`
+            parent[child] += computedValues[0]
+            localReportResult.result = `+${computedValues[0]}`
             break
         case "-=":
-            parent[child] -= Number(computedValues[0])
-            localReportResult.result = `-${Number(computedValues[0])}`
+            parent[child] -= computedValues[0]
+            localReportResult.result = `-${computedValues[0]}`
             break
         case "=":
             parent[child] = computedValues[0]
             localReportResult.result = `=${computedValues[0]}`
             break
         case "+":
-            return parent[child] + Number(computedValues[0])
+            return parent[child] + computedValues[0]
         case "-":
-            return parent[child] - Number(computedValues[0])
+            return parent[child] - computedValues[0]
     }
 
 }
@@ -72,27 +85,40 @@ interface sourceRepresentation {
 const processedCharacter = ref<Character>(deepReset<Character>(character, {}))
 const characterStack = ref<CharacterStack>({
     abilities: { str: [], dex: [], con: [], wis: [], int: [], cha: [] },
-    saves: { str: [], dex: [], con: [], wis: [], int: [], cha: [] }
+    saves: { str: [], dex: [], con: [], wis: [], int: [], cha: [] },
+    skills: {
+        acrobatics: [], animal_handling: [], arcana: [], athletics: [],
+        deception: [], history: [], insight: [], intimidation: [],
+        investigation: [], medicine: [], nature: [], perception: [],
+        performance: [], persuasion: [], religion: [], sleight_of_hand: [],
+        stealth: [], survival: [],
+    }
 })
 const effectSources = ref<{
     abilities: Record<AbilityKeys, sourceRepresentation[]>
     saves: Record<AbilityKeys, sourceRepresentation[]>
+    skills: sourceRepresentation[]
 }>({
     abilities: { str: [], dex: [], con: [], wis: [], int: [], cha: [] },
-    saves: { str: [], dex: [], con: [], wis: [], int: [], cha: [] }
+    saves: { str: [], dex: [], con: [], wis: [], int: [], cha: [] },
+    skills: []
 })
 
 watch(() => props.activatedEffects, (v) => {
     // Clean
     deepReset(character, processedCharacter.value)
-    for (let entry of Object.values(characterStack.value)) {
-        for (let abilityEntry of Object.values(entry)) {
-            abilityEntry.splice(0)
+    for (let type of Object.values(characterStack.value)) {
+        for (let entry of Object.values(type)) {
+            entry.splice(0)
         }
     }
-    for (let entry of Object.values(effectSources.value)) {
-        for (let abilityEntry of Object.values(entry)) {
-            abilityEntry.splice(0)
+    for (let type of Object.values(effectSources.value)) {
+        if (type instanceof Array) {
+            type.splice(0)
+            continue
+        }
+        for (let entry of Object.values(type)) {
+            entry.splice(0)
         }
     }
     // Push
@@ -110,18 +136,31 @@ watch(() => props.activatedEffects, (v) => {
         }
     }
     // Compute
-    for (let [key, entry] of Object.entries(characterStack.value)) {
-        for (let [abilityKey, abilityEntry] of Object.entries(entry)) {
-            for (let { expression, sources } of abilityEntry) {
+    for (let [typeKey, type] of Object.entries(characterStack.value)) {
+        for (let [entryKey, entry] of Object.entries(type)) {
+            for (let { expression, sources } of entry) {
                 const reportResult = { result: "" }
                 processExpression(expression, reportResult)
-                effectSources.value[key as keyof typeof effectSources.value][abilityKey as AbilityKeys].push(
-                    { sources, result: reportResult.result }
-                )
+                switch (typeKey) {
+                    case "skills":
+                        effectSources.value.skills.push({ sources, result: reportResult.result })
+                        break;
+                    case "abilities":
+                        effectSources.value.abilities[entryKey as AbilityKeys].push(
+                            { sources, result: reportResult.result }
+                        )
+                        break;
+                    case "saves":
+                        effectSources.value.saves[entryKey as AbilityKeys].push(
+                            { sources, result: reportResult.result }
+                        )
+                        break;
+                }
             }
         }
     }
 })
+const skillLength = computed(() => Object.values(processedCharacter.value.skills).filter(v => v != 0).length)
 
 
 const popoutHidden = ref(true)
@@ -131,6 +170,7 @@ const sections = computed(() => {
         wis: [], int: [], cha: [],
     }
     for (let [entryName, entry] of Object.entries(effectSources.value)) {
+        if (!["abilities", "saves"].includes(entryName)) continue
         for (let [abilityKey, abilityEntries] of Object.entries(entry)) {
             let content = abilityEntries.slice(0)
             switch (entryName) {
@@ -162,7 +202,7 @@ function openPopout(abilityName: AbilityKeys) {
 </script>
 <template>
     <div class="relative">
-        <div class="bg-slate-700 flex flex-col items-stretch justify-center px-1 w-full h-full relative z-20">
+        <div class="bg-slate-700 flex flex-col items-stretch px-1 w-full h-full relative z-20">
             <div class="text-center font-bold text-lg py-1">属性</div>
             <div v-for="(displayName, abilityName) of shortNameMapping"
                 class="text-center flex justify-center border-t border-slate-50 py-1 last:border-b">
@@ -176,6 +216,11 @@ function openPopout(abilityName: AbilityKeys) {
                     <span class="text-xl">{{ processedCharacter.abilities[abilityName] }}</span>
                 </button>
             </div>
+            <div class="border-t text-center font-bold text-lg py-1">技能</div>
+            <template v-for="skillValue, skillName in processedCharacter.skills">
+                <div class="text-center" v-if="skillValue !== 0">{{ `${skillMapping[skillName]}×${skillValue}` }}</div>
+            </template>
+            <div v-if="skillLength === 0" class="text-center">无</div>
         </div>
         <div class="popout flex flex-col items-stretch" :class="{ 'popout-hidden': popoutHidden }">
             <button

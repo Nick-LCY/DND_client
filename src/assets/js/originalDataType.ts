@@ -1,11 +1,17 @@
+interface Value {
+    type: ("number" | "string" | "boolean")
+    value: string
+}
 interface Expression {
+    type?: ("number" | "string" | "void" | "boolean")
     target: string
     operation: ("+" | "+=" | "-" | "-=" | "=")
     values: (
         Expression |
         boolean |
         number |
-        string)[]
+        string |
+        Value)[]
 }
 interface Effect {
     id: string
@@ -122,12 +128,22 @@ function isEffectSelection(obj: Effect
     return (<EffectSelection>obj).type === "selection"
 }
 
+function isExpression(obj: any): obj is Expression {
+    return (<Expression>obj).target !== undefined
+}
+
+function isValue(obj: any): obj is Value {
+    return (<Value>obj).value !== undefined
+}
+
 export {
     isEffect,
     isEffectSelection,
     isEffectGroup,
     isEffectGroupDict,
     isEffectGroupOrEffectGroupDict,
+    isExpression,
+    isValue
 }
 
 export type {
