@@ -1,4 +1,5 @@
-import { AbilityKeys, SkillKeys } from "./context/template"
+import { AbilityKeys, SkillKeys } from "./expression/dataType"
+
 const shortNameMapping: Record<AbilityKeys, string> = {
     str: "力", dex: "敏", con: "体",
     int: "智", wis: "感", cha: "魅",
@@ -17,7 +18,7 @@ const skillMapping: Record<SkillKeys, string> = {
     stealth: "隐匿", survival: "生存",
 }
 
-const proficiencyByLevel = function(level: number): number {
+const proficiencyByLevel = function (level: number): number {
     if (level >= 17) return 6
     if (level >= 13) return 5
     if (level >= 9) return 4

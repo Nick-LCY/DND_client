@@ -1,126 +1,27 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
-import { SourcedEffectType } from '../../assets/js/context/dataType';
-import { Expression, isValue } from '../../assets/js/originalDataType';
-import type { Character, CharacterStack, AbilityKeys, SkillKeys } from '../../assets/js/context/template';
-import { character } from '../../assets/js/context/template';
-import { findTarget, findBeforeTarget, deepReset } from '../../assets/js/context/utils';
+import { AbilityKeys, ExpressionResult, ExpressionSource, ExpressionStack, SkillKeys, SourcedEffect } from '../../assets/js/expression/dataType';
+import { findTarget } from '../../assets/js/expression/utils';
 import { shortNameMapping, nameMapping, skillMapping } from '../../assets/js/mappings';
 import { store } from '../../assets/js/store';
-import { isExpression } from "../../assets/js/originalDataType";
+import { characterResult, reset as resultReset } from '../../assets/js/expression/expressionResults';
+import { characterStack, reset as stackReset } from '../../assets/js/expression/expressionStacks';
+import { characterSource, reset as sourceReset } from '../../assets/js/expression/expressionSource';
+import { processExpression } from '../../assets/js/expression/processExpression';
 
-const props = defineProps<{ activatedEffects: SourcedEffectType[] }>()
-
-function findRootObject(target: string): any {
-    let root = target.split(".")[0]
-    switch (root) {
-        case "character":
-            return processedCharacter.value
-    }
-}
-
-function processExpression(
-    expression: Expression,
-    reportResult?: { result: string } | undefined
-): any {
-    let { target, operation, values } = expression
-    const localReportResult = reportResult === undefined ? { result: "" } : reportResult
-    // Step1, find target
-    const root = findRootObject(target)
-    const splitedTarget = target.split(".")
-    let child: string
-    let parent: any
-    if (splitedTarget.length == 2) {
-        parent = root
-        child = splitedTarget[1]
-    } else {
-        parent = findBeforeTarget(splitedTarget.slice(1).join("."), root)
-        child = splitedTarget.slice(-1)[0]
-    }
-    // Step2, compute value
-    const computedValues = []
-    for (let v of values) {
-        if (isExpression(v)) computedValues.push(processExpression(v))
-        else if (isValue(v)) {
-            switch (v.type) {
-                case "number":
-                    computedValues.push(Number(v.value))
-                    break
-                case "boolean":
-                    computedValues.push(v.value === "true" ? true : false)
-                    break
-                case "string":
-                    computedValues.push(v.value)
-            }
-        }
-        else computedValues.push(v)
-    }
-    // Step3, process operation
-    switch (operation) {
-        case "+=":
-            parent[child] += computedValues[0]
-            localReportResult.result = `+${computedValues[0]}`
-            break
-        case "-=":
-            parent[child] -= computedValues[0]
-            localReportResult.result = `-${computedValues[0]}`
-            break
-        case "=":
-            parent[child] = computedValues[0]
-            localReportResult.result = `=${computedValues[0]}`
-            break
-        case "+":
-            return parent[child] + computedValues[0]
-        case "-":
-            return parent[child] - computedValues[0]
-    }
-
-}
+const props = defineProps<{ activatedEffects: SourcedEffect[] }>()
 
 interface sourceRepresentation {
     sources: string[]
     result: string
 }
 
-const processedCharacter = ref<Character>(deepReset<Character>(character, {}))
-const characterStack = ref<CharacterStack>({
-    abilities: { str: [], dex: [], con: [], wis: [], int: [], cha: [] },
-    saves: { str: [], dex: [], con: [], wis: [], int: [], cha: [] },
-    skills: {
-        acrobatics: [], animal_handling: [], arcana: [], athletics: [],
-        deception: [], history: [], insight: [], intimidation: [],
-        investigation: [], medicine: [], nature: [], perception: [],
-        performance: [], persuasion: [], religion: [], sleight_of_hand: [],
-        stealth: [], survival: [],
-    }
-})
-const effectSources = ref<{
-    abilities: Record<AbilityKeys, sourceRepresentation[]>
-    saves: Record<AbilityKeys, sourceRepresentation[]>
-    skills: sourceRepresentation[]
-}>({
-    abilities: { str: [], dex: [], con: [], wis: [], int: [], cha: [] },
-    saves: { str: [], dex: [], con: [], wis: [], int: [], cha: [] },
-    skills: []
-})
 
 watch(() => props.activatedEffects, (v) => {
     // Clean
-    deepReset(character, processedCharacter.value)
-    for (let type of Object.values(characterStack.value)) {
-        for (let entry of Object.values(type)) {
-            entry.splice(0)
-        }
-    }
-    for (let type of Object.values(effectSources.value)) {
-        if (type instanceof Array) {
-            type.splice(0)
-            continue
-        }
-        for (let entry of Object.values(type)) {
-            entry.splice(0)
-        }
-    }
+    resultReset("character")
+    stackReset("character")
+    sourceReset("character")
     // Push
     for (let sourcedEffect of v) {
         for (let expression of sourcedEffect.effect.expressions) {
@@ -136,31 +37,33 @@ watch(() => props.activatedEffects, (v) => {
         }
     }
     // Compute
-    for (let [typeKey, type] of Object.entries(characterStack.value)) {
-        for (let [entryKey, entry] of Object.entries(type)) {
-            for (let { expression, sources } of entry) {
-                const reportResult = { result: "" }
-                processExpression(expression, reportResult)
-                switch (typeKey) {
-                    case "skills":
-                        effectSources.value.skills.push({ sources, result: reportResult.result })
-                        break;
-                    case "abilities":
-                        effectSources.value.abilities[entryKey as AbilityKeys].push(
-                            { sources, result: reportResult.result }
-                        )
-                        break;
-                    case "saves":
-                        effectSources.value.saves[entryKey as AbilityKeys].push(
-                            { sources, result: reportResult.result }
-                        )
-                        break;
+    function forEach(expStack: ExpressionStack, expSource: ExpressionSource) {
+        for (let [key, val] of Object.entries(expStack)) {
+            if (val instanceof Array) {
+                val.forEach(i => {
+                    let { expression, sources } = i
+                    let resultPointer = { result: "" }
+                    processExpression(expression, resultPointer)
+                    if (expSource[key] instanceof Array) {
+                        expSource[key].push({ sources, result: resultPointer.result })
+                    } else {
+                        expSource[key] = [{ sources, result: resultPointer.result }]
+                    }
+                })
+            }
+            else {
+                if (expSource[key] && !(expSource[key] instanceof Array)) {
+                    forEach(val, expSource[key])
+                } else {
+                    expSource[key] = {}
+                    forEach(val, expSource[key])
                 }
             }
         }
     }
+    forEach(characterStack.value, characterSource.value)
 })
-const skillCategory = {
+const skillCategory: Record<AbilityKeys, SkillKeys[]> = {
     str: ["athletics"],
     dex: ["acrobatics", "sleight_of_hand", "stealth"],
     con: [],
@@ -172,22 +75,22 @@ const skillCategory = {
 
 const popoutHidden = ref(true)
 const sections = computed(() => {
-    const localSections: Record<AbilityKeys, { name: string, content: sourceRepresentation[] }[]> = {
+    const localSections: { [key: string]: { name: string, content: sourceRepresentation[] }[] } = {
         str: [], dex: [], con: [],
         wis: [], int: [], cha: [],
     }
-    for (let [entryName, entry] of Object.entries(effectSources.value)) {
+    for (let [entryName, entry] of Object.entries(characterSource.value)) {
         if (!["abilities", "saves"].includes(entryName)) continue
         for (let [abilityKey, abilityEntries] of Object.entries(entry)) {
             let content = abilityEntries.slice(0)
             switch (entryName) {
                 case "abilities":
-                    localSections[abilityKey as AbilityKeys].push(
+                    localSections[abilityKey].push(
                         { "name": "数值", content }
                     )
                     break
                 case "saves":
-                    localSections[abilityKey as AbilityKeys].push(
+                    localSections[abilityKey].push(
                         { "name": "豁免熟练项", content }
                     )
                     break
@@ -221,9 +124,11 @@ const statusPannelOpen = ref(false)
                         @click="openPopout(abilityName)">
                         <div>
                             <span>{{ displayName }}</span>
-                            <span v-if="processedCharacter.saves[abilityName]">*</span>
+                            <!-- TODO: Any way to handle "as"? -->
+                            <span v-if="(characterResult.saves as ExpressionResult)[abilityName]">*</span>
                         </div>
-                        <span class="text-xl">{{ processedCharacter.abilities[abilityName] }}</span>
+                        <!-- TODO: Any way to handle "as"? -->
+                        <span class="text-xl">{{ (characterResult.abilities as ExpressionResult)[abilityName] }}</span>
                     </button>
                 </div>
             </div>
@@ -252,11 +157,13 @@ const statusPannelOpen = ref(false)
         </div>
         <div class="status-pannel">
             <div class="font-bold text-center text-lg border-b py-1">技能</div>
-            <div v-for="value, categoryKey of skillCategory" :key="categoryKey" class="flex flex-col items-stretch flex-grow basis-1">
+            <div v-for="value, categoryKey of skillCategory" :key="categoryKey"
+                class="flex flex-col items-stretch flex-grow basis-1">
                 <div class="skill-container">
                     <div v-for="skillKey of value" :key="skillKey" class="basis-1/3 flex-shrink-0">
-                        {{ skillMapping[skillKey as SkillKeys] }}
-                        ×{{ processedCharacter.skills[skillKey as SkillKeys] }}</div>
+                        {{ skillMapping[skillKey] }}
+                        <!-- TODO: Any way to handle "as"? -->
+                        ×{{ (characterResult.skills as ExpressionResult)[skillKey] }}</div>
                 </div>
             </div>
         </div>
@@ -310,7 +217,8 @@ const statusPannelOpen = ref(false)
     @apply relative flex-shrink-0;
     width: 50px;
 }
-.open > .status-bar > div {
+
+.open>.status-bar>div {
     @apply pr-0;
 }
 

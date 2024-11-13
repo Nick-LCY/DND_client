@@ -18,7 +18,7 @@ import { vModelSelection } from '../assets/js/selections';
 import EffectGroup from '../components/createCharacter/EffectGroup.vue';
 import StatusBar from '../components/createCharacter/StatusBar.vue';
 import { store } from '../assets/js/store';
-import { SourcedEffectType } from '../assets/js/context/dataType';
+import { SourcedEffect } from '../assets/js/expression/dataType';
 import _ from "lodash";
 
 const categories = ref<{ [key: number]: Categories }>({});
@@ -192,7 +192,7 @@ const activatedEffects = computed(() => {
         }
         return features
     }
-    const effects: SourcedEffectType[] = []
+    const effects: SourcedEffect[] = []
     for (let featureId in featureSelections.value) {
         let features = findFeatures(featureId)
         for (let { idx, feature, categoryName } of features) {
