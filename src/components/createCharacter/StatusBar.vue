@@ -38,26 +38,49 @@ watch(() => props.activatedEffects, (v) => {
     }
     // Compute
     function forEach(expStack: ExpressionStack, expSource: ExpressionSource) {
-        for (let [key, val] of Object.entries(expStack)) {
-            if (val instanceof Array) {
-                val.forEach(i => {
-                    let { expression, sources } = i
-                    let resultPointer = { result: "" }
-                    processExpression(expression, resultPointer)
-                    if (expSource[key] instanceof Array) {
-                        expSource[key].push({ sources, result: resultPointer.result })
-                    } else {
-                        expSource[key] = [{ sources, result: resultPointer.result }]
-                    }
-                })
-            }
-            else {
-                if (expSource[key] && !(expSource[key] instanceof Array)) {
-                    forEach(val, expSource[key])
-                } else {
-                    expSource[key] = {}
-                    forEach(val, expSource[key])
+        for (let [expStackKey, expStackVal] of Object.entries(expStack)) {
+            if (expStackVal instanceof Array) {
+                let expressionCategories: Record<string, (string | boolean | number)[]> = {
+                    set: [], change: [], none: []
                 }
+                let target: Record<string, any>, targetKey: string
+                expStackVal.forEach(i => {
+                    let { expression, sources } = i
+                    let values, modificationType
+                    ({ values, target, key: targetKey, modificationType } = processExpression(expression))
+                    expressionCategories[modificationType].push(values[0])
+                    if (!(expSource[expStackKey] instanceof Array)) expSource[expStackKey] = []
+                    let repr: string
+                    switch (typeof values[0]) {
+                        case "number":
+                            repr = String(values[0])
+                            if (values[0] > 0) repr = "+" + repr
+                            break
+                        case "boolean":
+                            repr = ""
+                            break
+                        case "string":
+                            repr = values[0]
+                    }
+                    expSource[expStackKey].push({ sources, result: repr })
+                })
+                if (expStackVal.length !== 0) {
+                    let finalValue = Math.max(
+                        expressionCategories.change.reduce((p: number, c) => p + Number(c), 0),
+                        expressionCategories.set.reduce((p: number, c) => Math.max(p, Number(c)), 0)
+                    )
+                    switch (typeof finalValue) {
+                        case "number":
+                            target![targetKey!] += finalValue
+                            break
+                        default:
+                            target![targetKey!] = finalValue
+                    }
+                }
+
+            } else {
+                if (!expSource[expStackKey] || expSource[expStackKey] instanceof Array) expSource[expStackKey] = {}
+                forEach(expStackVal, expSource[expStackKey])
             }
         }
     }
@@ -122,10 +145,10 @@ const statusPannelOpen = ref(false)
                     <button
                         class="flex flex-col items-center cursor-pointer select-none w-full hover:bg-slate-500 rounded-sm transition-colors py-1 gap-1"
                         @click="openPopout(abilityName)">
-                        <div>
-                            <span>{{ displayName }}</span>
-                            <!-- TODO: Any way to handle "as"? -->
-                            <span v-if="(characterResult.saves as ExpressionResult)[abilityName]">*</span>
+                        <!-- TODO: Any way to handle "as"? -->
+                        <div class="relative"
+                            :class="{ 'save-proficiency': (characterResult.saves as ExpressionResult)[abilityName] }">
+                            {{ displayName }}
                         </div>
                         <!-- TODO: Any way to handle "as"? -->
                         <span class="text-xl">{{ (characterResult.abilities as ExpressionResult)[abilityName] }}</span>
@@ -163,7 +186,8 @@ const statusPannelOpen = ref(false)
                     <div v-for="skillKey of value" :key="skillKey" class="basis-1/3 flex-shrink-0">
                         {{ skillMapping[skillKey] }}
                         <!-- TODO: Any way to handle "as"? -->
-                        ×{{ (characterResult.skills as ExpressionResult)[skillKey] }}</div>
+                        ×{{ (characterResult.skills as ExpressionResult)[skillKey] }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -212,7 +236,6 @@ const statusPannelOpen = ref(false)
     width: 350px;
 }
 
-
 .status-bar {
     @apply relative flex-shrink-0;
     width: 50px;
@@ -229,5 +252,10 @@ const statusPannelOpen = ref(false)
 
 .skill-container {
     @apply border-b pl-4 py-1 flex flex-wrap gap-y-1 items-center flex-grow;
+}
+
+.save-proficiency::after {
+    content: "";
+    @apply w-6 h-full border absolute -left-1 bottom-0;
 }
 </style>
