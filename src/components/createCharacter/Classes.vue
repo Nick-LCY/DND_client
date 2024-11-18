@@ -43,6 +43,11 @@ async function changeClass() {
     categories = mergeCategories(categories, leveledFeatureCategories)
     description.value = renderMD(classData.description)
     emit("change", categories)
+    store.addCharacterEffect((v) => {
+        (v.class as { main: string }).main = classSelection.value.id;
+        (v.class as { sub: string }).sub = classSelection.value.subclass;
+        (v.class as { level: number }).level = classSelection.value.level;
+    })
     store.endLoad()
 }
 
@@ -77,6 +82,11 @@ async function changeSubclass() {
                 ),
             )
             emit("change", categories)
+            store.addCharacterEffect((v) => {
+                (v.class as { main: string }).main = classSelection.value.id;
+                (v.class as { sub: string }).sub = classSelection.value.subclass;
+                (v.class as { level: number }).level = classSelection.value.level;
+            })
             store.endLoad()
             return
         }
@@ -85,9 +95,11 @@ async function changeSubclass() {
 
 function levelDown() {
     classSelection.value.level = Math.max(1, classSelection.value.level - 1)
+    store.addCharacterEffect((v) => (v.class as { level: number }).level = classSelection.value.level)
 }
 function levelUp() {
     classSelection.value.level = Math.min(20, classSelection.value.level + 1)
+    store.addCharacterEffect((v) => (v.class as { level: number }).level = classSelection.value.level)
 }
 </script>
 <template>

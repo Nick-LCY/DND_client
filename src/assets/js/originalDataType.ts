@@ -5,7 +5,7 @@ interface Value {
 interface Expression {
     type?: ("number" | "string" | "void" | "boolean")
     target: string
-    operation: ("+" | "+=" | "-" | "-=" | "=")
+    operation: ("+" | "+=" | "-" | "-=" | "=" | "==" | "<=" | ">=" | ">" | "<")
     values: (
         Expression |
         boolean |

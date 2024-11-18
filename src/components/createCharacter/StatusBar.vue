@@ -85,6 +85,9 @@ watch(() => props.activatedEffects, (v) => {
         }
     }
     forEach(characterStack.value, characterSource.value)
+    // Frontend Effects
+    store.characterEffects.forEach(v => v(characterResult.value))
+    store.clearEffect()
 })
 const skillCategory: Record<AbilityKeys, SkillKeys[]> = {
     str: ["athletics"],

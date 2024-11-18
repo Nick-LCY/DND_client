@@ -85,6 +85,26 @@ function processExpression(
             processResult.values.push(parent[child] - Number(computedValues[0]))
             processResult.doReturn = true
             break
+        case "<":
+            processResult.values.push(parent[child] < computedValues[0])
+            processResult.doReturn = true
+            break
+        case ">":
+            processResult.values.push(parent[child] > computedValues[0])
+            processResult.doReturn = true
+            break
+        case ">=":
+            processResult.values.push(parent[child] >= computedValues[0])
+            processResult.doReturn = true
+            break
+        case "<=":
+            processResult.values.push(parent[child] <= computedValues[0])
+            processResult.doReturn = true
+            break
+        case "==":
+            processResult.values.push(parent[child] == computedValues[0])
+            processResult.doReturn = true
+            break
     }
 
     return processResult

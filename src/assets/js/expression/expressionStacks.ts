@@ -10,6 +10,9 @@ const characterStack = ref<ExpressionStack>({
         investigation: [], medicine: [], nature: [], perception: [],
         performance: [], persuasion: [], religion: [], sleight_of_hand: [],
         stealth: [], survival: [],
+    },
+    class: {
+        level: [], main: [], sub: []
     }
 })
 
