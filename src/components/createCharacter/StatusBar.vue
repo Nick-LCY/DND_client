@@ -256,6 +256,6 @@ const statusPannelOpen = ref(false)
 
 .save-proficiency::after {
     content: "";
-    @apply w-6 h-full border absolute -left-1 bottom-0;
+    @apply w-6 h-full border absolute -left-1 bottom-0 rounded-sm;
 }
 </style>

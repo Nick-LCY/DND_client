@@ -141,7 +141,9 @@ function levelUp() {
                 </button>
             </div>
         </div>
-        <div class="description scroll-xs" :class="{ loading: store.loading }" v-html="description"></div>
+        <div class="m-8 mt-4 flex-grow h-64 rounded-lg" :class="{ loading: store.loading }">
+            <div class="scroll-xs description" v-html="description"></div>
+        </div>
     </div>
 </template>
 <style scoped>
@@ -164,7 +166,7 @@ input[type="radio"]:checked+.option-circle::after {
 }
 
 .description {
-    @apply m-8 p-2 bg-slate-800 overflow-auto rounded-lg h-64 flex-grow;
+    @apply p-2 bg-slate-800 overflow-auto rounded-lg h-full;
 }
 
 .show {

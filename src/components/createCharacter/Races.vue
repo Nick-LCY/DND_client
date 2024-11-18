@@ -110,7 +110,8 @@ function changeCurrentDescription() {
                 </button>
             </div>
         </div>
-        <div class="description scroll-xs" v-html="description[currentDescription]" :class="{ loading: store.loading }">
+        <div class="m-8 flex-grow h-64 rounded-lg" :class="{ loading: store.loading }">
+            <div class="scroll-xs description" v-html="description[currentDescription]"></div>
         </div>
     </div>
 </template>
@@ -134,7 +135,7 @@ input[type="radio"]:checked+.option-circle::after {
 }
 
 .description {
-    @apply m-8 p-2 bg-slate-800 overflow-auto rounded-lg h-64 flex-grow;
+    @apply p-2 bg-slate-800 overflow-auto rounded-lg h-full;
 }
 
 .description-change-btn {
