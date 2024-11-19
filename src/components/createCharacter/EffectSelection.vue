@@ -11,6 +11,7 @@ import { renderMD } from '../../assets/js/renderMarkdown';
 import EffectGroup from '../createCharacter/EffectGroup.vue';
 import type { vModelSelection } from '../../assets/js/selections';
 import { filterByType, isSelected, selectedCount } from '../../assets/js/selections';
+import { processExpression } from '../../assets/js/expression/processExpression';
 
 const model = defineModel<vModelSelection>({ required: true })
 const props = withDefaults(defineProps<{
@@ -31,6 +32,12 @@ const effectIndex = computed(
     () => filterByType<EffectType>(props.effect.available, isEffect)
 )
 const isFull = computed(() => selectedCount(model.value) >= Number(props.effect.choose))
+function shouldDisplay(item: EffectType): boolean {
+    if (item.prerequisite !== undefined) {
+        return processExpression(item.prerequisite).values[0] as boolean
+    }
+    return true
+}
 function shouldDisabled(selection: vModelSelection | string): boolean {
     if (props.disabled) return true
     if (isFull.value) {
@@ -64,7 +71,7 @@ function selectionMinus(idx: number) {
             [{{ selectedCount(model) }} / {{ effect.choose }}]
         </div>
         <template v-for="{ idx, item } of effectIndex">
-            <label v-if="!effect.allow_repeat" :for="`${idPrefix}-${idx}`"
+            <label v-if="!effect.allow_repeat" v-show="shouldDisplay(item)" :for="`${idPrefix}-${idx}`"
                 class="flex flex-col items-start cursor-pointer" :class="{ 'disabled': shouldDisabled(item.id) }"
                 :key="idx">
                 <input type="checkbox" :id="`${idPrefix}-${idx}`" :disabled="shouldDisabled(item.id)" :value="1"
@@ -76,7 +83,7 @@ function selectionMinus(idx: number) {
                 <div class="description pl-6 text-gray-400" v-html="renderMD(item.description)">
                 </div>
             </label>
-            <div v-else class="flex items-start gap-2">
+            <div v-else v-show="shouldDisplay(item)" class="flex items-start gap-2">
                 <div class="flex items-center justify-center gap-1">
                     <button
                         class="w-5 h-5 flex justify-center items-center border rounded-sm border-transparent transition hover:border-slate-500"

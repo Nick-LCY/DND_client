@@ -9,11 +9,13 @@ export const store = reactive({
     endLoad() {
         this.loading = false
     },
-    characterEffects: [] as ((v: ExpressionResult) => void)[],
-    addCharacterEffect(fn: (v: ExpressionResult) => void) {
-        this.characterEffects.push(fn)
+    characterEffects: {
+        class: [] as ((v: ExpressionResult) => void)[]
     },
-    clearEffect() {
-        this.characterEffects.splice(0)
+    addCharacterEffect(field: "class", fn: (v: ExpressionResult) => void) {
+        this.characterEffects[field].push(fn)
+    },
+    clearCharacterEffect(field: "class") {
+        this.characterEffects[field].splice(0)
     }
 })

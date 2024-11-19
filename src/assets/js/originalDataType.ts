@@ -17,7 +17,8 @@ interface Effect {
     id: string
     name: string
     description: string
-    expressions: Expression[]
+    expressions: Expression[],
+    prerequisite?: Expression
 }
 
 interface EffectGroup extends Array<Effect | EffectGroup | EffectSelection> {
