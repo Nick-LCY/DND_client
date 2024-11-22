@@ -15,7 +15,7 @@ interface ProcessResult {
     target: Record<string, any>
     key: string
     values: (string | number | boolean)[]
-    modificationType: "set" | "change" | "none"
+    modificationType: "set" | "change" | "none" | "arrayPush"
     doReturn: boolean
 }
 
@@ -76,6 +76,10 @@ function processExpression(
         case "=":
             processResult.values.push(computedValues[0])
             processResult.modificationType = "set"
+            break
+        case "push":
+            processResult.values.push(computedValues[0])
+            processResult.modificationType = "arrayPush"
             break
         case "+":
             processResult.values.push(parent[child] + computedValues[0])

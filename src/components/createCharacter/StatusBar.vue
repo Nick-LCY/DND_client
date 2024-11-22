@@ -41,7 +41,7 @@ watch(() => props.activatedEffects, (v) => {
         for (let [expStackKey, expStackVal] of Object.entries(expStack)) {
             if (expStackVal instanceof Array) {
                 let expressionCategories: Record<string, (string | boolean | number)[]> = {
-                    set: [], change: [], none: []
+                    set: [], change: [], none: [], arrayPush: []
                 }
                 let target: Record<string, any>, targetKey: string
                 expStackVal.forEach(i => {
@@ -65,16 +65,20 @@ watch(() => props.activatedEffects, (v) => {
                     expSource[expStackKey].push({ sources, result: repr })
                 })
                 if (expStackVal.length !== 0) {
-                    let finalValue = Math.max(
-                        expressionCategories.change.reduce((p: number, c) => p + Number(c), 0),
-                        expressionCategories.set.reduce((p: number, c) => Math.max(p, Number(c)), 0)
-                    )
-                    switch (typeof finalValue) {
-                        case "number":
-                            target![targetKey!] += finalValue
-                            break
-                        default:
-                            target![targetKey!] = finalValue
+                    if (expressionCategories.arrayPush.length !== 0) {
+                        expressionCategories.arrayPush.forEach(v => target![targetKey!].push(v))
+                    } else {
+                        let finalValue = Math.max(
+                            expressionCategories.change.reduce((p: number, c) => p + Number(c), 0),
+                            expressionCategories.set.reduce((p: number, c) => Math.max(p, Number(c)), 0)
+                        )
+                        switch (typeof finalValue) {
+                            case "number":
+                                target![targetKey!] += finalValue
+                                break
+                            default:
+                                target![targetKey!] = finalValue
+                        }
                     }
                 }
 
@@ -88,6 +92,7 @@ watch(() => props.activatedEffects, (v) => {
     // Frontend Effects
     store.characterEffects.class.forEach(v => v(characterResult.value))
     store.characterEffects.spell_slots.forEach(v => v(characterResult.value))
+    console.log(characterResult.value)
 })
 const skillCategory: Record<AbilityKeys, SkillKeys[]> = {
     str: ["athletics"],
@@ -97,6 +102,16 @@ const skillCategory: Record<AbilityKeys, SkillKeys[]> = {
     wis: ["animal_handling", "insight", "medicine", "survival", "perception"],
     cha: ["deception", "intimidation", "performance", "persuasion"]
 }
+const hp = computed(() => {
+    let hd = Number(characterResult.value.hit_dice)
+    let conMod = Math.floor((characterResult.value.abilities as { con: number }).con / 2) - 5
+    let hp = hd + conMod + ((characterResult.value.class as { level: number }).level - 1) * (hd / 2 + 1 + conMod)
+    return hp <= 0? "未知" : hp
+})
+const initiative = computed(() => {
+    let dexMod = Math.floor((characterResult.value.abilities as { dex: number }).dex / 2) - 5
+    return dexMod > 0 ? `+${dexMod}` : dexMod
+})
 
 
 const popoutHidden = ref(true)
@@ -196,13 +211,11 @@ const statusPannelOpen = ref(false)
         </div>
         <div class="px-1 py-2 text-center text-lg flex flex-col justify-center">
             <div class="font-bold">HP</div>
-            <div class="text-xl mb-3">20</div>
-            <div class="font-bold">AC</div>
-            <div class="text-xl mb-3">13</div>
+            <div class="text-xl mb-3">{{ hp }}</div>
             <div class="font-bold">先攻</div>
-            <div class="text-xl mb-3">+6</div>
+            <div class="text-xl mb-3">{{ initiative }}</div>
             <div class="font-bold">速度</div>
-            <div class="text-xl">25</div>
+            <div class="text-xl">{{ Number(characterResult.speed) <= 0 ? "未知" : characterResult.speed }}</div>
         </div>
         <div class="details">
             <div class="text-lg font-bold my-1 py-1 text-center border-b">法术点</div>
@@ -220,7 +233,10 @@ const statusPannelOpen = ref(false)
                 <div class="nothing">无熟练项</div>
             </div>
             <div class="text-lg font-bold my-1 py-1 text-center border-b">语言</div>
-            <div class="spell-slots-display">
+            <div class="languages-display">
+                <div v-for="language of new Set(characterResult.languages as string[])" class="w-1/4 text-center">
+                    {{ language }}
+                </div>
                 <div class="nothing">未知语言</div>
             </div>
         </div>
@@ -303,11 +319,16 @@ const statusPannelOpen = ref(false)
     @apply flex flex-wrap gap-y-2 mt-2;
 }
 
+.languages-display {
+    @apply flex flex-wrap gap-y-2 mt-2;
+}
+
 .nothing {
     @apply w-full text-center hidden;
 }
 
-.spell-slots-display>div:first-child.nothing {
+.spell-slots-display>div:first-child.nothing,
+.languages-display>div:first-child.nothing {
     display: block;
 }
 </style>

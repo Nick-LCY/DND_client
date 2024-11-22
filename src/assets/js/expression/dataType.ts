@@ -28,7 +28,7 @@ interface SourceRepresentation {
 }
 
 interface ExpressionResult {
-    [key: string]: ExpressionResult | boolean | string | number
+    [key: string]: ExpressionResult | boolean | string | number | string[]
 }
 
 interface ExpressionStack {

@@ -24,7 +24,10 @@ const characterStack = ref<ExpressionStack>({
         7: {current: [], capacity: []},
         8: {current: [], capacity: []},
         9: {current: [], capacity: []},
-    }
+    },
+    languages: [],
+    hit_dice: [],
+    speed: [],
 })
 
 function reset(what: "character") {

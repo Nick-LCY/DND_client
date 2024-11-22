@@ -43,7 +43,10 @@ const character: ExpressionResult = {
         7: {current: 0, capacity: 0},
         8: {current: 0, capacity: 0},
         9: {current: 0, capacity: 0},
-    }
+    },
+    languages: [],
+    hit_dice: 0,
+    speed: 0,
 }
 
 export { character }
