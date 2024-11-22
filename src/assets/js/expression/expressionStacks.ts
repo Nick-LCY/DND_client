@@ -13,6 +13,17 @@ const characterStack = ref<ExpressionStack>({
     },
     class: {
         level: [], main: [], sub: []
+    },
+    spell_slots: {
+        1: {current: [], capacity: []},
+        2: {current: [], capacity: []},
+        3: {current: [], capacity: []},
+        4: {current: [], capacity: []},
+        5: {current: [], capacity: []},
+        6: {current: [], capacity: []},
+        7: {current: [], capacity: []},
+        8: {current: [], capacity: []},
+        9: {current: [], capacity: []},
     }
 })
 

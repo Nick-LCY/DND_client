@@ -78,6 +78,13 @@ interface Subclass {
     features: Feature[]
     leveled_features: LeveledFeature[]
 }
+
+interface SpellSlot {
+    spell_level: number
+    class_level: number[]
+    capacity: number[]
+}
+
 interface Class {
     id: string
     name: string
@@ -87,6 +94,7 @@ interface Class {
     subclass_name: string
     subclasses_available_level: number
     subclasses: Subclass[]
+    spell_slots?: SpellSlot[]
 }
 
 function isEffect(obj: Effect
@@ -157,6 +165,7 @@ export type {
     EffectGroupDict,
     Effect,
     Expression,
+    SpellSlot,
     Class,
     Subclass
 }

@@ -4,7 +4,7 @@ import { processFeatures, processLeveledFeatures, mergeCategories } from '../../
 import { renderMD } from '../../assets/js/renderMarkdown';
 import { getByDataType } from '../../assets/js/api/getByDataType';
 import { getById } from '../../assets/js/api/getById';
-import { Class } from '../../assets/js/originalDataType';
+import { Class, SpellSlot as SpellSlotType } from '../../assets/js/originalDataType';
 import { store } from '../../assets/js/store';
 
 const classes = ref<Array<Class>>([])
@@ -23,6 +23,7 @@ const choosenClass = computed(() => classSelection.value.id != "")
 const subclassAvailable = computed(() => classSelection.value.level >= subclassAvailableLevel.value)
 const subclassAvailableLevel = ref(20)
 const subclasses = ref<Array<{ id: string, name: string }>>([])
+let spellSlotTable: SpellSlotType[] = []
 watch(subclassAvailable, (_1, isAvailable, _2) => {
     if (isAvailable) {
         classSelection.value.subclass = ""
@@ -42,13 +43,9 @@ async function changeClass() {
     )
     categories = mergeCategories(categories, leveledFeatureCategories)
     description.value = renderMD(classData.description)
+    spellSlotTable = classData.spell_slots ? classData.spell_slots : []
+    updateCharacter()
     emit("change", categories)
-    store.clearCharacterEffect("class")
-    store.addCharacterEffect("class", (v) => {
-        (v.class as { main: string }).main = classSelection.value.id;
-        (v.class as { sub: string }).sub = classSelection.value.subclass;
-        (v.class as { level: number }).level = classSelection.value.level;
-    })
     store.endLoad()
 }
 
@@ -82,28 +79,40 @@ async function changeSubclass() {
                     [classData.name, subclassName]
                 ),
             )
+            updateCharacter()
             emit("change", categories)
-            store.clearCharacterEffect("class")
-            store.addCharacterEffect("class", (v) => {
-                (v.class as { main: string }).main = classSelection.value.id;
-                (v.class as { sub: string }).sub = classSelection.value.subclass;
-                (v.class as { level: number }).level = classSelection.value.level;
-            })
             store.endLoad()
             return
         }
     }
 }
 
+function updateCharacter() {
+    store.clearCharacterEffect("class")
+    store.addCharacterEffect("class", (v) => {
+        (v.class as { main: string }).main = classSelection.value.id;
+        (v.class as { sub: string }).sub = classSelection.value.subclass;
+        (v.class as { level: number }).level = classSelection.value.level;
+    })
+    store.clearCharacterEffect("spell_slots")
+    store.addCharacterEffect("spell_slots", (v) => {
+        spellSlotTable.forEach(s => {
+            let capacityIdx = s.class_level.filter(c => classSelection.value.level >= c).length - 1
+            if (typeof v.spell_slots === "object" && capacityIdx >= 0) {
+                (v.spell_slots[s.spell_level] as { capacity: number }).capacity += s.capacity[capacityIdx]
+            }
+        })
+    })
+}
+
 function levelDown() {
     classSelection.value.level = Math.max(1, classSelection.value.level - 1)
-    store.clearCharacterEffect("class")
-    store.addCharacterEffect("class", (v) => (v.class as { level: number }).level = classSelection.value.level)
+    updateCharacter()
 }
+
 function levelUp() {
     classSelection.value.level = Math.min(20, classSelection.value.level + 1)
-    store.clearCharacterEffect("class")
-    store.addCharacterEffect("class", (v) => (v.class as { level: number }).level = classSelection.value.level)
+    updateCharacter()
 }
 </script>
 <template>

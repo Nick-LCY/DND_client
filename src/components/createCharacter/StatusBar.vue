@@ -87,6 +87,7 @@ watch(() => props.activatedEffects, (v) => {
     forEach(characterStack.value, characterSource.value)
     // Frontend Effects
     store.characterEffects.class.forEach(v => v(characterResult.value))
+    store.characterEffects.spell_slots.forEach(v => v(characterResult.value))
 })
 const skillCategory: Record<AbilityKeys, SkillKeys[]> = {
     str: ["athletics"],
@@ -193,8 +194,36 @@ const statusPannelOpen = ref(false)
                 </div>
             </div>
         </div>
-        <div></div>
-        <div></div>
+        <div class="px-1 py-2 text-center text-lg flex flex-col justify-center">
+            <div class="font-bold">HP</div>
+            <div class="text-xl mb-3">20</div>
+            <div class="font-bold">AC</div>
+            <div class="text-xl mb-3">13</div>
+            <div class="font-bold">先攻</div>
+            <div class="text-xl mb-3">+6</div>
+            <div class="font-bold">速度</div>
+            <div class="text-xl">25</div>
+        </div>
+        <div class="details">
+            <div class="text-lg font-bold my-1 py-1 text-center border-b">法术点</div>
+            <div class="spell-slots-display">
+                <template v-for="spellSlot, spellLevel in characterResult.spell_slots">
+                    <!-- TODO: AS ANY!?? ANYONE HELP! -->
+                    <div class="w-1/3 text-center" v-if="(spellSlot as any).capacity !== 0">
+                        {{ `${spellLevel}环：${(spellSlot as any).capacity}🔷` }}
+                    </div>
+                </template>
+                <div class="nothing">无法术点</div>
+            </div>
+            <div class="text-lg font-bold my-1 py-1 text-center border-b">熟练项</div>
+            <div class="spell-slots-display">
+                <div class="nothing">无熟练项</div>
+            </div>
+            <div class="text-lg font-bold my-1 py-1 text-center border-b">语言</div>
+            <div class="spell-slots-display">
+                <div class="nothing">未知语言</div>
+            </div>
+        </div>
         <div class="flex flex-col items-stretch pb-2 gap-2 px-1">
             <button @click="statusPannelOpen = !statusPannelOpen" class="button">
                 {{ statusPannelOpen ? "折叠" : "展开" }}
@@ -228,10 +257,19 @@ const statusPannelOpen = ref(false)
 
 .status-container {
     @apply bg-slate-700 grid;
-    grid-template-columns: 50px 250px;
+    grid-template-columns: 50px 300px;
     grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+        ". ."
+        ". a"
+        ". a";
     transition: width 150ms ease;
     width: 50px;
+}
+
+.details {
+    grid-area: a;
+    @apply px-1;
 }
 
 .open {
@@ -259,5 +297,17 @@ const statusPannelOpen = ref(false)
 .save-proficiency::after {
     content: "";
     @apply w-6 h-full border absolute -left-1 bottom-0 rounded-sm;
+}
+
+.spell-slots-display {
+    @apply flex flex-wrap gap-y-2 mt-2;
+}
+
+.nothing {
+    @apply w-full text-center hidden;
+}
+
+.spell-slots-display>div:first-child.nothing {
+    display: block;
 }
 </style>
