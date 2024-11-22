@@ -129,27 +129,31 @@ const statusPannelOpen = ref(false)
             <div class="font-bold">速度</div>
             <div class="text-xl">{{ Number(characterResult.speed) <= 0 ? "未知" : characterResult.speed }}</div>
             </div>
-            <div class="details">
-                <div class="text-lg font-bold my-1 py-1 text-center border-b">法术点</div>
+            <div class="details scroll-xs">
+                <div class="text-lg font-bold my-1 py-1 text-center border-b flex-shrink-0">法术点</div>
                 <div class="spell-slots-display">
                     <template v-for="spellSlot, spellLevel in characterResult.spell_slots">
                         <!-- TODO: AS ANY!?? ANYONE HELP! -->
-                        <div class="w-1/3 text-center" v-if="(spellSlot as any).capacity !== 0">
+                        <div class="w-1/3 text-center h-8 leading-8" v-if="(spellSlot as any).capacity !== 0">
                             {{ `${spellLevel}环：${(spellSlot as any).capacity}🔷` }}
                         </div>
                     </template>
                     <div class="nothing">无法术点</div>
                 </div>
-                <div class="text-lg font-bold my-1 py-1 text-center border-b">熟练项</div>
-                <div class="spell-slots-display">
-                    <div class="nothing">无熟练项</div>
-                </div>
-                <div class="text-lg font-bold my-1 py-1 text-center border-b">语言</div>
+                <div class="text-lg font-bold my-1 py-1 text-center border-b flex-shrink-0">语言</div>
                 <div class="languages-display">
-                    <div v-for="language of new Set(characterResult.languages as string[])" class="w-1/4 text-center">
+                    <div v-for="language of new Set(characterResult.languages as string[])" class="w-1/4 text-center h-8 leading-8">
                         {{ language }}
                     </div>
-                    <div class="nothing">未知语言</div>
+                    <div class="nothing">未掌握语言</div>
+                </div>
+                <div class="text-lg font-bold my-1 py-1 text-center border-b flex-shrink-0">熟练项</div>
+                <div class="proficiencies-display flex-grow h-20">
+                    <div v-for="language of new Set(characterResult.proficiencies as string[])"
+                        class="w-1/4 text-center h-8 leading-8">
+                        {{ language }}
+                    </div>
+                    <div class="nothing">无熟练项</div>
                 </div>
             </div>
             <div class="flex flex-col items-stretch pb-2 gap-2 px-1">
@@ -197,7 +201,7 @@ const statusPannelOpen = ref(false)
 
 .details {
     grid-area: a;
-    @apply px-1;
+    @apply px-1 flex flex-col overflow-auto;
 }
 
 .open {
@@ -227,20 +231,25 @@ const statusPannelOpen = ref(false)
     @apply w-6 h-full border absolute -left-1 bottom-0 rounded-sm;
 }
 
+.languages-display, .proficiencies-display, .spell-slots-display {
+    @apply flex flex-wrap mt-2 items-start;
+}
+
 .spell-slots-display {
-    @apply flex flex-wrap gap-y-2 mt-2;
+    @apply h-24;
 }
 
 .languages-display {
-    @apply flex flex-wrap gap-y-2 mt-2;
+    @apply h-16;
 }
 
 .nothing {
-    @apply w-full text-center hidden;
+    @apply w-full justify-center hidden h-full items-center;
 }
 
 .spell-slots-display>div:first-child.nothing,
+.proficiencies-display>div:first-child.nothing,
 .languages-display>div:first-child.nothing {
-    display: block;
+    display: flex;
 }
 </style>

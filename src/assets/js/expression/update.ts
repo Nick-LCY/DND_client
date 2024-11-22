@@ -83,7 +83,7 @@ function updateCharacter(v: SourcedEffect[]) {
     store.characterEffects.abilities.forEach(v => v(characterResult.value))
     // 2. 属性点、技能效果计算
     forEach(characterStack.value, characterSource.value,
-        ["abilities", "saves", "skills", "languages", "hit_dice", "speed"])
+        ["abilities", "saves", "skills", "languages", "hit_dice", "speed", "proficiencies"])
     // 3. 属性点间接决定属性计算（如先攻）
     characterResult.value.initiate = Math.floor((characterResult.value.abilities as { dex: number }).dex / 2) - 5
     let hd = Number(characterResult.value.hit_dice)

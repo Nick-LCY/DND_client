@@ -49,6 +49,7 @@ const character: ExpressionResult = {
     speed: 0,
     hp: 0,
     initiate: 0,
+    proficiencies: [],
 }
 
 export { character }

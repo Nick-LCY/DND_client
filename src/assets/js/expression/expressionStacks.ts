@@ -30,6 +30,7 @@ const characterStack = ref<ExpressionStack>({
     speed: [],
     initiate: [],
     hp: [],
+    proficiencies: [],
 })
 
 function reset(what: "character") {
