@@ -11,12 +11,13 @@ export const store = reactive({
     },
     characterEffects: {
         class: [] as ((v: ExpressionResult) => void)[],
-        spell_slots: [] as ((v: ExpressionResult) => void)[]
+        spell_slots: [] as ((v: ExpressionResult) => void)[],
+        abilities: [] as ((v: ExpressionResult) => void)[]
     },
-    addCharacterEffect(field: "class" | "spell_slots", fn: (v: ExpressionResult) => void) {
+    addCharacterEffect(field: "class" | "spell_slots" | "abilities", fn: (v: ExpressionResult) => void) {
         this.characterEffects[field].push(fn)
     },
-    clearCharacterEffect(field: "class" | "spell_slots") {
+    clearCharacterEffect(field: "class" | "spell_slots" | "abilities") {
         this.characterEffects[field].splice(0)
     }
 })

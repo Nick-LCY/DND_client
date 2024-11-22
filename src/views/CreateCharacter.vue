@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import Start from '../components/createCharacter/Start.vue';
 import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
+import BuyPoint from '../components/createCharacter/BuyPoint.vue';
 // import Backgrounds from '../components/createCharacter/Backgrounds.vue';
 import { Categories, ConditionalFeature, Feature } from '../assets/js/categories';
 import {
@@ -219,6 +220,8 @@ const activatedEffects = computed(() => {
                 <Races class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories"></Races>
                 <Classes class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
                 </Classes>
+                <BuyPoint class="step-card" :style="{ 'transform': stepTranslate }"
+                    :activatedEffects="activatedEffects"></BuyPoint>
                 <!-- <Backgrounds class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
                 </Backgrounds> -->
             </div>
