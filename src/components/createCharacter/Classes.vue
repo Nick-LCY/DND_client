@@ -45,6 +45,7 @@ async function changeClass() {
     description.value = renderMD(classData.description)
     spellSlotTable = classData.spell_slots ? classData.spell_slots : []
     updateCharacter()
+    classSelection.value.subclass = ""
     emit("change", categories)
     store.endLoad()
 }

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
+import { updateCharacter } from '../assets/js/expression/update';
 import Start from '../components/createCharacter/Start.vue';
 import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
@@ -205,6 +206,7 @@ const activatedEffects = computed(() => {
     }
     return effects
 })
+updateCharacter(activatedEffects.value)
 </script>
 <template>
     <main class="overflow-hidden">
