@@ -47,6 +47,8 @@ const character: ExpressionResult = {
     languages: [],
     hit_dice: 0,
     speed: 0,
+    hp: 0,
+    initiate: 0,
 }
 
 export { character }

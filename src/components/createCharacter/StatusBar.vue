@@ -37,8 +37,9 @@ watch(() => props.activatedEffects, (v) => {
         }
     }
     // Compute
-    function forEach(expStack: ExpressionStack, expSource: ExpressionSource) {
+    function forEach(expStack: ExpressionStack, expSource: ExpressionSource, processedKeys: string[] = []) {
         for (let [expStackKey, expStackVal] of Object.entries(expStack)) {
+            if (processedKeys.length !== 0 && !processedKeys.includes(expStackKey)) continue
             if (expStackVal instanceof Array) {
                 let expressionCategories: Record<string, (string | boolean | number)[]> = {
                     set: [], change: [], none: [], arrayPush: []
@@ -88,11 +89,19 @@ watch(() => props.activatedEffects, (v) => {
             }
         }
     }
-    forEach(characterStack.value, characterSource.value)
-    // Frontend Effects
+    // 1. 属性点（加点）、等级计算
     store.characterEffects.class.forEach(v => v(characterResult.value))
     store.characterEffects.spell_slots.forEach(v => v(characterResult.value))
-    console.log(characterResult.value)
+    // 2. 属性点、技能效果计算
+    forEach(characterStack.value, characterSource.value,
+        ["abilities", "saves", "skills", "languages", "hit_dice", "speed"])
+    // 3. 属性点间接决定属性计算（如先攻）
+    characterResult.value.initiate = Math.floor((characterResult.value.abilities as { dex: number }).dex / 2) - 5
+    let hd = Number(characterResult.value.hit_dice)
+    let conMod = Math.floor((characterResult.value.abilities as { con: number }).con / 2) - 5
+    characterResult.value.hp = hd + conMod + ((characterResult.value.class as { level: number }).level - 1) * (hd / 2 + 1 + conMod)
+    // 4. 属性点间接决定属性效果计算
+    forEach(characterStack.value, characterSource.value, ["initiate", "hp"])
 })
 const skillCategory: Record<AbilityKeys, SkillKeys[]> = {
     str: ["athletics"],
@@ -102,17 +111,6 @@ const skillCategory: Record<AbilityKeys, SkillKeys[]> = {
     wis: ["animal_handling", "insight", "medicine", "survival", "perception"],
     cha: ["deception", "intimidation", "performance", "persuasion"]
 }
-const hp = computed(() => {
-    let hd = Number(characterResult.value.hit_dice)
-    let conMod = Math.floor((characterResult.value.abilities as { con: number }).con / 2) - 5
-    let hp = hd + conMod + ((characterResult.value.class as { level: number }).level - 1) * (hd / 2 + 1 + conMod)
-    return hp <= 0? "未知" : hp
-})
-const initiative = computed(() => {
-    let dexMod = Math.floor((characterResult.value.abilities as { dex: number }).dex / 2) - 5
-    return dexMod > 0 ? `+${dexMod}` : dexMod
-})
-
 
 const popoutHidden = ref(true)
 const sections = computed(() => {
@@ -211,42 +209,44 @@ const statusPannelOpen = ref(false)
         </div>
         <div class="px-1 py-2 text-center text-lg flex flex-col justify-center">
             <div class="font-bold">HP</div>
-            <div class="text-xl mb-3">{{ hp }}</div>
+            <div class="text-xl mb-3">{{ Number(characterResult.hp) > 0 ? characterResult.hp : "未知" }}</div>
             <div class="font-bold">先攻</div>
-            <div class="text-xl mb-3">{{ initiative }}</div>
+            <div class="text-xl mb-3">
+                {{ Number(characterResult.initiate) > 0 ? `+${characterResult.hp}` : characterResult.initiate }}
+            </div>
             <div class="font-bold">速度</div>
             <div class="text-xl">{{ Number(characterResult.speed) <= 0 ? "未知" : characterResult.speed }}</div>
-        </div>
-        <div class="details">
-            <div class="text-lg font-bold my-1 py-1 text-center border-b">法术点</div>
-            <div class="spell-slots-display">
-                <template v-for="spellSlot, spellLevel in characterResult.spell_slots">
-                    <!-- TODO: AS ANY!?? ANYONE HELP! -->
-                    <div class="w-1/3 text-center" v-if="(spellSlot as any).capacity !== 0">
-                        {{ `${spellLevel}环：${(spellSlot as any).capacity}🔷` }}
-                    </div>
-                </template>
-                <div class="nothing">无法术点</div>
             </div>
-            <div class="text-lg font-bold my-1 py-1 text-center border-b">熟练项</div>
-            <div class="spell-slots-display">
-                <div class="nothing">无熟练项</div>
-            </div>
-            <div class="text-lg font-bold my-1 py-1 text-center border-b">语言</div>
-            <div class="languages-display">
-                <div v-for="language of new Set(characterResult.languages as string[])" class="w-1/4 text-center">
-                    {{ language }}
+            <div class="details">
+                <div class="text-lg font-bold my-1 py-1 text-center border-b">法术点</div>
+                <div class="spell-slots-display">
+                    <template v-for="spellSlot, spellLevel in characterResult.spell_slots">
+                        <!-- TODO: AS ANY!?? ANYONE HELP! -->
+                        <div class="w-1/3 text-center" v-if="(spellSlot as any).capacity !== 0">
+                            {{ `${spellLevel}环：${(spellSlot as any).capacity}🔷` }}
+                        </div>
+                    </template>
+                    <div class="nothing">无法术点</div>
                 </div>
-                <div class="nothing">未知语言</div>
+                <div class="text-lg font-bold my-1 py-1 text-center border-b">熟练项</div>
+                <div class="spell-slots-display">
+                    <div class="nothing">无熟练项</div>
+                </div>
+                <div class="text-lg font-bold my-1 py-1 text-center border-b">语言</div>
+                <div class="languages-display">
+                    <div v-for="language of new Set(characterResult.languages as string[])" class="w-1/4 text-center">
+                        {{ language }}
+                    </div>
+                    <div class="nothing">未知语言</div>
+                </div>
+            </div>
+            <div class="flex flex-col items-stretch pb-2 gap-2 px-1">
+                <button @click="statusPannelOpen = !statusPannelOpen" class="button">
+                    {{ statusPannelOpen ? "折叠" : "展开" }}
+                </button>
+                <button class="button">设置</button>
             </div>
         </div>
-        <div class="flex flex-col items-stretch pb-2 gap-2 px-1">
-            <button @click="statusPannelOpen = !statusPannelOpen" class="button">
-                {{ statusPannelOpen ? "折叠" : "展开" }}
-            </button>
-            <button class="button">设置</button>
-        </div>
-    </div>
 </template>
 <style scoped>
 .popout {

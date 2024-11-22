@@ -28,6 +28,8 @@ const characterStack = ref<ExpressionStack>({
     languages: [],
     hit_dice: [],
     speed: [],
+    initiate: [],
+    hp: [],
 })
 
 function reset(what: "character") {
