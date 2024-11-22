@@ -98,7 +98,7 @@ function updateCharacter() {
     store.addCharacterEffect("spell_slots", (v) => {
         spellSlotTable.forEach(s => {
             let capacityIdx = s.class_level.filter(c => classSelection.value.level >= c).length - 1
-            if (typeof v.spell_slots === "object" && capacityIdx >= 0) {
+            if (typeof v.spell_slots === "object" && !(v.spell_slots instanceof Array) && capacityIdx >= 0) {
                 (v.spell_slots[s.spell_level] as { capacity: number }).capacity += s.capacity[capacityIdx]
             }
         })
