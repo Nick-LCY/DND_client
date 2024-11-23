@@ -97,6 +97,13 @@ interface Class {
     spell_slots?: SpellSlot[]
 }
 
+interface Background {
+    id: string
+    name: string
+    description: string
+    features: Feature[]
+}
+
 function isEffect(obj: Effect
     | EffectSelection
     | EffectGroup
@@ -167,6 +174,7 @@ export type {
     Expression,
     SpellSlot,
     Class,
-    Subclass
+    Subclass,
+    Background
 }
 

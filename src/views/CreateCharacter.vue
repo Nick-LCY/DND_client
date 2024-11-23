@@ -5,7 +5,7 @@ import Start from '../components/createCharacter/Start.vue';
 import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
 import BuyPoint from '../components/createCharacter/BuyPoint.vue';
-// import Backgrounds from '../components/createCharacter/Backgrounds.vue';
+import Backgrounds from '../components/createCharacter/Backgrounds.vue';
 import { Categories, ConditionalFeature, Feature } from '../assets/js/categories';
 import {
     Effect as EffectType,
@@ -44,6 +44,7 @@ const categoryMapping: { [key: string]: string } = {
     subrace_proficiencies: "亚种熟练项",
     background_traits: "背景特质",
     background_proficiencies: "背景熟练项",
+    background_equipment: "背景初始装备",
 }
 const currentStep = ref<number>(0);
 const totalSteps = ref<number>(5);
@@ -222,10 +223,10 @@ updateCharacter(activatedEffects.value)
                 <Races class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories"></Races>
                 <Classes class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
                 </Classes>
+                <Backgrounds class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
+                </Backgrounds>
                 <BuyPoint class="step-card" :style="{ 'transform': stepTranslate }"
                     :activatedEffects="activatedEffects"></BuyPoint>
-                <!-- <Backgrounds class="step-card" :style="{ 'transform': stepTranslate }" @change="updateCategories">
-                </Backgrounds> -->
             </div>
             <div class="mx-8 flex items-stretch h-10 shrink-0 gap-2 mb-8">
                 <button @click="prevStep"

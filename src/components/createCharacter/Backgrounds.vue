@@ -4,9 +4,11 @@ import { processFeatures } from '../../assets/js/featureProcessing';
 import { renderMD } from '../../assets/js/renderMarkdown';
 import { getByDataType } from '../../assets/js/api/getByDataType';
 import { getById } from '../../assets/js/api/getById';
+import { Background } from '../../assets/js/originalDataType';
+import { store } from '../../assets/js/store';
 
-const backgrounds = ref<Array<{ id: string, name: string }>>([])
-getByDataType("backgrounds").then(data => {
+const backgrounds = ref<Array<Background>>([])
+getByDataType<Background>("backgrounds").then(data => {
     backgrounds.value = data
 })
 const emit = defineEmits(["change"])
@@ -14,10 +16,12 @@ const description = ref<string>("")
 const backgroundSelection = ref<string>("")
 
 async function changeBackground() {
-    let backgroundData = await getById(backgroundSelection.value);
-    let categories = processFeatures(backgroundData.features)
+    store.startLoad()
+    let backgroundData = await getById<Background>(backgroundSelection.value);
+    let categories = processFeatures(backgroundData.features, [backgroundData.name])
     description.value = renderMD(backgroundData.description)
     emit("change", categories)
+    store.endLoad()
 }
 </script>
 <template>
@@ -33,7 +37,9 @@ async function changeBackground() {
                 </label>
             </div>
         </div>
-        <div class="description scroll-xs" v-html="description"></div>
+        <div class="m-8 flex-grow h-64 rounded-lg" :class="{ loading: store.loading }">
+            <div class="scroll-xs description" v-html="description"></div>
+        </div>
     </div>
 </template>
 <style scoped>
@@ -56,6 +62,6 @@ input[type="radio"]:checked+.option-circle::after {
 }
 
 .description {
-    @apply m-8 p-2 bg-slate-800 overflow-auto rounded-lg h-64 flex-grow;
+    @apply p-2 bg-slate-800 overflow-auto rounded-lg h-full;
 }
 </style>
