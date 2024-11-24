@@ -14,6 +14,7 @@ interface Expression {
         Value)[]
 }
 interface Effect {
+    type: "effect"
     id: string
     name: string
     description: string
@@ -21,8 +22,26 @@ interface Effect {
     prerequisite?: Expression
 }
 
-interface EffectGroup extends Array<Effect | EffectGroup | EffectSelection> {
-    [key: number]: Effect | EffectGroup | EffectSelection
+interface SpellList {
+    id: string
+}
+
+interface SpellListEffect {
+    id: string
+    type: "spell_list_effect"
+    name: string
+    description: string
+    spells: {
+        known?: number
+        start_level?: number
+        end_level?: number
+        level?: number
+        from: (SpellList | "string")[]
+    }
+}
+
+interface EffectGroup extends Array<Effect | EffectGroup | EffectSelection | SpellListEffect> {
+    [key: number]: Effect | EffectGroup | EffectSelection | SpellListEffect
 }
 
 interface EffectGroupDict {
@@ -104,18 +123,29 @@ interface Background {
     features: Feature[]
 }
 
+function isSpellListEffect(obj: Effect
+    | EffectSelection
+    | EffectGroup
+    | EffectGroupDict
+    | SpellListEffect
+): obj is SpellListEffect {
+    return (<SpellListEffect>obj).type === "spell_list_effect"
+}
+
 function isEffect(obj: Effect
     | EffectSelection
     | EffectGroup
     | EffectGroupDict
+    | SpellListEffect
 ): obj is Effect {
-    return !isEffectGroup(obj) && !isEffectSelection(obj) && !isEffectGroupDict(obj);
+    return (<Effect>obj).type === "effect"
 }
 
 function isEffectGroup(obj: Effect
     | EffectSelection
     | EffectGroup
     | EffectGroupDict
+    | SpellListEffect
 ): obj is EffectGroup {
     return obj instanceof Array
 }
@@ -124,6 +154,7 @@ function isEffectGroupDict(obj: Effect
     | EffectSelection
     | EffectGroup
     | EffectGroupDict
+    | SpellListEffect
 ): obj is EffectGroupDict {
     return (<EffectGroupDict>obj).type === "group_dict"
 }
@@ -132,14 +163,16 @@ function isEffectGroupOrEffectGroupDict(obj: Effect
     | EffectSelection
     | EffectGroup
     | EffectGroupDict
+    | SpellListEffect
 ): obj is (EffectGroupDict | EffectGroup) {
-    return !isEffect(obj) && !isEffectSelection(obj)
+    return !isEffect(obj) && !isEffectSelection(obj) && !isSpellListEffect(obj)
 }
 
 function isEffectSelection(obj: Effect
     | EffectSelection
     | EffectGroup
     | EffectGroupDict
+    | SpellListEffect
 ): obj is EffectSelection {
     return (<EffectSelection>obj).type === "selection"
 }
@@ -154,6 +187,7 @@ function isValue(obj: any): obj is Value {
 
 export {
     isEffect,
+    isSpellListEffect,
     isEffectSelection,
     isEffectGroup,
     isEffectGroupDict,
@@ -170,6 +204,8 @@ export type {
     EffectSelection,
     EffectGroup,
     EffectGroupDict,
+    SpellList,
+    SpellListEffect,
     Effect,
     Expression,
     SpellSlot,

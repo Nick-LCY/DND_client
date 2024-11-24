@@ -4,9 +4,10 @@ import type {
     EffectGroupDict as EffectGroupDictType,
     EffectGroup as EffectGroupType,
     EffectSelection as EffectSelectionType,
-    Effect as EffectType
+    Effect as EffectType,
+    SpellListEffect
 } from '../../assets/js/originalDataType';
-import { isEffectGroup, isEffectSelection, isEffect, isEffectGroupOrEffectGroupDict } from '../../assets/js/originalDataType';
+import { isEffectGroup, isEffectSelection, isEffect, isEffectGroupOrEffectGroupDict, isSpellListEffect } from '../../assets/js/originalDataType';
 import { renderMD } from '../../assets/js/renderMarkdown';
 import type { vModelSelection } from '../../assets/js/selections';
 import { filterByType, isSelected, selectedCount } from '../../assets/js/selections';
@@ -30,7 +31,7 @@ const groupIndex = computed(
     )
 )
 const effectIndex = computed(
-    () => filterByType<EffectType>(props.effects, isEffect)
+    () => filterByType<EffectType | SpellListEffect>(props.effects, (item) => isSpellListEffect(item) || isEffect(item))
 )
 
 const groupLength = computed(

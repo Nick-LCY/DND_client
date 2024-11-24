@@ -14,7 +14,8 @@ import {
     EffectGroupDict as EffectGroupDictType,
     isEffect,
     isEffectSelection,
-    isEffectGroupDict
+    isEffectGroupDict,
+    isSpellListEffect,
 } from '../assets/js/originalDataType';
 import { vModelSelection } from '../assets/js/selections';
 import EffectGroup from '../components/createCharacter/EffectGroup.vue';
@@ -80,9 +81,8 @@ function collapse(categoryName: string) {
 function visitEffects(effects: EffectGroupType | EffectGroupDictType, vModelObj: vModelSelection, inSelection: boolean = false) {
     if (isEffectGroupDict(effects)) effects = effects.group
     for (let effect of effects) {
-        if (isEffect(effect)) {
-            let value = 0
-            if (!inSelection) value = 1
+        if (isEffect(effect) || isSpellListEffect(effect)) {
+            let value = inSelection ? 0 : 1
             vModelObj.selectedString.push({ id: effect.id, value })
         } else if (isEffectSelection(effect)) {
             const subSelection: vModelSelection = {
@@ -172,6 +172,8 @@ const activatedEffects = computed(() => {
         else list = obj
         for (let i of list) {
             if (isEffect(i)) effects[i.id] = i
+            // TODO
+            else if (isSpellListEffect(i)) continue
             else effects = {
                 ...effects,
                 ...findAllEffects(i)
@@ -201,8 +203,10 @@ const activatedEffects = computed(() => {
         for (let { idx, feature, categoryName } of features) {
             let selectedEffectIds = findSelectedEffectIds(featureSelections.value[featureId][idx])
             let effectDict = findAllEffects(feature.effects)
-            for (let effectId of selectedEffectIds)
-                effects.push({ sources: [...feature.sources, categoryMapping[categoryName], feature.name], effect: effectDict[effectId] })
+            for (let effectId of selectedEffectIds) {
+                if (effectDict[effectId] !== undefined)
+                    effects.push({ sources: [...feature.sources, categoryMapping[categoryName], feature.name], effect: effectDict[effectId] })
+            }
         }
     }
     return effects
