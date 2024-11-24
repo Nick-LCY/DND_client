@@ -16,13 +16,79 @@ import {
     isEffectSelection,
     isEffectGroupDict,
     isSpellListEffect,
+    SpellListEffect,
+    isSpell,
+    isSpellList,
+    Spell,
 } from '../assets/js/originalDataType';
 import { vModelSelection } from '../assets/js/selections';
 import EffectGroup from '../components/createCharacter/EffectGroup.vue';
 import StatusBar from '../components/createCharacter/StatusBar.vue';
 import { store } from '../assets/js/store';
 import { SourcedEffect } from '../assets/js/expression/dataType';
+import { characterResult } from '../assets/js/expression/expressionResults';
+import { spellList } from '../assets/js/expression/spellLists';
 import _ from "lodash";
+
+const activatedSpellList = computed(() => {
+    interface SpellPart {
+        name: string, spells: Spell[]
+    }
+    const results = [] as { known: number, spellParts: SpellPart[], sources: string[] }[]
+    let currentLevel = (characterResult.value.class as { level: number }).level
+    let currentSpellLevel = Object.entries(
+        characterResult.value.spell_slots as { [key: number]: { capacity: number } }).filter(
+            ([_, v]) => v.capacity > 0
+        ).reduce(
+            (p, c) => Math.max(p, Number(c[0])), 0
+        )
+    for (let sourcedSpellList of spellList.value) {
+        for (let spellListItem of sourcedSpellList.effect.spells) {
+            // 在写了level相关的字段的时候判断是否生效
+            if (spellListItem.level !== undefined && currentLevel !== spellListItem.level) continue
+            if (spellListItem.start_level !== undefined && currentLevel < spellListItem.start_level) continue
+            if (spellListItem.end_level !== undefined && currentLevel >= spellListItem.end_level) continue
+
+            let result = { known: 0, spellParts: [] as SpellPart[], sources: sourcedSpellList.sources }
+            let others: SpellPart = { name: "其他", spells: [] }
+            if (spellListItem.from instanceof Array) {
+                for (let spellOrList of spellListItem.from) {
+                    if (isSpell(spellOrList) && currentSpellLevel >= spellOrList.spell_level) others.spells.push(spellOrList)
+                    else if (isSpellList(spellOrList)) {
+                        let partOfSpellList: SpellPart = { name: spellOrList.name, spells: [] }
+                        for (let spell of spellOrList.list) {
+                            if (currentSpellLevel >= spell.spell_level) partOfSpellList.spells.push(spell)
+                        }
+                        result.spellParts.push(partOfSpellList)
+                    }
+                }
+            } else {
+                let spellPart: SpellPart = { name: spellListItem.from.name, spells: [] }
+                for (let spell of spellListItem.from.list) {
+                    if (currentSpellLevel >= spell.spell_level) spellPart.spells.push(spell)
+                }
+                result.spellParts.push(spellPart)
+            }
+            // 如果没有写known为多少，则自动学会所有列出的法术
+            if (spellListItem.known !== undefined) result.known = spellListItem.known
+            else result.known = result.spellParts.length
+            results.push(result)
+        }
+    }
+    if (categoryCollapse.value[4] === undefined) categoryCollapse.value[4] = {}
+    results.forEach((_, idx) => {
+        categoryCollapse.value[4][`spell-lists-${idx}`] = false
+        knownSpells.value[idx] = []
+    })
+    return results
+})
+const knownSpells = ref<string[][]>([])
+function spellShouldBeDisabled(spellId: string, spellListIdx: number) {
+    if (knownSpells.value[spellListIdx].length >= activatedSpellList.value[spellListIdx].known) {
+        return !knownSpells.value[spellListIdx].includes(spellId)
+    }
+    return false
+}
 
 const categories = ref<{ [key: number]: Categories }>({});
 const currentCategoryCollapse = computed(
@@ -164,15 +230,14 @@ const activatedEffects = computed(() => {
         for (let group of obj.selectedGroup) selectedEffects.push(...findSelectedEffectIds(group))
         return selectedEffects
     }
-    function findAllEffects(obj: EffectGroupType | EffectSelectionType | EffectGroupDictType): { [key: string]: EffectType } {
-        let effects: { [key: string]: EffectType } = {}
+    function findAllEffects(obj: EffectGroupType | EffectSelectionType | EffectGroupDictType): { [key: string]: EffectType | SpellListEffect } {
+        let effects: { [key: string]: EffectType | SpellListEffect } = {}
         let list: EffectGroupType
         if (isEffectSelection(obj)) list = obj.available
         else if (isEffectGroupDict(obj)) list = obj.group
         else list = obj
         for (let i of list) {
-            if (isEffect(i)) effects[i.id] = i
-            // TODO
+            if (isEffect(i) || isSpellListEffect(i)) effects[i.id] = i
             else if (isSpellListEffect(i)) continue
             else effects = {
                 ...effects,
@@ -242,7 +307,9 @@ updateCharacter(activatedEffects.value)
             </div>
         </div>
         <div class="bg-slate-800 h-screen flex flex-col items-stretch">
-            <h2 v-if="currentStep > 0"
+            <h2 v-if="currentStep === 4"
+                class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">学习法术</h2>
+            <h2 v-else-if="currentStep > 0 && currentStep !== 4"
                 class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">特质</h2>
             <h2 v-else class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">
                 简要说明</h2>
@@ -251,13 +318,11 @@ updateCharacter(activatedEffects.value)
                     :style="{ 'transform': stepTranslate }">
                     是饼🍪。
                 </div>
-                <div v-for="step in totalSteps" class="flex-shrink-0 w-full p-4 overflow-y-scroll scroll-xs"
-                    :style="{ 'transform': stepTranslate }">
+                <div v-for="step in [1, 2, 3]" class="step-details scroll-xs" :style="{ 'transform': stepTranslate }">
                     <template v-if="categories[step] != undefined">
                         <div v-for="(features, categoryName) in categories[step]" :key="categoryName"
                             class=" border-2 border-gray-700 rounded-md mb-2">
-                            <button
-                                class="cursor-pointer hover:bg-slate-700 w-full text-left transition p-2 flex justify-between items-center"
+                            <button class="collapse-button"
                                 :class="{ 'bg-slate-700': !categoryCollapse[step][categoryName] }"
                                 @click="collapse(String(categoryName))">
                                 <h3 class="text-2xl font-bold"> {{ categoryMapping[categoryName] }} </h3>
@@ -282,6 +347,46 @@ updateCharacter(activatedEffects.value)
                             </div>
                         </div>
                     </template>
+                </div>
+                <div class="step-details scroll-xs" :style="{ 'transform': stepTranslate }">
+                    <div v-for="spellList, idx of activatedSpellList" class="border-2 border-gray-700 rounded-md mb-2"
+                        :key=idx>
+                        <button class="collapse-button"
+                            :class="{ 'bg-slate-700': !categoryCollapse[4][`spell-lists-${idx}`] }"
+                            @click="collapse(`spell-lists-${idx}`)">
+                            <div>
+                                <div class="text-xl font-bold">已学法术：{{ knownSpells[idx].length }} / {{ spellList.known
+                                    }}
+                                </div>
+                                <div class="text-gray-400 text-xs">法表来源：{{ spellList.sources.join(" > ") }}</div>
+                            </div>
+                            <div class="relative w-4 h-1 transition"
+                                :class="{ 'rotate-45': !categoryCollapse[4][`spell-lists-${idx}`] }">
+                                <div class="w-4 h-1 bg-slate-50"></div>
+                                <div class="w-4 h-1 bg-slate-50 absolute top-0 transition rotate-90"></div>
+                            </div>
+                        </button>
+                        <div class="collapse-container" :id="`spell-lists-${idx}`"
+                            :class="{ collapsed: categoryCollapse[4][`spell-lists-${idx}`] }" ref="categoryRefs">
+                            <div v-for="spellPart, spellPartIdx of spellList.spellParts" class="mx-4 my-2"
+                                :key="spellPartIdx">
+                                <div class="text-lg font-bold mb-1">{{ spellPart.name }}：</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <template v-for="spell, spellIdx of spellPart.spells" :key="spellIdx">
+                                        <input class="hidden" type="checkbox" :id="`${idx}-${spellPartIdx}-${spellIdx}`"
+                                            v-model="knownSpells[idx]" :value="spell.id"
+                                            :disabled="spellShouldBeDisabled(spell.id, idx)">
+                                        <label
+                                            class="border rounded-md p-2 border-slate-500 select-none cursor-pointer flex-grow text-center"
+                                            :class="{ 'disabled': spellShouldBeDisabled(spell.id, idx) }"
+                                            :for="`${idx}-${spellPartIdx}-${spellIdx}`">
+                                            {{ spell.name }}
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -312,8 +417,23 @@ main {
     @apply flex flex-col items-stretch flex-shrink-0 w-full transition-transform;
 }
 
+.collapse-button {
+    @apply cursor-pointer hover:bg-slate-700 w-full text-left transition p-2 flex justify-between items-center;
+}
 
 .collapse-container {
     @apply overflow-hidden transition-all;
+}
+
+.step-details {
+    @apply flex-shrink-0 w-full p-4 overflow-y-scroll;
+}
+
+input[type="checkbox"]:checked+label {
+    @apply bg-slate-600;
+}
+
+.disabled {
+    @apply text-gray-400 cursor-not-allowed;
 }
 </style>

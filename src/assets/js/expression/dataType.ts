@@ -1,4 +1,4 @@
-import { Effect, Expression } from "../originalDataType"
+import { Effect, Expression, SpellListEffect } from "../originalDataType"
 
 const _abilityKeys = ["str", "dex", "con", "int", "wis", "cha"] as const
 type AbilityKeys = (typeof _abilityKeys)[number]
@@ -14,7 +14,7 @@ type SkillKeys = (typeof _skills)[number]
 
 interface SourcedEffect {
     sources: string[]
-    effect: Effect
+    effect: Effect | SpellListEffect
 }
 
 interface SourcedExpression {

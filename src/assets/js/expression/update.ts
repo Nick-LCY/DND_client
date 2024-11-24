@@ -5,23 +5,30 @@ import { characterSource, reset as sourceReset } from './expressionSource';
 import { processExpression } from './processExpression';
 import { ExpressionSource, ExpressionStack, SourcedEffect } from './dataType';
 import { store } from '../store';
+import { isEffect } from '../originalDataType';
+import { spellList } from './spellLists';
 function updateCharacter(v: SourcedEffect[]) {
     // Clean
     resultReset("character")
     stackReset("character")
     sourceReset("character")
+    spellList.value.splice(0)
     // Push
     for (let sourcedEffect of v) {
-        for (let expression of sourcedEffect.effect.expressions) {
-            const { target } = expression
-            let target_obj = target.split(".")[0]
-            switch (target_obj) {
-                case "character":
-                    findTarget(target.split(".").slice(1).join("."), characterStack.value).push({
-                        sources: sourcedEffect.sources,
-                        expression
-                    })
+        if (isEffect(sourcedEffect.effect)) {
+            for (let expression of sourcedEffect.effect.expressions) {
+                const { target } = expression
+                let target_obj = target.split(".")[0]
+                switch (target_obj) {
+                    case "character":
+                        findTarget(target.split(".").slice(1).join("."), characterStack.value).push({
+                            sources: sourcedEffect.sources,
+                            expression
+                        })
+                }
             }
+        } else {
+            spellList.value.push({ sources: sourcedEffect.sources, effect: sourcedEffect.effect })
         }
     }
     // Compute

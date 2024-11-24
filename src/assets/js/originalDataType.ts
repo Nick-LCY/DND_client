@@ -22,8 +22,18 @@ interface Effect {
     prerequisite?: Expression
 }
 
+interface Spell {
+    id: string
+    name: string
+    description: string
+    spell_level: number
+}
+
 interface SpellList {
     id: string
+    name: string
+    description: string
+    list: Spell[]
 }
 
 interface SpellListEffect {
@@ -36,8 +46,8 @@ interface SpellListEffect {
         start_level?: number
         end_level?: number
         level?: number
-        from: (SpellList | "string")[]
-    }
+        from: (SpellList | Spell)[] | SpellList
+    }[]
 }
 
 interface EffectGroup extends Array<Effect | EffectGroup | EffectSelection | SpellListEffect> {
@@ -185,6 +195,14 @@ function isValue(obj: any): obj is Value {
     return (<Value>obj).value !== undefined
 }
 
+function isSpell(obj: Spell | SpellList): obj is Spell {
+    return (<SpellList>obj).list === undefined
+}
+
+function isSpellList(obj: Spell | SpellList): obj is SpellList {
+    return (<SpellList>obj).list !== undefined
+}
+
 export {
     isEffect,
     isSpellListEffect,
@@ -193,7 +211,9 @@ export {
     isEffectGroupDict,
     isEffectGroupOrEffectGroupDict,
     isExpression,
-    isValue
+    isValue,
+    isSpell,
+    isSpellList
 }
 
 export type {
@@ -204,6 +224,7 @@ export type {
     EffectSelection,
     EffectGroup,
     EffectGroupDict,
+    Spell,
     SpellList,
     SpellListEffect,
     Effect,

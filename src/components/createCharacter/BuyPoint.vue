@@ -36,7 +36,8 @@ const cost = computed(() => {
 </script>
 <template>
     <div>
-        <h2 class="font-bold text-center text-3xl my-8 flex-shrink-0">购点</h2>
+        <h2 class="font-bold text-center text-3xl my-8 flex-shrink-0">购点与法术</h2>
+        <div class="font-bold text-center text-xl mb-4">基础属性值</div>
         <div class="buy-abilities">
             <template v-for="_, key of sth">
                 <label :for="key" class="text-xl leading-10 h-10">{{ nameMapping[key] }}</label>
