@@ -95,8 +95,6 @@ const activatedSpellList = computed(() => {
     }
     if (categoryCollapse.value[4] === undefined) categoryCollapse.value[4] = {}
     results.forEach((_, idx) => {
-        if (!(`spell-lists-${idx}` in categoryCollapse.value[4]))
-            categoryCollapse.value[4][`spell-lists-${idx}`] = false
         knownSpells.value[idx] = []
     })
     return results
@@ -160,6 +158,8 @@ function collapse(categoryName: string) {
         }, 151)
     }
     setTimeout(() => {
+        if (currentCategoryCollapse.value[categoryName] === undefined)
+            currentCategoryCollapse.value[categoryName] = false
         currentCategoryCollapse.value[categoryName] = !currentCollapse
     }, 1)
 }
