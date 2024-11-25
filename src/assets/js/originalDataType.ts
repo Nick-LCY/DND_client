@@ -46,6 +46,8 @@ interface SpellListEffect {
         start_level?: number
         end_level?: number
         level?: number
+        cantrip_only?: boolean
+        spell_only?: boolean
         from: (SpellList | Spell)[] | SpellList
     }[]
 }

@@ -54,6 +54,8 @@ const activatedSpellList = computed(() => {
             if (spellListItem.from instanceof Array) {
                 for (let spellOrList of spellListItem.from) {
                     if (isSpell(spellOrList) && currentSpellLevel >= spellOrList.spell_level) {
+                        if (spellListItem.cantrip_only && spellOrList.spell_level > 0) continue
+                        if (spellListItem.spell_only && spellOrList.spell_level === 0) continue
                         if (others.spells[spellOrList.spell_level] === undefined)
                             others.spells[spellOrList.spell_level] = []
                         others.spells[spellOrList.spell_level].push(spellOrList)
@@ -62,6 +64,8 @@ const activatedSpellList = computed(() => {
                         let partOfSpellList: SpellPart = { name: spellOrList.name, spells: {} }
                         for (let spell of spellOrList.list) {
                             if (currentSpellLevel >= spell.spell_level) {
+                                if (spellListItem.cantrip_only && spell.spell_level > 0) continue
+                                if (spellListItem.spell_only && spell.spell_level === 0) continue
                                 if (partOfSpellList.spells[spell.spell_level] === undefined)
                                     partOfSpellList.spells[spell.spell_level] = []
                                 partOfSpellList.spells[spell.spell_level].push(spell)
@@ -74,6 +78,8 @@ const activatedSpellList = computed(() => {
                 let spellPart: SpellPart = { name: spellListItem.from.name, spells: {} }
                 for (let spell of spellListItem.from.list) {
                     if (currentSpellLevel >= spell.spell_level) {
+                        if (spellListItem.cantrip_only && spell.spell_level > 0) continue
+                        if (spellListItem.spell_only && spell.spell_level === 0) continue
                         if (spellPart.spells[spell.spell_level] === undefined)
                             spellPart.spells[spell.spell_level] = []
                         spellPart.spells[spell.spell_level].push(spell)
