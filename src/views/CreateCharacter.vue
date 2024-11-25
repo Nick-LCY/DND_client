@@ -32,7 +32,7 @@ import _ from "lodash";
 
 const activatedSpellList = computed(() => {
     interface SpellPart {
-        name: string, spells: Spell[]
+        name: string, spells: { [key: number]: Spell[] }
     }
     const results = [] as { known: number, spellParts: SpellPart[], sources: string[] }[]
     let currentLevel = (characterResult.value.class as { level: number }).level
@@ -50,22 +50,34 @@ const activatedSpellList = computed(() => {
             if (spellListItem.end_level !== undefined && currentLevel >= spellListItem.end_level) continue
 
             let result = { known: 0, spellParts: [] as SpellPart[], sources: sourcedSpellList.sources }
-            let others: SpellPart = { name: "其他", spells: [] }
+            let others: SpellPart = { name: "其他", spells: {} }
             if (spellListItem.from instanceof Array) {
                 for (let spellOrList of spellListItem.from) {
-                    if (isSpell(spellOrList) && currentSpellLevel >= spellOrList.spell_level) others.spells.push(spellOrList)
+                    if (isSpell(spellOrList) && currentSpellLevel >= spellOrList.spell_level) {
+                        if (others.spells[spellOrList.spell_level] === undefined)
+                            others.spells[spellOrList.spell_level] = []
+                        others.spells[spellOrList.spell_level].push(spellOrList)
+                    }
                     else if (isSpellList(spellOrList)) {
-                        let partOfSpellList: SpellPart = { name: spellOrList.name, spells: [] }
+                        let partOfSpellList: SpellPart = { name: spellOrList.name, spells: {} }
                         for (let spell of spellOrList.list) {
-                            if (currentSpellLevel >= spell.spell_level) partOfSpellList.spells.push(spell)
+                            if (currentSpellLevel >= spell.spell_level) {
+                                if (partOfSpellList.spells[spell.spell_level] === undefined)
+                                    partOfSpellList.spells[spell.spell_level] = []
+                                partOfSpellList.spells[spell.spell_level].push(spell)
+                            }
                         }
                         result.spellParts.push(partOfSpellList)
                     }
                 }
             } else {
-                let spellPart: SpellPart = { name: spellListItem.from.name, spells: [] }
+                let spellPart: SpellPart = { name: spellListItem.from.name, spells: {} }
                 for (let spell of spellListItem.from.list) {
-                    if (currentSpellLevel >= spell.spell_level) spellPart.spells.push(spell)
+                    if (currentSpellLevel >= spell.spell_level) {
+                        if (spellPart.spells[spell.spell_level] === undefined)
+                            spellPart.spells[spell.spell_level] = []
+                        spellPart.spells[spell.spell_level].push(spell)
+                    }
                 }
                 result.spellParts.push(spellPart)
             }
@@ -77,7 +89,8 @@ const activatedSpellList = computed(() => {
     }
     if (categoryCollapse.value[4] === undefined) categoryCollapse.value[4] = {}
     results.forEach((_, idx) => {
-        categoryCollapse.value[4][`spell-lists-${idx}`] = false
+        if (!(`spell-lists-${idx}` in categoryCollapse.value[4]))
+            categoryCollapse.value[4][`spell-lists-${idx}`] = false
         knownSpells.value[idx] = []
     })
     return results
@@ -120,12 +133,13 @@ const stepTranslate = computed(() => {
 })
 const featureSelections = ref<{ [key: string]: { [key: number]: vModelSelection } }>({});
 const categoryRefs = ref<Array<HTMLElement>>([]);
+const connectedCategroyRefs = computed(() => categoryRefs.value.filter(v => v.isConnected))
 const categoryCollapse = ref<{ [step: number]: { [category: string]: boolean } }>({})
 
 function collapse(categoryName: string) {
     let currentCollapse = currentCategoryCollapse.value[categoryName]
     let targetElement: HTMLElement
-    for (let featureRef of categoryRefs.value) {
+    for (let featureRef of connectedCategroyRefs.value) {
         if (featureRef.id == categoryName) {
             targetElement = featureRef
             break
@@ -193,7 +207,7 @@ function updateCategories(categories_data: Categories) {
             // FIXME: compare between ConditionalFeatures always false
             if (!_.isEqual(oldObj, newObj)) {
                 currentCategoryCollapse.value[key] = false
-                for (let featureRef of categoryRefs.value) {
+                for (let featureRef of connectedCategroyRefs.value) {
                     if (featureRef.id == key) {
                         featureRef.style.setProperty("height", "")
                         break
@@ -370,18 +384,25 @@ updateCharacter(activatedEffects.value)
                             :class="{ collapsed: categoryCollapse[4][`spell-lists-${idx}`] }" ref="categoryRefs">
                             <div v-for="spellPart, spellPartIdx of spellList.spellParts" class="mx-4 my-2"
                                 :key="spellPartIdx">
-                                <div class="text-lg font-bold mb-1">{{ spellPart.name }}：</div>
-                                <div class="flex flex-wrap gap-2">
-                                    <template v-for="spell, spellIdx of spellPart.spells" :key="spellIdx">
-                                        <input class="hidden" type="checkbox" :id="`${idx}-${spellPartIdx}-${spellIdx}`"
-                                            v-model="knownSpells[idx]" :value="spell.id"
-                                            :disabled="spellShouldBeDisabled(spell.id, idx)">
-                                        <label
-                                            class="border rounded-md p-2 border-slate-500 select-none cursor-pointer flex-grow text-center"
-                                            :class="{ 'disabled': spellShouldBeDisabled(spell.id, idx) }"
-                                            :for="`${idx}-${spellPartIdx}-${spellIdx}`">
-                                            {{ spell.name }}
-                                        </label>
+                                <div class="text-lg font-bold my-1">{{ spellPart.name }}：</div>
+                                <div v-for="spells, spellLevel of spellPart.spells" :key="spellLevel">
+                                    <template v-if="spells.length !== 0">
+                                        <div class="font-bold my-1 ml-2" v-if="spellLevel > 0">{{ spellLevel }} 环：</div>
+                                        <div class="font-bold my-1 ml-2" v-else>戏法：</div>
+                                        <div class="flex flex-wrap gap-2 ml-2">
+                                            <template v-for="spell, spellIdx of spells" :key="spellIdx">
+                                                <input class="hidden" type="checkbox"
+                                                    :id="`${idx}-${spellPartIdx}-${spellLevel}-${spellIdx}`"
+                                                    v-model="knownSpells[idx]" :value="spell.id"
+                                                    :disabled="spellShouldBeDisabled(spell.id, idx)">
+                                                <label
+                                                    class="border rounded-md p-2 border-slate-500 select-none cursor-pointer text-center hover:bg-slate-600 transition"
+                                                    :class="{ 'disabled': spellShouldBeDisabled(spell.id, idx) }"
+                                                    :for="`${idx}-${spellPartIdx}-${spellLevel}-${spellIdx}`">
+                                                    {{ spell.name }}
+                                                </label>
+                                            </template>
+                                        </div>
                                     </template>
                                 </div>
                             </div>

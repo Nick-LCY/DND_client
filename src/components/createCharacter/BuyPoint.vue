@@ -1,26 +1,35 @@
 <script setup lang="ts">
 import { AbilityKeys, SourcedEffect } from '../../assets/js/expression/dataType';
 import { nameMapping } from '../../assets/js/mappings';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { store } from '../../assets/js/store';
 import { updateCharacter } from '../../assets/js/expression/update';
 const props = defineProps<{ activatedEffects: SourcedEffect[] }>()
-const sth = ref<Record<AbilityKeys, number>>({
+const baseAbilities = ref<Record<AbilityKeys, number>>({
     str: 8, dex: 8, con: 8,
     wis: 8, int: 8, cha: 8,
 })
+watch(baseAbilities.value, () =>
+    updateAbilities()
+)
+
+function check(e: FocusEvent) {
+    let key = (e.target as HTMLInputElement).id
+    baseAbilities.value[key as AbilityKeys] = Math.max(8, Math.min(baseAbilities.value[key as AbilityKeys], 20))
+}
+
 function increase(key: AbilityKeys) {
-    sth.value[key] = Math.min(sth.value[key] + 1, 15)
-    updateAbilities()
+    baseAbilities.value[key] = Math.min(baseAbilities.value[key] + 1, 20)
 }
+
 function decrease(key: AbilityKeys) {
-    sth.value[key] = Math.max(sth.value[key] - 1, 8)
-    updateAbilities()
+    baseAbilities.value[key] = Math.max(baseAbilities.value[key] - 1, 8)
 }
+
 function updateAbilities() {
     store.clearCharacterEffect("abilities")
     store.addCharacterEffect("abilities", (v) => {
-        for (let [key, value] of Object.entries(sth.value)) {
+        for (let [key, value] of Object.entries(baseAbilities.value)) {
             (v.abilities as Record<string, number>)[key] = value
         }
     })
@@ -28,7 +37,7 @@ function updateAbilities() {
 }
 const cost = computed(() => {
     let cost = 0
-    for (let num of Object.values(sth.value)) {
+    for (let num of Object.values(baseAbilities.value)) {
         cost += (num - 8) + (num >= 13 ? (num - 13) : 0)
     }
     return cost
@@ -39,13 +48,13 @@ const cost = computed(() => {
         <h2 class="font-bold text-center text-3xl my-8 flex-shrink-0">购点与法术</h2>
         <div class="font-bold text-center text-xl mb-4">基础属性值</div>
         <div class="buy-abilities">
-            <template v-for="_, key of sth">
+            <template v-for="_, key of baseAbilities">
                 <label :for="key" class="text-xl leading-10 h-10">{{ nameMapping[key] }}</label>
                 <div class="flex items-center justify-center gap-x-4">
                     <button @click="decrease(key)">
                         <div class="w-4 h-1 bg-slate-50"></div>
                     </button>
-                    <input :id="key" v-model.number="sth[key]">
+                    <input :id="key" v-model.number="baseAbilities[key]" @blur="check">
                     <button @click="increase(key)">
                         <div class="relative">
                             <div class="w-4 h-1 bg-slate-50"></div>
