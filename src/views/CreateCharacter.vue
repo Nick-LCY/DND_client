@@ -29,6 +29,7 @@ import { SourcedEffect } from '../assets/js/expression/dataType';
 import { characterResult } from '../assets/js/expression/expressionResults';
 import { spellList } from '../assets/js/expression/spellLists';
 import _ from "lodash";
+import { renderMD } from '../assets/js/renderMarkdown';
 
 const activatedSpellList = computed(() => {
     interface SpellPart {
@@ -105,6 +106,21 @@ function spellShouldBeDisabled(spellId: string, spellListIdx: number) {
         return !knownSpells.value[spellListIdx].includes(spellId)
     }
     return false
+}
+const showSpellDetail = ref(false)
+const currentSpellDetil = ref({ id: "", name: "", description: "" })
+function switchSpellDetail(id: string, name: string, description: string) {
+    if (id === currentSpellDetil.value.id) {
+        showSpellDetail.value = false
+        currentSpellDetil.value.id = ""
+        currentSpellDetil.value.description = ""
+        currentSpellDetil.value.name = ""
+        return
+    }
+    showSpellDetail.value = true
+    currentSpellDetil.value.id = id
+    currentSpellDetil.value.name = name
+    currentSpellDetil.value.description = renderMD(description)
 }
 
 const categories = ref<{ [key: number]: Categories }>({});
@@ -318,7 +334,7 @@ updateCharacter(activatedEffects.value)
                     :activatedEffects="activatedEffects"></BuyPoint>
             </div>
             <div class="mx-8 flex items-stretch h-10 shrink-0 gap-2 mb-8">
-                <button @click="prevStep"
+                <button @click="prevStep" v-if="currentStep > 0"
                     class="leading-10 w-10 rounded-md bg-gray-400 transition hover:bg-gray-700">👈</button>
                 <button v-if="currentStep > 0" @click="nextStep"
                     class="leading-10 flex-grow rounded-md bg-green-600 font-bold text-lg transition hover:bg-green-800">继续</button>
@@ -368,48 +384,70 @@ updateCharacter(activatedEffects.value)
                         </div>
                     </template>
                 </div>
-                <div class="step-details scroll-xs" :style="{ 'transform': stepTranslate }">
-                    <div v-for="spellList, idx of activatedSpellList" class="border-2 border-gray-700 rounded-md mb-2"
-                        :key=idx>
-                        <button class="collapse-button"
-                            :class="{ 'bg-slate-700': !categoryCollapse[4][`spell-lists-${idx}`] }"
-                            @click="collapse(`spell-lists-${idx}`)">
-                            <div>
-                                <div class="text-xl font-bold">已学法术：{{ knownSpells[idx].length }} / {{ spellList.known
-                                    }}
+                <div class="step-details spell-selection" :style="{ 'transform': stepTranslate }">
+                    <div class="rounded-md border-slate-700 overflow-hidden flex flex-col"
+                        :style="{ 'width': showSpellDetail ? '300px' : '0' }"
+                        :class="{ 'border-2': showSpellDetail, 'p-2': showSpellDetail, 'mr-4': showSpellDetail }">
+                        <div class="text-xl font-bold mb-2 pb-1 border-b-2">{{ currentSpellDetil.name }}</div>
+                        <div class="description overflow-auto scroll-xs pr-1" v-html="currentSpellDetil.description"></div>
+                    </div>
+                    <div class="overflow-y-scroll pr-2 scroll-xs">
+                        <div v-for="spellList, idx of activatedSpellList"
+                            class="border-2 border-gray-700 rounded-md mb-2" :key=idx>
+                            <button class="collapse-button"
+                                :class="{ 'bg-slate-700': !categoryCollapse[4][`spell-lists-${idx}`] }"
+                                @click="collapse(`spell-lists-${idx}`)">
+                                <div>
+                                    <div class="text-xl font-bold">
+                                        已学法术：
+                                        {{ knownSpells[idx].length }} / {{ spellList.known }}
+                                    </div>
+                                    <div class="text-gray-400 text-xs">法表来源：{{ spellList.sources.join(" > ") }}</div>
                                 </div>
-                                <div class="text-gray-400 text-xs">法表来源：{{ spellList.sources.join(" > ") }}</div>
-                            </div>
-                            <div class="relative w-4 h-1 transition"
-                                :class="{ 'rotate-45': !categoryCollapse[4][`spell-lists-${idx}`] }">
-                                <div class="w-4 h-1 bg-slate-50"></div>
-                                <div class="w-4 h-1 bg-slate-50 absolute top-0 transition rotate-90"></div>
-                            </div>
-                        </button>
-                        <div class="collapse-container" :id="`spell-lists-${idx}`"
-                            :class="{ collapsed: categoryCollapse[4][`spell-lists-${idx}`] }" ref="categoryRefs">
-                            <div v-for="spellPart, spellPartIdx of spellList.spellParts" class="mx-4 my-2"
-                                :key="spellPartIdx">
-                                <div class="text-lg font-bold my-1">{{ spellPart.name }}：</div>
-                                <div v-for="spells, spellLevel of spellPart.spells" :key="spellLevel">
-                                    <template v-if="spells.length !== 0">
-                                        <div class="font-bold my-1 ml-2" v-if="spellLevel > 0">{{ spellLevel }} 环：</div>
-                                        <div class="font-bold my-1 ml-2" v-else>戏法：</div>
-                                        <div class="flex flex-wrap gap-2 ml-2">
-                                            <template v-for="spell, spellIdx of spells" :key="spellIdx">
-                                                <input class="hidden" type="checkbox"
-                                                    :id="`${idx}-${spellPartIdx}-${spellLevel}-${spellIdx}`"
-                                                    v-model="knownSpells[idx]" :value="spell.id"
-                                                    :disabled="spellShouldBeDisabled(spell.id, idx)">
-                                                <label
-                                                    class="border rounded-md p-2 border-slate-500 select-none cursor-pointer text-center hover:bg-slate-600 transition"
-                                                    :class="{ 'disabled': spellShouldBeDisabled(spell.id, idx) }"
-                                                    :for="`${idx}-${spellPartIdx}-${spellLevel}-${spellIdx}`">
-                                                    {{ spell.name }}
-                                                </label>
-                                            </template>
-                                        </div>
-                                    </template>
+                                <div class="relative w-4 h-1 transition"
+                                    :class="{ 'rotate-45': !categoryCollapse[4][`spell-lists-${idx}`] }">
+                                    <div class="w-4 h-1 bg-slate-50"></div>
+                                    <div class="w-4 h-1 bg-slate-50 absolute top-0 transition rotate-90"></div>
+                                </div>
+                            </button>
+                            <div class="collapse-container" :id="`spell-lists-${idx}`"
+                                :class="{ collapsed: categoryCollapse[4][`spell-lists-${idx}`] }" ref="categoryRefs">
+                                <div v-for="spellPart, spellPartIdx of spellList.spellParts" class="mx-4 my-2"
+                                    :key="spellPartIdx">
+                                    <div class="text-lg font-bold my-1">{{ spellPart.name }}：</div>
+                                    <div v-for="spells, spellLevel of spellPart.spells" :key="spellLevel">
+                                        <template v-if="spells.length !== 0">
+                                            <div class="font-bold my-1 ml-2" v-if="spellLevel > 0">{{ spellLevel }} 环：
+                                            </div>
+                                            <div class="font-bold my-1 ml-2" v-else>戏法：</div>
+                                            <div class="flex flex-wrap gap-2 ml-2">
+                                                <div v-for="spell, spellIdx of spells" :key="spellIdx"
+                                                    class="border overflow-hidden rounded-md border-slate-600 select-none flex items-stretch">
+                                                    <button
+                                                        class="px-2 py-1 hover:bg-slate-600 transition text-center cursor-pointer"
+                                                        :class="{ 'text-gray-400': spellShouldBeDisabled(spell.id, idx), 'bg-slate-600': spell.id === currentSpellDetil.id }"
+                                                        @click="switchSpellDetail(spell.id, spell.name, spell.description)">
+                                                        {{ spell.name }}
+                                                    </button>
+                                                    <input class="hidden" type="checkbox"
+                                                        :id="`${idx}-${spellPartIdx}-${spellLevel}-${spellIdx}`"
+                                                        v-model="knownSpells[idx]" :value="spell.id"
+                                                        :disabled="spellShouldBeDisabled(spell.id, idx)">
+                                                    <label
+                                                        class="bg-slate-600 flex items-center justify-center px-2 relative cursor-pointer transition"
+                                                        :class="{ 'cursor-not-allowed': spellShouldBeDisabled(spell.id, idx) }"
+                                                        :for="`${idx}-${spellPartIdx}-${spellLevel}-${spellIdx}`">
+                                                        <div class="w-3 h-0.5 bg-slate-50"
+                                                            :class="{ '!bg-gray-400': spellShouldBeDisabled(spell.id, idx) }">
+                                                        </div>
+                                                        <div class="w-3 h-0.5 bg-slate-50 rotate-90 absolute transition"
+                                                            :class="{ '!bg-gray-400': spellShouldBeDisabled(spell.id, idx) }">
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -456,8 +494,17 @@ main {
     @apply flex-shrink-0 w-full p-4 overflow-y-scroll;
 }
 
+.spell-selection {
+    @apply grid overflow-hidden;
+    grid-template-columns: auto minmax(0, auto);
+}
+
 input[type="checkbox"]:checked+label {
-    @apply bg-slate-600;
+    @apply bg-red-500;
+}
+
+input[type="checkbox"]:checked+label div {
+    @apply rotate-0;
 }
 
 .disabled {
