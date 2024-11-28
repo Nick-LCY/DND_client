@@ -20,6 +20,7 @@ import {
     isSpell,
     isSpellList,
     Spell,
+    isConstraintSpell,
 } from '../assets/js/originalDataType';
 import { vModelSelection } from '../assets/js/selections';
 import EffectGroup from '../components/createCharacter/EffectGroup.vue';
@@ -81,13 +82,21 @@ const activatedSpellList = computed(() => {
                     else if (isSpellList(spellOrList)) {
                         let partOfSpellList: SpellPart = { name: spellOrList.name, spells: {} }
                         for (let spell of spellOrList.list) {
-                            if (currentSpellLevel >= spell.spell_level) {
+                            if (isSpell(spell) && currentSpellLevel >= spell.spell_level) {
                                 if (spellListItem.cantrip_only && spell.spell_level > 0) continue
                                 if (spellListItem.spell_only && spell.spell_level === 0) continue
                                 if (partOfSpellList.spells[spell.spell_level] === undefined)
                                     partOfSpellList.spells[spell.spell_level] = []
                                 partOfSpellList.spells[spell.spell_level].push(spell)
                                 if (knownAll) knownSpells.value[Number(idx)].push(spell.id)
+                            } else if (isConstraintSpell(spell) && currentLevel >= spell.level) {
+                                let innerSpell = spell.spell
+                                if (spellListItem.cantrip_only && innerSpell.spell_level > 0) continue
+                                if (spellListItem.spell_only && innerSpell.spell_level === 0) continue
+                                if (partOfSpellList.spells[innerSpell.spell_level] === undefined)
+                                    partOfSpellList.spells[innerSpell.spell_level] = []
+                                partOfSpellList.spells[innerSpell.spell_level].push(innerSpell)
+                                if (knownAll) knownSpells.value[Number(idx)].push(innerSpell.id)
                             }
                         }
                         result.spellParts.push(partOfSpellList)
@@ -96,13 +105,21 @@ const activatedSpellList = computed(() => {
             } else {
                 let spellPart: SpellPart = { name: spellListItem.from.name, spells: {} }
                 for (let spell of spellListItem.from.list) {
-                    if (currentSpellLevel >= spell.spell_level) {
+                    if (isSpell(spell) && currentSpellLevel >= spell.spell_level) {
                         if (spellListItem.cantrip_only && spell.spell_level > 0) continue
                         if (spellListItem.spell_only && spell.spell_level === 0) continue
                         if (spellPart.spells[spell.spell_level] === undefined)
                             spellPart.spells[spell.spell_level] = []
                         spellPart.spells[spell.spell_level].push(spell)
                         if (knownAll) knownSpells.value[Number(idx)].push(spell.id)
+                    } else if (isConstraintSpell(spell) && currentLevel >= spell.level) {
+                        let innerSpell = spell.spell
+                        if (spellListItem.cantrip_only && innerSpell.spell_level > 0) continue
+                        if (spellListItem.spell_only && innerSpell.spell_level === 0) continue
+                        if (spellPart.spells[innerSpell.spell_level] === undefined)
+                            spellPart.spells[innerSpell.spell_level] = []
+                        spellPart.spells[innerSpell.spell_level].push(innerSpell)
+                        if (knownAll) knownSpells.value[Number(idx)].push(innerSpell.id)
                     }
                 }
                 result.spellParts.push(spellPart)
@@ -120,7 +137,7 @@ function spellShouldBeDisabled(spellId: string, spellListIdx: number) {
     }
     return false
 }
-const currentSpellDetil = ref({ id: "", name: "法术详情", description: "选择某个法术以查看详情" })
+const currentSpellDetil = ref({ id: "", name: "法术详情", description: "点击法术以查看详情" })
 function switchSpellDetail(id: string, name: string, description: string) {
     currentSpellDetil.value.id = id
     currentSpellDetil.value.name = name
@@ -442,7 +459,7 @@ updateCharacter(activatedEffects.value)
                                                         :disabled="spellShouldBeDisabled(spell.id, idx)">
                                                     <label v-if="spellList.known !== -1"
                                                         class="bg-slate-600 flex items-center justify-center px-2 relative cursor-pointer transition"
-                                                        :class="{ 'cursor-not-allowed': spellShouldBeDisabled(spell.id, idx) }"
+                                                        :class="{ '!cursor-not-allowed': spellShouldBeDisabled(spell.id, idx) }"
                                                         :for="`${idx}-${spellPartIdx}-${spellLevel}-${spellIdx}`">
                                                         <div class="w-3 h-0.5 bg-slate-50"
                                                             :class="{ '!bg-gray-400': spellShouldBeDisabled(spell.id, idx) }">

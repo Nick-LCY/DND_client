@@ -28,12 +28,17 @@ interface Spell {
     description: string
     spell_level: number
 }
+ 
+interface SpellWithLevelConstraint {
+    level: number
+    spell: Spell
+}
 
 interface SpellList {
     id: string
     name: string
     description: string
-    list: Spell[]
+    list: (Spell | SpellWithLevelConstraint)[]
 }
 
 interface SpellListEffect {
@@ -197,11 +202,15 @@ function isValue(obj: any): obj is Value {
     return (<Value>obj).value !== undefined
 }
 
-function isSpell(obj: Spell | SpellList): obj is Spell {
-    return (<SpellList>obj).list === undefined
+function isSpell(obj: Spell | SpellList | SpellWithLevelConstraint): obj is Spell {
+    return !isSpellList(obj) && !isConstraintSpell(obj)
 }
 
-function isSpellList(obj: Spell | SpellList): obj is SpellList {
+function isConstraintSpell(obj: Spell | SpellList | SpellWithLevelConstraint): obj is SpellWithLevelConstraint {
+    return (<SpellWithLevelConstraint>obj).level !== undefined
+}
+
+function isSpellList(obj: Spell | SpellList | SpellWithLevelConstraint): obj is SpellList {
     return (<SpellList>obj).list !== undefined
 }
 
@@ -214,6 +223,7 @@ export {
     isEffectGroupOrEffectGroupDict,
     isExpression,
     isValue,
+    isConstraintSpell,
     isSpell,
     isSpellList
 }
