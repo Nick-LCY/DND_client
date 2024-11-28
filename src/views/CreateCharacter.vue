@@ -35,7 +35,12 @@ const activatedSpellList = computed(() => {
     interface SpellPart {
         name: string, spells: { [key: number]: Spell[] }
     }
-    const results = [] as { known: number, spellParts: SpellPart[], sources: string[] }[]
+    interface SpellList {
+        known: number
+        spellParts: SpellPart[]
+        sources: string[]
+    }
+    const results = [] as SpellList[]
     let currentLevel = (characterResult.value.class as { level: number }).level
     let currentSpellLevel = Object.entries(
         characterResult.value.spell_slots as { [key: number]: { capacity: number } }).filter(
@@ -43,15 +48,26 @@ const activatedSpellList = computed(() => {
         ).reduce(
             (p, c) => Math.max(p, Number(c[0])), 0
         )
-    for (let sourcedSpellList of spellList.value) {
+    for (let [idx, sourcedSpellList] of Object.entries(spellList.value)) {
+        // 初始化选择的法术
+        knownSpells.value[Number(idx)] = []
         for (let spellListItem of sourcedSpellList.effect.spells) {
             // 在写了level相关的字段的时候判断是否生效
             if (spellListItem.level !== undefined && currentLevel !== spellListItem.level) continue
             if (spellListItem.start_level !== undefined && currentLevel < spellListItem.start_level) continue
             if (spellListItem.end_level !== undefined && currentLevel >= spellListItem.end_level) continue
 
-            let result = { known: 0, spellParts: [] as SpellPart[], sources: sourcedSpellList.sources }
+            let result: SpellList = {
+                known: 0,
+                spellParts: [] as SpellPart[],
+                sources: sourcedSpellList.sources
+            }
             let others: SpellPart = { name: "其他", spells: {} }
+            // 如果没有写known为多少，则自动学会所有列出的法术
+            // 用-1标记学会所有法术
+            let knownAll = spellListItem.known === undefined
+            if (!knownAll) result.known = spellListItem.known!
+            else result.known = -1
             if (spellListItem.from instanceof Array) {
                 for (let spellOrList of spellListItem.from) {
                     if (isSpell(spellOrList) && currentSpellLevel >= spellOrList.spell_level) {
@@ -60,6 +76,7 @@ const activatedSpellList = computed(() => {
                         if (others.spells[spellOrList.spell_level] === undefined)
                             others.spells[spellOrList.spell_level] = []
                         others.spells[spellOrList.spell_level].push(spellOrList)
+                        if (knownAll) knownSpells.value[Number(idx)].push(spellOrList.id)
                     }
                     else if (isSpellList(spellOrList)) {
                         let partOfSpellList: SpellPart = { name: spellOrList.name, spells: {} }
@@ -70,6 +87,7 @@ const activatedSpellList = computed(() => {
                                 if (partOfSpellList.spells[spell.spell_level] === undefined)
                                     partOfSpellList.spells[spell.spell_level] = []
                                 partOfSpellList.spells[spell.spell_level].push(spell)
+                                if (knownAll) knownSpells.value[Number(idx)].push(spell.id)
                             }
                         }
                         result.spellParts.push(partOfSpellList)
@@ -84,20 +102,15 @@ const activatedSpellList = computed(() => {
                         if (spellPart.spells[spell.spell_level] === undefined)
                             spellPart.spells[spell.spell_level] = []
                         spellPart.spells[spell.spell_level].push(spell)
+                        if (knownAll) knownSpells.value[Number(idx)].push(spell.id)
                     }
                 }
                 result.spellParts.push(spellPart)
             }
-            // 如果没有写known为多少，则自动学会所有列出的法术
-            if (spellListItem.known !== undefined) result.known = spellListItem.known
-            else result.known = result.spellParts.length
             results.push(result)
         }
     }
     if (categoryCollapse.value[4] === undefined) categoryCollapse.value[4] = {}
-    results.forEach((_, idx) => {
-        knownSpells.value[idx] = []
-    })
     return results
 })
 const knownSpells = ref<string[][]>([])
@@ -107,17 +120,8 @@ function spellShouldBeDisabled(spellId: string, spellListIdx: number) {
     }
     return false
 }
-const showSpellDetail = ref(false)
-const currentSpellDetil = ref({ id: "", name: "", description: "" })
+const currentSpellDetil = ref({ id: "", name: "法术详情", description: "选择某个法术以查看详情" })
 function switchSpellDetail(id: string, name: string, description: string) {
-    if (id === currentSpellDetil.value.id) {
-        showSpellDetail.value = false
-        currentSpellDetil.value.id = ""
-        currentSpellDetil.value.description = ""
-        currentSpellDetil.value.name = ""
-        return
-    }
-    showSpellDetail.value = true
     currentSpellDetil.value.id = id
     currentSpellDetil.value.name = name
     currentSpellDetil.value.description = renderMD(description)
@@ -385,11 +389,11 @@ updateCharacter(activatedEffects.value)
                     </template>
                 </div>
                 <div class="step-details spell-selection" :style="{ 'transform': stepTranslate }">
-                    <div class="rounded-md border-slate-700 overflow-hidden flex flex-col"
-                        :style="{ 'width': showSpellDetail ? '300px' : '0' }"
-                        :class="{ 'border-2': showSpellDetail, 'p-2': showSpellDetail, 'mr-4': showSpellDetail }">
+                    <div
+                        class="rounded-md border-slate-700 overflow-hidden flex flex-col transition-all p-2 mb-4 border-2 mr-3">
                         <div class="text-xl font-bold mb-2 pb-1 border-b-2">{{ currentSpellDetil.name }}</div>
-                        <div class="description overflow-auto scroll-xs pr-1" v-html="currentSpellDetil.description"></div>
+                        <div class="description overflow-auto scroll-xs pr-1" v-html="currentSpellDetil.description">
+                        </div>
                     </div>
                     <div class="overflow-y-scroll pr-2 scroll-xs">
                         <div v-for="spellList, idx of activatedSpellList"
@@ -398,9 +402,12 @@ updateCharacter(activatedEffects.value)
                                 :class="{ 'bg-slate-700': !categoryCollapse[4][`spell-lists-${idx}`] }"
                                 @click="collapse(`spell-lists-${idx}`)">
                                 <div>
-                                    <div class="text-xl font-bold">
-                                        已学法术：
-                                        {{ knownSpells[idx].length }} / {{ spellList.known }}
+                                    <div class="text-xl font-bold" v-if="spellList.known !== -1">
+                                        学习法术
+                                        ({{ knownSpells[idx].length }} / {{ spellList.known }})
+                                    </div>
+                                    <div class="text-xl font-bold" v-else>
+                                        已学法术 (全部掌握)
                                     </div>
                                     <div class="text-gray-400 text-xs">法表来源：{{ spellList.sources.join(" > ") }}</div>
                                 </div>
@@ -433,7 +440,7 @@ updateCharacter(activatedEffects.value)
                                                         :id="`${idx}-${spellPartIdx}-${spellLevel}-${spellIdx}`"
                                                         v-model="knownSpells[idx]" :value="spell.id"
                                                         :disabled="spellShouldBeDisabled(spell.id, idx)">
-                                                    <label
+                                                    <label v-if="spellList.known !== -1"
                                                         class="bg-slate-600 flex items-center justify-center px-2 relative cursor-pointer transition"
                                                         :class="{ 'cursor-not-allowed': spellShouldBeDisabled(spell.id, idx) }"
                                                         :for="`${idx}-${spellPartIdx}-${spellLevel}-${spellIdx}`">
@@ -495,8 +502,8 @@ main {
 }
 
 .spell-selection {
-    @apply grid overflow-hidden;
-    grid-template-columns: auto minmax(0, auto);
+    @apply grid overflow-hidden pt-0;
+    grid-template-rows: 300px 1fr;
 }
 
 input[type="checkbox"]:checked+label {
