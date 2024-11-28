@@ -405,14 +405,8 @@ updateCharacter(activatedEffects.value)
                         </div>
                     </template>
                 </div>
-                <div class="step-details spell-selection" :style="{ 'transform': stepTranslate }">
-                    <div
-                        class="rounded-md border-slate-700 overflow-hidden flex flex-col transition-all p-2 mb-4 border-2 mr-3">
-                        <div class="text-xl font-bold mb-2 pb-1 border-b-2">{{ currentSpellDetil.name }}</div>
-                        <div class="description overflow-auto scroll-xs pr-1" v-html="currentSpellDetil.description">
-                        </div>
-                    </div>
-                    <div class="overflow-y-scroll pr-2 scroll-xs">
+                <div class="step-details spell-selection !p-0" :style="{ 'transform': stepTranslate }">
+                    <div class="overflow-y-scroll mx-4 pr-2 scroll-xs">
                         <div v-for="spellList, idx of activatedSpellList"
                             class="border-2 border-gray-700 rounded-md mb-2" :key=idx>
                             <button class="collapse-button"
@@ -424,7 +418,7 @@ updateCharacter(activatedEffects.value)
                                         ({{ knownSpells[idx].length }} / {{ spellList.known }})
                                     </div>
                                     <div class="text-xl font-bold" v-else>
-                                        已学法术 (全部掌握)
+                                        学习法术 (全部)
                                     </div>
                                     <div class="text-gray-400 text-xs">法表来源：{{ spellList.sources.join(" > ") }}</div>
                                 </div>
@@ -476,6 +470,12 @@ updateCharacter(activatedEffects.value)
                             </div>
                         </div>
                     </div>
+                    <div
+                        class="spell-details">
+                        <div class="text-xl font-bold mb-2 pb-1 border-b-2">{{ currentSpellDetil.name }}</div>
+                        <div class="description overflow-auto scroll-xs pr-1" v-html="currentSpellDetil.description">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -520,7 +520,7 @@ main {
 
 .spell-selection {
     @apply grid overflow-hidden pt-0;
-    grid-template-rows: 300px 1fr;
+    grid-template-rows: 1fr 300px;
 }
 
 input[type="checkbox"]:checked+label {
@@ -533,5 +533,10 @@ input[type="checkbox"]:checked+label div {
 
 .disabled {
     @apply text-gray-400 cursor-not-allowed;
+}
+
+.spell-details {
+    @apply overflow-hidden flex flex-col transition-all p-2 bg-slate-800 px-4 pt-2 relative z-10;
+    box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.5);
 }
 </style>

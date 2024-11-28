@@ -5,8 +5,9 @@ import type {
     Effect as EffectType,
     EffectGroup as EffectGroupType,
     EffectGroupDict as EffectGroupDictType,
+    SpellListEffect,
 } from '../../assets/js/originalDataType';
-import { isEffect, isEffectSelection, isEffectGroupOrEffectGroupDict } from '../../assets/js/originalDataType';
+import { isEffect, isEffectSelection, isEffectGroupOrEffectGroupDict, isSpellListEffect } from '../../assets/js/originalDataType';
 import { renderMD } from '../../assets/js/renderMarkdown';
 import EffectGroup from '../createCharacter/EffectGroup.vue';
 import type { vModelSelection } from '../../assets/js/selections';
@@ -29,11 +30,14 @@ const groupIndex = computed(
     )
 )
 const effectIndex = computed(
-    () => filterByType<EffectType>(props.effect.available, isEffect)
+    () => filterByType<EffectType | SpellListEffect>(
+        props.effect.available,
+        (i) => isEffect(i) || isSpellListEffect(i)
+    )
 )
 const isFull = computed(() => selectedCount(model.value) >= Number(props.effect.choose))
-function shouldDisplay(item: EffectType): boolean {
-    if (item.prerequisite !== undefined) {
+function shouldDisplay(item: EffectType | SpellListEffect): boolean {
+    if (isEffect(item) && item.prerequisite !== undefined) {
         return processExpression(item.prerequisite).values[0] as boolean
     }
     return true
