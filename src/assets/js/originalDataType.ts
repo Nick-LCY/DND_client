@@ -28,7 +28,7 @@ interface Spell {
     description: string
     spell_level: number
 }
- 
+
 interface SpellWithLevelConstraint {
     level: number
     spell: Spell
@@ -238,6 +238,7 @@ export type {
     EffectGroup,
     EffectGroupDict,
     Spell,
+    SpellWithLevelConstraint,
     SpellList,
     SpellListEffect,
     Effect,

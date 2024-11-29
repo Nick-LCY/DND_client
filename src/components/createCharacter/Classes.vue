@@ -63,7 +63,9 @@ async function changeSubclass() {
         if (subclass.id === subclassId) {
             subclassFeatures = subclass.features
             subclassLeveledFeatures = subclass.leveled_features
-            spellSlotTable = subclass.spell_slots ? subclass.spell_slots : []
+            if (subclass.spell_slots !== undefined) {
+                spellSlotTable = subclass.spell_slots
+            }
             let categories = mergeCategories(
                 processFeatures(classFeatures, [classData.name]),
                 processLeveledFeatures(

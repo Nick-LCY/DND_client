@@ -21,6 +21,7 @@ import {
     isSpellList,
     Spell,
     isConstraintSpell,
+    SpellWithLevelConstraint,
 } from '../assets/js/originalDataType';
 import { vModelSelection } from '../assets/js/selections';
 import EffectGroup from '../components/createCharacter/EffectGroup.vue';
@@ -41,7 +42,6 @@ const activatedSpellList = computed(() => {
         spellParts: SpellPart[]
         sources: string[]
     }
-    const results = [] as SpellList[]
     let currentLevel = (characterResult.value.class as { level: number }).level
     let currentSpellLevel = Object.entries(
         characterResult.value.spell_slots as { [key: number]: { capacity: number } }).filter(
@@ -49,9 +49,33 @@ const activatedSpellList = computed(() => {
         ).reduce(
             (p, c) => Math.max(p, Number(c[0])), 0
         )
-    for (let [idx, sourcedSpellList] of Object.entries(spellList.value)) {
+    function addSpell(
+        targetSpellPart: SpellPart,
+        spell: Spell | SpellWithLevelConstraint,
+        spellListIdx: number,
+        knownAll: boolean,
+        cantripOnly: boolean | undefined,
+        spellOnly: boolean | undefined
+    ) {
+        if (isSpell(spell) && cantripOnly && spell.spell_level > 0) return
+        if (isSpell(spell) && spellOnly && spell.spell_level === 0) return
+        if (isConstraintSpell(spell) && cantripOnly && spell.spell.spell_level > 0) return
+        if (isConstraintSpell(spell) && spellOnly && spell.spell.spell_level === 0) return
+        if (isSpell(spell) && currentSpellLevel < spell.spell_level) return
+        if (isConstraintSpell(spell) && currentLevel < spell.level) return
+
+        if (isConstraintSpell(spell)) spell = spell.spell
+        if (targetSpellPart.spells[spell.spell_level] === undefined)
+            targetSpellPart.spells[spell.spell_level] = []
+
+        targetSpellPart.spells[spell.spell_level].push(spell)
+        if (knownAll) knownSpells.value[spellListIdx].push(spell.id)
+    }
+    const results = [] as SpellList[]
+    let idx = 0
+    for (let sourcedSpellList of spellList.value) {
         // 初始化选择的法术
-        knownSpells.value[Number(idx)] = []
+        knownSpells.value[idx] = []
         for (let spellListItem of sourcedSpellList.effect.spells) {
             // 在写了level相关的字段的时候判断是否生效
             if (spellListItem.level !== undefined && currentLevel !== spellListItem.level) continue
@@ -71,61 +95,42 @@ const activatedSpellList = computed(() => {
             else result.known = -1
             if (spellListItem.from instanceof Array) {
                 for (let spellOrList of spellListItem.from) {
-                    if (isSpell(spellOrList) && currentSpellLevel >= spellOrList.spell_level) {
-                        if (spellListItem.cantrip_only && spellOrList.spell_level > 0) continue
-                        if (spellListItem.spell_only && spellOrList.spell_level === 0) continue
-                        if (others.spells[spellOrList.spell_level] === undefined)
-                            others.spells[spellOrList.spell_level] = []
-                        others.spells[spellOrList.spell_level].push(spellOrList)
-                        if (knownAll) knownSpells.value[Number(idx)].push(spellOrList.id)
-                    }
+                    if (isSpell(spellOrList) || isConstraintSpell(spellOrList)) addSpell(
+                        others,
+                        spellOrList,
+                        idx,
+                        knownAll,
+                        spellListItem.cantrip_only,
+                        spellListItem.spell_only
+                    )
                     else if (isSpellList(spellOrList)) {
                         let partOfSpellList: SpellPart = { name: spellOrList.name, spells: {} }
-                        for (let spell of spellOrList.list) {
-                            if (isSpell(spell) && currentSpellLevel >= spell.spell_level) {
-                                if (spellListItem.cantrip_only && spell.spell_level > 0) continue
-                                if (spellListItem.spell_only && spell.spell_level === 0) continue
-                                if (partOfSpellList.spells[spell.spell_level] === undefined)
-                                    partOfSpellList.spells[spell.spell_level] = []
-                                partOfSpellList.spells[spell.spell_level].push(spell)
-                                if (knownAll) knownSpells.value[Number(idx)].push(spell.id)
-                            } else if (isConstraintSpell(spell) && currentLevel >= spell.level) {
-                                let innerSpell = spell.spell
-                                if (spellListItem.cantrip_only && innerSpell.spell_level > 0) continue
-                                if (spellListItem.spell_only && innerSpell.spell_level === 0) continue
-                                if (partOfSpellList.spells[innerSpell.spell_level] === undefined)
-                                    partOfSpellList.spells[innerSpell.spell_level] = []
-                                partOfSpellList.spells[innerSpell.spell_level].push(innerSpell)
-                                if (knownAll) knownSpells.value[Number(idx)].push(innerSpell.id)
-                            }
-                        }
+                        for (let spell of spellOrList.list) addSpell(
+                            partOfSpellList,
+                            spell,
+                            idx,
+                            knownAll,
+                            spellListItem.cantrip_only,
+                            spellListItem.spell_only
+                        )
                         result.spellParts.push(partOfSpellList)
                     }
                 }
             } else {
                 let spellPart: SpellPart = { name: spellListItem.from.name, spells: {} }
-                for (let spell of spellListItem.from.list) {
-                    if (isSpell(spell) && currentSpellLevel >= spell.spell_level) {
-                        if (spellListItem.cantrip_only && spell.spell_level > 0) continue
-                        if (spellListItem.spell_only && spell.spell_level === 0) continue
-                        if (spellPart.spells[spell.spell_level] === undefined)
-                            spellPart.spells[spell.spell_level] = []
-                        spellPart.spells[spell.spell_level].push(spell)
-                        if (knownAll) knownSpells.value[Number(idx)].push(spell.id)
-                    } else if (isConstraintSpell(spell) && currentLevel >= spell.level) {
-                        let innerSpell = spell.spell
-                        if (spellListItem.cantrip_only && innerSpell.spell_level > 0) continue
-                        if (spellListItem.spell_only && innerSpell.spell_level === 0) continue
-                        if (spellPart.spells[innerSpell.spell_level] === undefined)
-                            spellPart.spells[innerSpell.spell_level] = []
-                        spellPart.spells[innerSpell.spell_level].push(innerSpell)
-                        if (knownAll) knownSpells.value[Number(idx)].push(innerSpell.id)
-                    }
-                }
+                for (let spell of spellListItem.from.list) addSpell(
+                    spellPart,
+                    spell,
+                    idx,
+                    knownAll,
+                    spellListItem.cantrip_only,
+                    spellListItem.spell_only
+                )
                 result.spellParts.push(spellPart)
             }
             results.push(result)
         }
+        idx++
     }
     if (categoryCollapse.value[4] === undefined) categoryCollapse.value[4] = {}
     return results
@@ -337,7 +342,7 @@ updateCharacter(activatedEffects.value)
 </script>
 <template>
     <main class="overflow-hidden">
-        <div class="bg-slate-600 flex flex-col justify-start items-stretch h-screen">
+        <div class="bg-slate-600 flex flex-col justify-start items-stretch h-screen relative z-10">
             <div class="flex mx-8 mt-4 justify-between items-center relative">
                 <button v-for="i in totalSteps" :key="i" @click="setStep(i)" class="step-circle"
                     :class="{ finished: currentStep >= i, 'cursor-default': currentStep == i }"
@@ -364,12 +369,17 @@ updateCharacter(activatedEffects.value)
             </div>
         </div>
         <div class="bg-slate-800 h-screen flex flex-col items-stretch">
-            <h2 v-if="currentStep === 4"
-                class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">学习法术</h2>
-            <h2 v-else-if="currentStep > 0 && currentStep !== 4"
-                class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">特质</h2>
-            <h2 v-else class="text-3xl mx-4 py-4 my-4 font-bold text-center border-b border-b-slate-50 flex-shrink-0">
-                简要说明</h2>
+            <div v-if="currentStep === 0" class="step-detail-title">
+                <h2> 简要说明 </h2>
+            </div>
+            <div v-else-if="currentStep > 0 && currentStep !== 4" class="step-detail-title">
+                <h2>特质</h2>
+            </div>
+            <div v-else class="step-detail-title">
+                <h2>
+                    学习法术
+                </h2>
+            </div>
             <div class="flex overflow-hidden h-64 w-full flex-grow" :class="{ loading: store.loading }">
                 <div class="flex-shrink-0 w-full p-4 text-4xl flex justify-center items-center"
                     :style="{ 'transform': stepTranslate }">
@@ -406,7 +416,7 @@ updateCharacter(activatedEffects.value)
                     </template>
                 </div>
                 <div class="step-details spell-selection !p-0" :style="{ 'transform': stepTranslate }">
-                    <div class="overflow-y-scroll mx-4 pr-2 scroll-xs">
+                    <div class="overflow-y-scroll mx-4 pr-2 pt-4 scroll-xs">
                         <div v-for="spellList, idx of activatedSpellList"
                             class="border-2 border-gray-700 rounded-md mb-2" :key=idx>
                             <button class="collapse-button"
@@ -470,8 +480,7 @@ updateCharacter(activatedEffects.value)
                             </div>
                         </div>
                     </div>
-                    <div
-                        class="spell-details">
+                    <div class="spell-details">
                         <div class="text-xl font-bold mb-2 pb-1 border-b-2">{{ currentSpellDetil.name }}</div>
                         <div class="description overflow-auto scroll-xs pr-1" v-html="currentSpellDetil.description">
                         </div>
@@ -519,7 +528,7 @@ main {
 }
 
 .spell-selection {
-    @apply grid overflow-hidden pt-0;
+    @apply grid overflow-hidden;
     grid-template-rows: 1fr 300px;
 }
 
@@ -536,7 +545,16 @@ input[type="checkbox"]:checked+label div {
 }
 
 .spell-details {
-    @apply overflow-hidden flex flex-col transition-all p-2 bg-slate-800 px-4 pt-2 relative z-10;
+    @apply overflow-hidden flex flex-col transition-all py-2 px-4 bg-slate-800 relative z-10;
     box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.5);
+}
+
+.step-detail-title {
+    @apply text-3xl p-4 pt-8 font-bold text-center flex-shrink-0;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+}
+
+.step-detail-title h2 {
+    @apply border-b-2 border-slate-50 pb-4;
 }
 </style>
