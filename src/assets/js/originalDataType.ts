@@ -113,6 +113,7 @@ interface Subclass {
     description: string
     features: Feature[]
     leveled_features: LeveledFeature[]
+    spell_slots?: SpellSlot[]
 }
 
 interface SpellSlot {
