@@ -6,6 +6,8 @@ import Races from '../components/createCharacter/Races.vue';
 import Classes from '../components/createCharacter/Classes.vue';
 import BuyPoint from '../components/createCharacter/BuyPoint.vue';
 import Backgrounds from '../components/createCharacter/Backgrounds.vue';
+import Export from '../components/createCharacter/Export.vue';
+import Character from './Character.vue';
 import { Categories, ConditionalFeature, Feature } from '../assets/js/categories';
 import {
     Effect as EffectType,
@@ -358,6 +360,7 @@ updateCharacter(activatedEffects.value)
                 </Backgrounds>
                 <BuyPoint class="step-card" :style="{ 'transform': stepTranslate }"
                     :activatedEffects="activatedEffects"></BuyPoint>
+                <Export class="step-card" :style="{ 'transform': stepTranslate }"></Export>
             </div>
             <div class="mx-8 flex items-stretch h-10 shrink-0 gap-2 mb-8">
                 <button @click="prevStep" v-if="currentStep > 0"
@@ -372,14 +375,17 @@ updateCharacter(activatedEffects.value)
             <div v-if="currentStep === 0" class="step-detail-title">
                 <h2> 简要说明 </h2>
             </div>
-            <div v-else-if="currentStep > 0 && currentStep !== 4" class="step-detail-title">
+            <div v-else-if="currentStep > 0 && currentStep < 4" class="step-detail-title">
                 <h2>特质</h2>
             </div>
-            <div v-else class="step-detail-title">
+            <div v-else-if="currentStep === 4" class="step-detail-title">
                 <h2>
                     学习法术
                 </h2>
             </div>
+            <!-- <div v-else class="step-detail-title">
+                <h2>人物总览</h2>
+            </div> -->
             <div class="flex overflow-hidden h-64 w-full flex-grow" :class="{ loading: store.loading }">
                 <div class="flex-shrink-0 w-full p-4 text-4xl flex justify-center items-center"
                     :style="{ 'transform': stepTranslate }">
@@ -486,9 +492,11 @@ updateCharacter(activatedEffects.value)
                         </div>
                     </div>
                 </div>
+                <Character :style="{ 'transform': stepTranslate }"></Character>
             </div>
         </div>
-        <StatusBar :activatedEffects="activatedEffects"></StatusBar>
+        <StatusBar :class="{ 'status-bar-collapse': currentStep === 5 }" :activatedEffects="activatedEffects">
+        </StatusBar>
     </main>
 </template>
 <style scoped>
@@ -497,6 +505,10 @@ main {
     grid-template-columns: 500px minmax(0, 1fr) auto;
     height: 100vh;
     @apply text-slate-50;
+}
+
+.status-bar-collapse {
+    @apply !w-0;
 }
 
 .collapsed {
