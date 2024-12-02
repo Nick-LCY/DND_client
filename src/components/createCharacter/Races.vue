@@ -24,6 +24,7 @@ async function changeRace() {
     subraces.value = [{ id: "none", name: "无" }, ...raceData.subraces]
     let categories = processFeatures(raceData.features, [raceData.name])
     description.value.race = renderMD(raceData.description)
+    updateCharacter()
     emit("change", categories)
     store.endLoad()
 }
@@ -57,11 +58,19 @@ async function changeSubrace() {
                 )
             )
             description.value.subrace = renderMD(subrace.description)
+            updateCharacter()
             emit("change", categories)
             store.endLoad()
             return
         }
     }
+}
+function updateCharacter() {
+    store.clearCharacterEffect("race")
+    store.addCharacterEffect("race", (v) => {
+        (v.race as { main: string }).main = raceSelection.value.race;
+        (v.race as { sub: string }).sub = raceSelection.value.subrace;
+    })
 }
 
 function changeCurrentDescription() {

@@ -20,8 +20,16 @@ async function changeBackground() {
     let backgroundData = await getById<Background>(backgroundSelection.value);
     let categories = processFeatures(backgroundData.features, [backgroundData.name])
     description.value = renderMD(backgroundData.description)
+    updateCharacter()
     emit("change", categories)
     store.endLoad()
+}
+
+function updateCharacter() {
+    store.clearCharacterEffect("background")
+    store.addCharacterEffect("background", (v) => {
+        v.background = backgroundSelection.value;
+    })
 }
 </script>
 <template>

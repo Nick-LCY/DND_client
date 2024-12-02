@@ -88,6 +88,8 @@ function updateCharacter(v: SourcedEffect[]) {
     store.characterEffects.class.forEach(v => v(characterResult.value))
     store.characterEffects.spell_slots.forEach(v => v(characterResult.value))
     store.characterEffects.abilities.forEach(v => v(characterResult.value))
+    store.characterEffects.race.forEach(v => v(characterResult.value))
+    store.characterEffects.background.forEach(v => v(characterResult.value))
     // 2. 属性点、技能效果计算
     forEach(characterStack.value, characterSource.value,
         ["abilities", "saves", "skills", "languages", "hit_dice", "speed", "proficiencies"])

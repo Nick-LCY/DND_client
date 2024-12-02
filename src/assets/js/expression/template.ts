@@ -33,6 +33,10 @@ const character: ExpressionResult = {
     class: {
         level: 0, main: "", sub: ""
     },
+    race: {
+        main: "", sub: ""
+    },
+    background: "",
     spell_slots: {
         1: {current: 0, capacity: 0},
         2: {current: 0, capacity: 0},
