@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { nameMapping } from '../assets/js/mappings';
+import { characterResult } from '../assets/js/expression/expressionResults';
 
 // function abilityExpandScroll(event: Event) {
 //     const dom = event.currentTarget as HTMLElement
@@ -19,7 +21,7 @@ const pageTransform = computed(() =>
         </div>
         <div class="character-content">
             <div class="page" :style="{ 'transform': pageTransform }">
-                <div class="rp-page">
+                <div>
                     <section class="character-info">
                         <h2>角色资料</h2>
                         <div class="item">
@@ -114,13 +116,55 @@ const pageTransform = computed(() =>
                 </div>
             </div>
             <div class="page" :style="{ 'transform': pageTransform }">
-                <section class="abilities">能力</section>
-                <section class="skills">技能与熟练项</section>
-                <section class="traits">特性</section>
+                <div>
+                    <section class="flex flex-col">
+                        <h2 class="mb-2">属性</h2>
+                        <table class="abilities-table">
+                            <thead>
+                                <tr>
+                                    <th>属性名</th>
+                                    <th>属性值</th>
+                                    <th>检定加值</th>
+                                    <th>豁免加值</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="name, key of nameMapping">
+                                    <td class="bg-slate-800">
+                                        <div :class="{'has-proficiencies': key === 'str'}">
+                                            {{ name }}
+                                        </div>
+                                    </td>
+                                    <td class="bg-slate-800">
+                                        {{ (characterResult.abilities as { [key: string]: any })[key] }}
+                                    </td>
+                                    <td class="bg-slate-800">0</td>
+                                    <td class="bg-slate-800">0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </section>
+                    <section class="skills">
+                        <h2>技能与熟练项</h2>
+                        <div>技能</div>
+                        <div></div>
+                        <div>熟练项</div>
+                        <div></div>
+                    </section>
+                    <section class="traits">
+                        <h2>特性</h2>
+                    </section>
+                </div>
             </div>
             <div class="page" :style="{ 'transform': pageTransform }">
-                <section class="combat">战斗</section>
-                <section class="actions">动作</section>
+                <div>
+                    <section class="combat">
+                        <h2>战斗属性</h2>
+                    </section>
+                    <section class="actions">
+                        <h2>背包、技能与法术</h2>
+                    </section>
+                </div>
             </div>
         </div>
     </div>
@@ -132,12 +176,12 @@ const pageTransform = computed(() =>
 }
 
 .character-control {
-    @apply border-2 border-slate-600 flex items-stretch gap-4 rounded-full overflow-hidden relative h-8;
+    @apply border-2 border-slate-600 flex items-stretch gap-4 rounded-full overflow-hidden relative h-8 z-0;
 }
 
 .character-control::after {
     content: "";
-    @apply absolute h-full w-20 bg-slate-700 -z-10 rounded-full transition-all;
+    @apply absolute h-full w-32 bg-slate-700 -z-10 rounded-full transition-all;
 }
 
 .character-control.page-rp::after {
@@ -145,11 +189,11 @@ const pageTransform = computed(() =>
 }
 
 .character-control.page-combat::after {
-    @apply left-24;
+    @apply left-36;
 }
 
 .character-control button {
-    @apply w-20;
+    @apply w-32;
 }
 
 .character-content {
@@ -160,7 +204,7 @@ const pageTransform = computed(() =>
     @apply w-1/2 flex-shrink-0 pr-4 transition;
 }
 
-.rp-page {
+.page>div {
     @apply grid gap-2 h-full w-full;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: minmax(0, 2fr) 3fr;
@@ -168,6 +212,12 @@ const pageTransform = computed(() =>
 
 section {
     @apply rounded-md border-2 border-slate-600 p-2;
+}
+
+.traits,
+.combat,
+.actions {
+    @apply col-span-2;
 }
 
 .character-info {
@@ -217,5 +267,21 @@ section {
 
 h2 {
     @apply text-xl font-bold text-center;
+}
+
+.abilities-table {
+    @apply flex-grow flex-shrink text-center;
+}
+
+thead {
+    @apply border-b-2;
+}
+
+tr {
+    @apply border-b border-slate-600;
+}
+
+.has-proficiencies {
+    @apply border border-slate-400;
 }
 </style>
