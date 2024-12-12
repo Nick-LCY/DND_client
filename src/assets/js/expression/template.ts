@@ -1,11 +1,11 @@
-import { SourcedExpression } from "./dataType"
+import { SourcedExpression, SourceRepresentation } from "./dataType"
 import { processExpression } from "./processExpression"
 import { store } from "../store"
 interface Stack {
     [key: string]: SourcedExpression[] | Stack
 }
 interface Source {
-    [key: string]: { sources: string[], result: string }[] | Source
+    [key: string]: SourceRepresentation[] | Source
 }
 
 
@@ -65,6 +65,15 @@ class Character {
         }
         findTarget(hierarchy);
         (targetStack as SourcedExpression[]).push(expression)
+    }
+
+    public getSource(key: string): SourceRepresentation[] {
+        let that: any = this.source
+        for (let part of key.split(".")) {
+            if (that === undefined || that[part] === undefined) return []
+            that = that[part]
+        }
+        return that as SourceRepresentation[]
     }
 
     public compute() {

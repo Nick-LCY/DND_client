@@ -4,7 +4,6 @@ import { AbilityKeys, SkillKeys, SourcedEffect } from '../../assets/js/expressio
 import { shortNameMapping, nameMapping, skillMapping } from '../../assets/js/mappings';
 import { store } from '../../assets/js/store';
 import { characterResult } from '../../assets/js/expression/expressionResults';
-import { characterSource } from '../../assets/js/expression/expressionSource';
 import { updateCharacter } from '../../assets/js/expression/update';
 
 const props = defineProps<{ activatedEffects: SourcedEffect[] }>()
@@ -30,23 +29,11 @@ const sections = computed(() => {
         str: [], dex: [], con: [],
         wis: [], int: [], cha: [],
     }
-    for (let [entryName, entry] of Object.entries(characterSource.value)) {
-        if (!["abilities", "saves"].includes(entryName)) continue
-        for (let [abilityKey, abilityEntries] of Object.entries(entry)) {
-            let content = abilityEntries.slice(0)
-            switch (entryName) {
-                case "abilities":
-                    localSections[abilityKey].push(
-                        { "name": "数值", content }
-                    )
-                    break
-                case "saves":
-                    localSections[abilityKey].push(
-                        { "name": "豁免熟练项", content }
-                    )
-                    break
-            }
-        }
+    for (let ability of Object.keys(localSections)) {
+        const abilityValueSource = characterResult.value.getSource(`abilities.${ability}`).slice()
+        const abilitySaveSource = characterResult.value.getSource(`saves.${ability}`).slice()
+        localSections[ability].push({ "name": "数值", content: abilityValueSource })
+        localSections[ability].push({ "name": "豁免熟练项", content: abilitySaveSource })
     }
     return localSections
 })
@@ -73,8 +60,7 @@ const statusPannelOpen = ref(false)
                     <button
                         class="flex flex-col items-center cursor-pointer select-none w-full hover:bg-slate-500 rounded-sm transition-colors py-1 gap-1"
                         @click="openPopout(abilityName)">
-                        <div class="relative"
-                            :class="{ 'save-proficiency': characterResult.saves[abilityName] }">
+                        <div class="relative" :class="{ 'save-proficiency': characterResult.saves[abilityName] }">
                             {{ displayName }}
                         </div>
                         <span class="text-xl">{{ characterResult.abilities[abilityName] }}</span>
@@ -227,7 +213,9 @@ const statusPannelOpen = ref(false)
     @apply w-6 h-full border absolute -left-1 bottom-0 rounded-sm;
 }
 
-.languages-display, .proficiencies-display, .spell-slots-display {
+.languages-display,
+.proficiencies-display,
+.spell-slots-display {
     @apply flex flex-wrap mt-2 items-start;
 }
 
