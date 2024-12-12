@@ -12,6 +12,23 @@ const currentPage = ref(1)
 const pageTransform = computed(() =>
     `translateX(${(1 - currentPage.value) * 100}%)`
 )
+const proficiencyBonus = computed(() => Math.ceil(characterResult.value.class.level / 4) + 1)
+const characterData = ref({
+    playerName: "",
+    characterName: "",
+    height: "",
+    weight: "",
+    gender: "",
+    age: "",
+    faith: "",
+    align: "",
+    bgPersonality: "",
+    bgIdeal: "",
+    bgBond: "",
+    bgFlaw: "",
+    bgOther: "",
+    backgroundStory: "",
+})
 </script>
 <template>
     <div class="character-container">
@@ -26,60 +43,76 @@ const pageTransform = computed(() =>
                         <h2>角色资料</h2>
                         <div class="item">
                             <label for="char-name">角色名字</label>
-                            <input type="text" id="char-name" class="value to-fill-value">
+                            <input type="text" id="char-name" class="value"
+                                :class="[!characterData.characterName ? 'to-fill-value' : 'filled-value']"
+                                v-model="characterData.characterName">
                         </div>
                         <div class="item">
                             <label for="player-name">玩家名字</label>
-                            <input type="text" id="player-name" class="value to-fill-value">
+                            <input type="text" id="player-name" class="value"
+                                :class="[!characterData.playerName ? 'to-fill-value' : 'filled-value']"
+                                v-model="characterData.playerName">
                         </div>
                         <div class="group">
                             <div class="item">
                                 <label for="height">身高</label>
-                                <input type="text" id="height" class="value to-fill-value">
+                                <input type="text" id="height" class="value"
+                                    :class="[!characterData.height ? 'to-fill-value' : 'filled-value']"
+                                    v-model="characterData.height">
                             </div>
                             <div class="item">
                                 <label for="weight">体重</label>
-                                <input type="text" id="weight" class="value to-fill-value">
+                                <input type="text" id="weight" class="value"
+                                    :class="[!characterData.weight ? 'to-fill-value' : 'filled-value']"
+                                    v-model="characterData.weight">
                             </div>
                         </div>
                         <div class="group">
                             <div class="item">
                                 <label for="gender">性别</label>
-                                <input type="text" id="gender" class="value to-fill-value">
+                                <input type="text" id="gender" class="value"
+                                    :class="[!characterData.gender ? 'to-fill-value' : 'filled-value']"
+                                    v-model="characterData.gender">
                             </div>
                             <div class="item">
                                 <label for="age">年龄</label>
-                                <input type="text" id="age" class="value to-fill-value">
+                                <input type="text" id="age" class="value"
+                                    :class="[!characterData.age ? 'to-fill-value' : 'filled-value']"
+                                    v-model="characterData.age">
                             </div>
                         </div>
                         <div class="group">
                             <div class="item">
                                 <label for="faith">信仰</label>
-                                <input type="text" id="faith" class="value to-fill-value">
+                                <input type="text" id="faith" class="value"
+                                    :class="[!characterData.faith ? 'to-fill-value' : 'filled-value']"
+                                    v-model="characterData.faith">
                             </div>
                             <div class="item">
-                                <label for="camp">阵营</label>
-                                <input type="text" id="camp" class="value to-fill-value">
+                                <label for="align">阵营</label>
+                                <input type="text" id="align" class="value"
+                                    :class="[!characterData.align ? 'to-fill-value' : 'filled-value']"
+                                    v-model="characterData.align">
                             </div>
                         </div>
                         <div class="group">
                             <div class="item">
                                 <div>种族</div>
-                                <div class="value gen-value">{{ characterResult.race.main }}</div>
+                                <div class="value gen-value">{{ characterResult.race.main || '未知' }}</div>
                             </div>
                             <div class="item">
                                 <div>亚种</div>
-                                <div class="value gen-value">{{ characterResult.race.sub }}</div>
+                                <div class="value gen-value">{{ characterResult.race.sub || '未知' }}</div>
                             </div>
                         </div>
                         <div class="group">
                             <div class="item">
                                 <div>背景</div>
-                                <div class="value gen-value">{{ characterResult.background }}</div>
+                                <div class="value gen-value">{{ characterResult.background || '未知' }}</div>
                             </div>
                             <div class="item">
                                 <div>体型</div>
-                                <div class="value gen-value">中型</div>
+                                <div class="value gen-value">{{ characterResult.size || '未知' }}</div>
                             </div>
                         </div>
                     </section>
@@ -87,31 +120,42 @@ const pageTransform = computed(() =>
                         <h2>背景特质</h2>
                         <div class="item">
                             <label for="personality">特点</label>
-                            <textarea rows="1" class="value-area filled-value scroll-xs" name=""
-                                id="personality"></textarea>
+                            <textarea rows="1" class="value-area scroll-xs"
+                                :class="[!characterData.bgPersonality ? 'to-fill-value' : 'filled-value']"
+                                id="personality" v-model="characterData.bgPersonality"></textarea>
                         </div>
                         <div class="item">
                             <label for="ideal">理想</label>
-                            <textarea rows="1" class="value-area filled-value scroll-xs" name="" id="ideal"></textarea>
+                            <textarea rows="1" class="value-area scroll-xs"
+                                :class="[!characterData.bgIdeal ? 'to-fill-value' : 'filled-value']" id="ideal"
+                                v-model="characterData.bgIdeal"></textarea>
                         </div>
                         <div class="item">
                             <label for="bond">牵绊</label>
-                            <textarea rows="1" class="value-area filled-value scroll-xs" name="" id="bond"></textarea>
+                            <textarea rows="1" class="value-area scroll-xs"
+                                :class="[!characterData.bgBond ? 'to-fill-value' : 'filled-value']" id="bond"
+                                v-model="characterData.bgBond"></textarea>
                         </div>
                         <div class="item">
                             <label for="flaw">缺点</label>
-                            <textarea rows="1" class="value-area filled-value scroll-xs" name="" id="flaw"></textarea>
+                            <textarea rows="1" class="value-area scroll-xs"
+                                :class="[!characterData.bgFlaw ? 'to-fill-value' : 'filled-value']" id="flaw"
+                                v-model="characterData.bgFlaw"></textarea>
                         </div>
                         <div class="item">
                             <label for="others">其他</label>
-                            <textarea rows="1" class="value-area filled-value scroll-xs" name="" id="others"></textarea>
+                            <textarea rows="1" class="value-area scroll-xs"
+                                :class="[!characterData.bgOther ? 'to-fill-value' : 'filled-value']" id="others"
+                                v-model="characterData.bgOther"></textarea>
                         </div>
                     </section>
                     <section class="flex flex-col items-stretch col-span-2">
-                        <h2 class="mb-1">
+                        <h2 class="mb-2">
                             <label for="story">背景故事</label>
                         </h2>
-                        <textarea class="value-area scroll-xs to-fill-value" name="" id="story"></textarea>
+                        <textarea class="value-area scroll-xs"
+                            :class="[!characterData.backgroundStory ? 'to-fill-value' : 'filled-value']" id="story"
+                            v-model="characterData.backgroundStory"></textarea>
                     </section>
                 </div>
             </div>
@@ -131,21 +175,24 @@ const pageTransform = computed(() =>
                             <tbody>
                                 <tr v-for="name, key of nameMapping">
                                     <td class="bg-slate-800">
-                                        <div :class="{ 'has-proficiencies': key === 'str' }">
+                                        <div :class="{ 'has-proficiencies': characterResult.saves[key] }">
                                             {{ name }}
                                         </div>
                                     </td>
                                     <td class="bg-slate-800">
                                         {{ characterResult.abilities[key] }}
                                     </td>
-                                    <td class="bg-slate-800">0</td>
-                                    <td class="bg-slate-800">0</td>
+                                    <td class="bg-slate-800">{{ Math.floor(characterResult.abilities[key] / 2 - 5) }}
+                                    </td>
+                                    <td class="bg-slate-800">{{ Math.floor(characterResult.abilities[key] / 2 - 5) +
+                                        (characterResult.saves[key] ? proficiencyBonus : 0) }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </section>
                     <section class="skills">
                         <h2>技能与熟练项</h2>
+                        <div>熟练项加值： {{ proficiencyBonus }}</div>
                         <div>技能</div>
                         <div></div>
                         <div>熟练项</div>

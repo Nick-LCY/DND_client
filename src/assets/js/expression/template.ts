@@ -28,7 +28,7 @@ class Character {
         stealth: 0, survival: 0,
     }
     class = {
-        level: 0, main: "", sub: ""
+        level: 1, main: "", sub: ""
     }
     race = {
         main: "", sub: ""
@@ -51,6 +51,7 @@ class Character {
     hp = 0
     initiate = 0
     proficiencies = []
+    size = ""
 
     public addEffect(target: string, expression: SourcedExpression) {
         let hierarchy = target.split(".").slice(1)
