@@ -1,14 +1,12 @@
 import { ref } from "vue"
-import { character } from "./template"
-import { deepReset } from "./utils"
-import { ExpressionResult } from "./dataType"
+import { Character } from "./template"
 
-const characterResult = ref<ExpressionResult>(deepReset<ExpressionResult>(character, {}))
+const characterResult = ref(new Character())
 
 function reset(what: "character") {
     switch (what) {
         case "character":
-            deepReset(character, characterResult.value)
+            characterResult.value = new Character()
             break
     }
 }

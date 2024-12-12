@@ -94,16 +94,16 @@ async function changeSubclass() {
 function updateCharacter() {
     store.clearCharacterEffect("class")
     store.addCharacterEffect("class", (v) => {
-        (v.class as { main: string }).main = classSelection.value.id;
-        (v.class as { sub: string }).sub = classSelection.value.subclass;
-        (v.class as { level: number }).level = classSelection.value.level;
+        v.class.main = classSelection.value.id;
+        v.class.sub = classSelection.value.subclass;
+        v.class.level = classSelection.value.level;
     })
     store.clearCharacterEffect("spell_slots")
     store.addCharacterEffect("spell_slots", (v) => {
         spellSlotTable.forEach(s => {
             let capacityIdx = s.class_level.filter(c => classSelection.value.level >= c).length - 1
             if (typeof v.spell_slots === "object" && !(v.spell_slots instanceof Array) && capacityIdx >= 0) {
-                (v.spell_slots[s.spell_level] as { capacity: number }).capacity += s.capacity[capacityIdx]
+                v.spell_slots[s.spell_level].capacity += s.capacity[capacityIdx]
             }
         })
     })

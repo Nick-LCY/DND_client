@@ -14,6 +14,7 @@ watch(baseAbilities.value, () =>
 )
 
 function check(e: FocusEvent) {
+    // TODO: AS
     let key = (e.target as HTMLInputElement).id
     baseAbilities.value[key as AbilityKeys] = Math.max(8, Math.min(baseAbilities.value[key as AbilityKeys], 20))
 }
@@ -30,6 +31,7 @@ function updateAbilities() {
     store.clearCharacterEffect("abilities")
     store.addCharacterEffect("abilities", (v) => {
         for (let [key, value] of Object.entries(baseAbilities.value)) {
+            // TODO: AS
             (v.abilities as Record<string, number>)[key] = value
         }
     })

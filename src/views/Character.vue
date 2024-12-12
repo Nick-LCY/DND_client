@@ -65,17 +65,17 @@ const pageTransform = computed(() =>
                         <div class="group">
                             <div class="item">
                                 <div>种族</div>
-                                <div class="value gen-value">矮人</div>
+                                <div class="value gen-value">{{ characterResult.race.main }}</div>
                             </div>
                             <div class="item">
                                 <div>亚种</div>
-                                <div class="value gen-value">山地矮人</div>
+                                <div class="value gen-value">{{ characterResult.race.sub }}</div>
                             </div>
                         </div>
                         <div class="group">
                             <div class="item">
                                 <div>背景</div>
-                                <div class="value gen-value">士兵</div>
+                                <div class="value gen-value">{{ characterResult.background }}</div>
                             </div>
                             <div class="item">
                                 <div>体型</div>
@@ -131,12 +131,12 @@ const pageTransform = computed(() =>
                             <tbody>
                                 <tr v-for="name, key of nameMapping">
                                     <td class="bg-slate-800">
-                                        <div :class="{'has-proficiencies': key === 'str'}">
+                                        <div :class="{ 'has-proficiencies': key === 'str' }">
                                             {{ name }}
                                         </div>
                                     </td>
                                     <td class="bg-slate-800">
-                                        {{ (characterResult.abilities as { [key: string]: any })[key] }}
+                                        {{ characterResult.abilities[key] }}
                                     </td>
                                     <td class="bg-slate-800">0</td>
                                     <td class="bg-slate-800">0</td>

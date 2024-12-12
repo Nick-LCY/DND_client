@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
-import { AbilityKeys, ExpressionResult, SkillKeys, SourcedEffect } from '../../assets/js/expression/dataType';
+import { AbilityKeys, SkillKeys, SourcedEffect } from '../../assets/js/expression/dataType';
 import { shortNameMapping, nameMapping, skillMapping } from '../../assets/js/mappings';
 import { store } from '../../assets/js/store';
 import { characterResult } from '../../assets/js/expression/expressionResults';
@@ -73,13 +73,11 @@ const statusPannelOpen = ref(false)
                     <button
                         class="flex flex-col items-center cursor-pointer select-none w-full hover:bg-slate-500 rounded-sm transition-colors py-1 gap-1"
                         @click="openPopout(abilityName)">
-                        <!-- TODO: Any way to handle "as"? -->
                         <div class="relative"
-                            :class="{ 'save-proficiency': (characterResult.saves as ExpressionResult)[abilityName] }">
+                            :class="{ 'save-proficiency': characterResult.saves[abilityName] }">
                             {{ displayName }}
                         </div>
-                        <!-- TODO: Any way to handle "as"? -->
-                        <span class="text-xl">{{ (characterResult.abilities as ExpressionResult)[abilityName] }}</span>
+                        <span class="text-xl">{{ characterResult.abilities[abilityName] }}</span>
                     </button>
                 </div>
             </div>
@@ -113,8 +111,7 @@ const statusPannelOpen = ref(false)
                 <div class="skill-container">
                     <div v-for="skillKey of value" :key="skillKey" class="basis-1/3 flex-shrink-0">
                         {{ skillMapping[skillKey] }}
-                        <!-- TODO: Any way to handle "as"? -->
-                        ×{{ (characterResult.skills as ExpressionResult)[skillKey] }}
+                        ×{{ characterResult.skills[skillKey] }}
                     </div>
                 </div>
             </div>
@@ -133,23 +130,22 @@ const statusPannelOpen = ref(false)
                 <div class="text-lg font-bold my-1 py-1 text-center border-b flex-shrink-0">法术点</div>
                 <div class="spell-slots-display">
                     <template v-for="spellSlot, spellLevel in characterResult.spell_slots">
-                        <!-- TODO: AS ANY!?? ANYONE HELP! -->
-                        <div class="w-1/3 text-center h-8 leading-8" v-if="(spellSlot as any).capacity !== 0">
-                            {{ `${spellLevel}环：${(spellSlot as any).capacity}🔷` }}
+                        <div class="w-1/3 text-center h-8 leading-8" v-if="spellSlot.capacity !== 0">
+                            {{ `${spellLevel}环：${spellSlot.capacity}🔷` }}
                         </div>
                     </template>
                     <div class="nothing">无法术点</div>
                 </div>
                 <div class="text-lg font-bold my-1 py-1 text-center border-b flex-shrink-0">语言</div>
                 <div class="languages-display">
-                    <div v-for="language of new Set(characterResult.languages as string[])" class="w-1/4 text-center h-8 leading-8">
+                    <div v-for="language of new Set(characterResult.languages)" class="w-1/4 text-center h-8 leading-8">
                         {{ language }}
                     </div>
                     <div class="nothing">未掌握语言</div>
                 </div>
                 <div class="text-lg font-bold my-1 py-1 text-center border-b flex-shrink-0">熟练项</div>
                 <div class="proficiencies-display flex-grow h-20">
-                    <div v-for="language of new Set(characterResult.proficiencies as string[])"
+                    <div v-for="language of new Set(characterResult.proficiencies)"
                         class="w-1/4 text-center h-8 leading-8">
                         {{ language }}
                     </div>

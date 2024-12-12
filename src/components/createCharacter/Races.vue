@@ -68,8 +68,8 @@ async function changeSubrace() {
 function updateCharacter() {
     store.clearCharacterEffect("race")
     store.addCharacterEffect("race", (v) => {
-        (v.race as { main: string }).main = raceSelection.value.race;
-        (v.race as { sub: string }).sub = raceSelection.value.subrace;
+        v.race.main = raceSelection.value.race;
+        v.race.sub = raceSelection.value.subrace;
     })
 }
 
