@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { nameMapping } from '../assets/js/mappings';
+import { computed, ref, watch } from 'vue';
+import { nameMapping, skillCategoryMapping, skillNameMapping } from '../assets/js/mappings';
 import { characterResult } from '../assets/js/expression/expressionResults';
+import { getById } from '../assets/js/api/getById';
+import { formatNumber } from '../assets/js/expression/utils';
+import { AbilityKeys } from '../assets/js/expression/dataType';
 
 // function abilityExpandScroll(event: Event) {
 //     const dom = event.currentTarget as HTMLElement
@@ -13,6 +16,26 @@ const pageTransform = computed(() =>
     `translateX(${(1 - currentPage.value) * 100}%)`
 )
 const proficiencyBonus = computed(() => Math.ceil(characterResult.value.class.level / 4) + 1)
+const abilityModValues = computed(() => {
+    const result: Record<AbilityKeys, number> = {
+        str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0
+    }
+    for (let [key, val] of Object.entries(characterResult.value.abilities)) {
+        result[key as AbilityKeys] = Math.floor(val / 2 - 5)
+    }
+    return result
+})
+const abilitySaveValues = computed(() => {
+    const result: Record<AbilityKeys, number> = {
+        str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0
+    }
+    for (let [key, val] of Object.entries(characterResult.value.abilities)) {
+        result[key as AbilityKeys] = Math.floor(val / 2 - 5)
+        if (characterResult.value.saves[key as AbilityKeys])
+            result[key as AbilityKeys] += proficiencyBonus.value
+    }
+    return result
+})
 const characterData = ref({
     playerName: "",
     characterName: "",
@@ -29,6 +52,31 @@ const characterData = ref({
     bgOther: "",
     backgroundStory: "",
 })
+
+// TODO: 这里好蠢，之后看看怎么改
+// ==============================================================
+async function tryToGet(id: string): Promise<string> {
+    if (id === "none") return "无"
+    if (id) return ((await getById(id)) as any).name as string
+    return "布什"
+}
+
+const computedCharacterData = ref({
+    mainRace: "未知",
+    subRace: "未知",
+    mainClass: "未知",
+    subClass: "未知",
+    background: "未知"
+})
+
+watch(characterResult, async () => {
+    computedCharacterData.value.mainRace = await tryToGet(characterResult.value.race.main)
+    computedCharacterData.value.subRace = await tryToGet(characterResult.value.race.sub)
+    computedCharacterData.value.mainClass = await tryToGet(characterResult.value.class.main)
+    computedCharacterData.value.subClass = await tryToGet(characterResult.value.class.sub)
+    computedCharacterData.value.background = await tryToGet(characterResult.value.background)
+})
+// ==============================================================
 </script>
 <template>
     <div class="character-container">
@@ -98,17 +146,17 @@ const characterData = ref({
                         <div class="group">
                             <div class="item">
                                 <div>种族</div>
-                                <div class="value gen-value">{{ characterResult.race.main || '未知' }}</div>
+                                <div class="value gen-value">{{ computedCharacterData.mainRace }}</div>
                             </div>
                             <div class="item">
                                 <div>亚种</div>
-                                <div class="value gen-value">{{ characterResult.race.sub || '未知' }}</div>
+                                <div class="value gen-value">{{ computedCharacterData.subRace }}</div>
                             </div>
                         </div>
                         <div class="group">
                             <div class="item">
                                 <div>背景</div>
-                                <div class="value gen-value">{{ characterResult.background || '未知' }}</div>
+                                <div class="value gen-value">{{ computedCharacterData.background }}</div>
                             </div>
                             <div class="item">
                                 <div>体型</div>
@@ -151,7 +199,7 @@ const characterData = ref({
                     </section>
                     <section class="flex flex-col items-stretch col-span-2">
                         <h2 class="mb-2">
-                            <label for="story">背景故事</label>
+                            <label for="story">背景故事与描述</label>
                         </h2>
                         <textarea class="value-area scroll-xs"
                             :class="[!characterData.backgroundStory ? 'to-fill-value' : 'filled-value']" id="story"
@@ -162,7 +210,6 @@ const characterData = ref({
             <div class="page" :style="{ 'transform': pageTransform }">
                 <div>
                     <section class="flex flex-col">
-                        <h2 class="mb-2">属性</h2>
                         <table class="abilities-table">
                             <thead>
                                 <tr>
@@ -182,21 +229,55 @@ const characterData = ref({
                                     <td class="bg-slate-800">
                                         {{ characterResult.abilities[key] }}
                                     </td>
-                                    <td class="bg-slate-800">{{ Math.floor(characterResult.abilities[key] / 2 - 5) }}
+                                    <td class="bg-slate-800">
+                                        {{ formatNumber(abilityModValues[key]) }}
                                     </td>
-                                    <td class="bg-slate-800">{{ Math.floor(characterResult.abilities[key] / 2 - 5) +
-                                        (characterResult.saves[key] ? proficiencyBonus : 0) }}</td>
+                                    <td class="bg-slate-800">
+                                        {{ formatNumber(abilitySaveValues[key]) }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </section>
                     <section class="skills">
-                        <h2>技能与熟练项</h2>
-                        <div>熟练项加值： {{ proficiencyBonus }}</div>
-                        <div>技能</div>
-                        <div></div>
-                        <div>熟练项</div>
-                        <div></div>
+                        <div class="col-span-3 border-b-2 border-slate-600">
+                            <div class="font-bold text-center bg-slate-700 py-1">技能</div>
+                            <div class="px-2 py-1">
+                                <div class="w-1/4 text-center inline-block"
+                                    v-for="val, skillName of characterResult.skills">
+                                    <div class="inline-block w-1/2">
+                                        {{ skillNameMapping[skillName] }}
+                                    </div>
+                                    <div class="w-1/2 text-left inline-block">
+                                        {{ formatNumber(Math.floor(val * proficiencyBonus) +
+                                            abilityModValues[skillCategoryMapping[skillName]]) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col border-r-2 border-slate-600 pb-2">
+                            <div class="font-bold text-center bg-slate-700 py-1">语言</div>
+                            <div class="scroll-xs overflow-auto h-20 flex-grow">
+                                <div v-for="language of new Set(characterResult.languages)"
+                                    class="text-center hover:bg-slate-600 transition-colors">
+                                    {{ language }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col border-r-2 border-slate-600 pb-2">
+                            <div class="font-bold text-center bg-slate-700 py-1">熟练项</div>
+                            <div class="scroll-xs overflow-auto h-20 flex-grow ">
+                                <div v-for="item of new Set(characterResult.proficiencies)"
+                                    class="text-center hover:bg-slate-600 transition-colors">
+                                    {{ item }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col border-slate-600">
+                            <div class="font-bold text-center bg-slate-700 py-1">熟练加值</div>
+                            <div class="flex-grow flex justify-center items-center text-3xl">
+                                {{ formatNumber(proficiencyBonus) }}
+                            </div>
+                        </div>
                     </section>
                     <section class="traits">
                         <h2>特性</h2>
@@ -330,5 +411,11 @@ tr {
 
 .has-proficiencies {
     @apply border border-slate-400;
+}
+
+.skills {
+    @apply grid p-0;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
 }
 </style>

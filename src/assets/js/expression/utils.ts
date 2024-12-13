@@ -28,4 +28,8 @@ function deepReset<T>(obj: T, copy: any = Array.isArray(obj) ? [] : {}): T {
     return copy as T;
 }
 
-export { findBeforeTarget, findTarget, deepReset }
+function formatNumber(number: number): string {
+    return number > 0 ? `+${number}` : `${number}`
+}
+
+export { findBeforeTarget, findTarget, deepReset, formatNumber }

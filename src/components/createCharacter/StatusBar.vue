@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import { AbilityKeys, SkillKeys, SourcedEffect } from '../../assets/js/expression/dataType';
-import { shortNameMapping, nameMapping, skillMapping } from '../../assets/js/mappings';
+import { shortNameMapping, nameMapping, skillNameMapping } from '../../assets/js/mappings';
 import { store } from '../../assets/js/store';
 import { characterResult } from '../../assets/js/expression/expressionResults';
 import { updateCharacter } from '../../assets/js/expression/update';
@@ -96,7 +96,7 @@ const statusPannelOpen = ref(false)
                 class="flex flex-col items-stretch flex-grow basis-1">
                 <div class="skill-container">
                     <div v-for="skillKey of value" :key="skillKey" class="basis-1/3 flex-shrink-0">
-                        {{ skillMapping[skillKey] }}
+                        {{ skillNameMapping[skillKey] }}
                         ×{{ characterResult.skills[skillKey] }}
                     </div>
                 </div>
