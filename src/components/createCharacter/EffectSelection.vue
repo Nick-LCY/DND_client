@@ -47,7 +47,7 @@ function shouldDisabled(selection: vModelSelection | string): boolean {
     if (isFull.value) {
         if (typeof selection === "string") {
             for (let selectedEffect of model.value.selectedString) {
-                if (selectedEffect.id === selection && selectedEffect.value > 0)
+                if (selectedEffect.object.id === selection && selectedEffect.value > 0)
                     return false
             }
             return true

@@ -1,4 +1,4 @@
-import { EffectGroup, EffectGroupDict, isEffectGroupDict } from "./originalDataType"
+import { Effect, EffectGroup, EffectGroupDict, isEffectGroupDict, SpellListEffect } from "./originalDataType"
 
 interface TypeIndex<T> {
     idx: number
@@ -21,7 +21,9 @@ function filterByType<T>(
 }
 
 interface vModelSelection {
-    selectedString: { id: string, value: number }[],
+    selectedString: {
+        object: Effect | SpellListEffect, value: number
+    }[],
     selectedSelection: vModelSelection[],
     selectedGroup: vModelSelection[],
 }

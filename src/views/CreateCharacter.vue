@@ -12,7 +12,6 @@ import { Categories, ConditionalFeature, Feature } from '../assets/js/categories
 import {
     Effect as EffectType,
     EffectGroup as EffectGroupType,
-    EffectSelection as EffectSelectionType,
     EffectGroupDict as EffectGroupDictType,
     isEffect,
     isEffectSelection,
@@ -29,7 +28,6 @@ import { vModelSelection } from '../assets/js/selections';
 import EffectGroup from '../components/createCharacter/EffectGroup.vue';
 import StatusBar from '../components/createCharacter/StatusBar.vue';
 import { store } from '../assets/js/store';
-import { SourcedEffect } from '../assets/js/expression/dataType';
 import { characterResult } from '../assets/js/expression/expressionResults';
 import { spellList } from '../assets/js/expression/spellLists';
 import _ from "lodash";
@@ -198,7 +196,7 @@ function visitEffects(effects: EffectGroupType | EffectGroupDictType, vModelObj:
     for (let effect of effects) {
         if (isEffect(effect) || isSpellListEffect(effect)) {
             let value = inSelection ? 0 : 1
-            vModelObj.selectedString.push({ id: effect.id, value })
+            vModelObj.selectedString.push({ object: effect, value })
         } else if (isEffectSelection(effect)) {
             const subSelection: vModelSelection = {
                 selectedGroup: [],
@@ -269,36 +267,30 @@ function nextStep() {
     currentStep.value++
 }
 
-const activatedEffects = computed(() => {
-    function findSelectedEffectIds(obj: vModelSelection): string[] {
-        const selectedEffects: string[] = []
-        for (let selectedEffect of obj.selectedString) {
-            for (let i = 0; i < selectedEffect.value; i++) selectedEffects.push(selectedEffect.id)
-        }
-        for (let selection of obj.selectedSelection) selectedEffects.push(...findSelectedEffectIds(selection))
-        for (let group of obj.selectedGroup) selectedEffects.push(...findSelectedEffectIds(group))
-        return selectedEffects
+const activatedEffects = computed(() => activatedFeatures.value.map(f => {
+    return f.effects.map(e => { return { sources: f.sources, effect: e } })
+}).flat())
+
+const activatedFeatures = computed(() => {
+    interface Result {
+        name: string
+        description: string
+        sources: string[]
+        effects: (EffectType | SpellListEffect)[]
     }
-    function findAllEffects(obj: EffectGroupType | EffectSelectionType | EffectGroupDictType): { [key: string]: EffectType | SpellListEffect } {
-        let effects: { [key: string]: EffectType | SpellListEffect } = {}
-        let list: EffectGroupType
-        if (isEffectSelection(obj)) list = obj.available
-        else if (isEffectGroupDict(obj)) list = obj.group
-        else list = obj
-        for (let i of list) {
-            if (isEffect(i) || isSpellListEffect(i)) effects[i.id] = i
-            else if (isSpellListEffect(i)) continue
-            else effects = {
-                ...effects,
-                ...findAllEffects(i)
-            }
+    function findSelectedEffects(obj: vModelSelection): (EffectType | SpellListEffect)[] {
+        const selectedEffects: (EffectType | SpellListEffect)[] = []
+        for (let selectedEffect of obj.selectedString) {
+            for (let i = 0; i < selectedEffect.value; i++) selectedEffects.push(selectedEffect.object)
         }
-        return effects
+        for (let selection of obj.selectedSelection) selectedEffects.push(...findSelectedEffects(selection))
+        for (let group of obj.selectedGroup) selectedEffects.push(...findSelectedEffects(group))
+        return selectedEffects
     }
     function findFeatures(id: string): { idx: number, feature: Feature, categoryName: string }[] {
         const features: { idx: number, feature: Feature, categoryName: string }[] = []
-        for (let step in categories.value) {
-            for (let [categoryName, category] of Object.entries(categories.value[step])) {
+        for (let page of Object.values(categories.value)) {
+            for (let [categoryName, category] of Object.entries(page)) {
                 for (let [idx, feature] of category.entries()) {
                     if (id == feature.id) {
                         if (
@@ -311,43 +303,17 @@ const activatedEffects = computed(() => {
         }
         return features
     }
-    const effects: SourcedEffect[] = []
+    let results: Result[] = []
     for (let featureId in featureSelections.value) {
         let features = findFeatures(featureId)
         for (let { idx, feature } of features) {
-            let selectedEffectIds = findSelectedEffectIds(featureSelections.value[featureId][idx])
-            let effectDict = findAllEffects(feature.effects)
-            for (let effectId of selectedEffectIds) {
-                if (effectDict[effectId] !== undefined)
-                    effects.push({ sources: [...feature.sources, feature.name], effect: effectDict[effectId] })
+            const result: Result = {
+                name: feature.name,
+                description: feature.description,
+                sources: feature.sources,
+                effects: findSelectedEffects(featureSelections.value[featureId][idx])
             }
-        }
-    }
-    return effects
-})
-
-const activatedFeatures = computed(() => {
-    interface Result {
-        name: string
-        description: string
-        sources: string[]
-    }
-
-    let results: Result[] = []
-    for (let page of Object.values(categories.value)) {
-        for (let features of Object.values(page)) {
-            for (let feature of features) {
-                if (
-                    (<ConditionalFeature>feature).condition &&
-                    !(<ConditionalFeature>feature).condition()
-                ) continue
-                const result: Result = {
-                    name: feature.name,
-                    description: feature.description,
-                    sources: feature.sources,
-                }
-                results.push(result)
-            }
+            results.push(result)
         }
     }
     return results

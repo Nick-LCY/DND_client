@@ -5,15 +5,16 @@ import { characterResult } from '../assets/js/expression/expressionResults';
 import { getById } from '../assets/js/api/getById';
 import { formatNumber } from '../assets/js/expression/utils';
 import { AbilityKeys } from '../assets/js/expression/dataType';
+import { Effect, isEffect, SpellListEffect } from '../assets/js/originalDataType';
 
 interface Result {
     name: string
     description: string
     sources: string[]
+    effects: (Effect | SpellListEffect)[]
 }
 
 const props = defineProps<{ features: Result[] }>()
-watch(() => props.features, () => console.log(props.features))
 
 // function abilityExpandScroll(event: Event) {
 //     const dom = event.currentTarget as HTMLElement
@@ -91,6 +92,10 @@ const selectedFeature = ref(-1)
 const currentDescription = computed(() => {
     if (selectedFeature.value === -1) return ""
     return props.features[selectedFeature.value].description
+})
+const currentEffects = computed(() => {
+    if (selectedFeature.value === -1) return []
+    return props.features[selectedFeature.value].effects.filter(isEffect)
 })
 </script>
 <template>
@@ -224,7 +229,7 @@ const currentDescription = computed(() => {
             </div>
             <div class="page" :style="{ 'transform': pageTransform }">
                 <div>
-                    <section class="flex flex-col">
+                    <section class="abilities">
                         <table class="abilities-table">
                             <thead>
                                 <tr>
@@ -317,8 +322,13 @@ const currentDescription = computed(() => {
                                 </div>
                                 <div
                                     class="flex-grow basis-1 flex-shrink flex flex-col rounded-md border-slate-600 border-2 overflow-hidden">
-                                    <div class="text-center text-lg py-1 bg-slate-700">效果</div>
-                                    <div class="h-10 flex-grow overflow-y-scroll scroll-xs description p-1"></div>
+                                    <div class="text-center text-lg py-1 bg-slate-700">已获得效果</div>
+                                    <div class="h-10 flex-grow overflow-y-scroll scroll-xs p-1">
+                                        <div v-for="effect of currentEffects" class="mb-1 border border-slate-600 rounded-md p-1">
+                                            <div>{{ effect.name }}</div>
+                                            <div class="text-sm text-gray-400">{{ effect.description }}</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -442,15 +452,31 @@ h2 {
     @apply text-xl font-bold text-center;
 }
 
+.abilities {
+    @apply p-0 overflow-hidden;
+}
+
 .abilities-table {
-    @apply flex-grow flex-shrink text-center;
+    @apply h-full w-full text-center;
 }
 
 thead {
-    @apply border-b-2;
+    @apply bg-slate-700;
 }
 
-tr {
+thead th {
+    @apply py-1;
+}
+
+tbody td {
+    @apply px-2;
+}
+
+thead tr {
+    @apply border-b-0;
+}
+
+tr:not(:last-child) {
     @apply border-b border-slate-600;
 }
 
