@@ -2,6 +2,7 @@ import { Feature as OriginalFeature, LeveledFeature } from "./originalDataType";
 import { Categories, ConditionalFeature, Feature } from "./categories";
 import { renderMD } from "./renderMarkdown";
 import { Ref } from "vue";
+import { categoryMapping } from "./mappings";
 
 function processFeatures(features: OriginalFeature[], sources: string[]): Categories {
     const categories: Categories = {};
@@ -15,7 +16,7 @@ function processFeatures(features: OriginalFeature[], sources: string[]): Catego
             description: renderMD(feature.description),
             // Effect description rendering is done in EffectSelection.vue
             effects: feature.effects,
-            sources
+            sources: [...sources, categoryMapping[feature.category]]
         }
         categories[feature.category].push(data)
     }
@@ -39,7 +40,7 @@ function processLeveledFeatures(features: LeveledFeature[], selectionProxy: Ref<
                         || selectionProxy.value.level < leveledFeature.end_level
                     )
             },
-            sources
+            sources: [...sources, categoryMapping[feature.category]]
         }
         if (!(feature.category in categories)) {
             categories[feature.category] = []

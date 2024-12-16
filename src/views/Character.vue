@@ -6,6 +6,15 @@ import { getById } from '../assets/js/api/getById';
 import { formatNumber } from '../assets/js/expression/utils';
 import { AbilityKeys } from '../assets/js/expression/dataType';
 
+interface Result {
+    name: string
+    description: string
+    sources: string[]
+}
+
+const props = defineProps<{ features: Result[] }>()
+watch(() => props.features, () => console.log(props.features))
+
 // function abilityExpandScroll(event: Event) {
 //     const dom = event.currentTarget as HTMLElement
 //     const wheelEvent = event as WheelEvent
@@ -58,7 +67,7 @@ const characterData = ref({
 async function tryToGet(id: string): Promise<string> {
     if (id === "none") return "无"
     if (id) return ((await getById(id)) as any).name as string
-    return "布什"
+    return "未知"
 }
 
 const computedCharacterData = ref({
@@ -77,6 +86,12 @@ watch(characterResult, async () => {
     computedCharacterData.value.background = await tryToGet(characterResult.value.background)
 })
 // ==============================================================
+
+const selectedFeature = ref(-1)
+const currentDescription = computed(() => {
+    if (selectedFeature.value === -1) return ""
+    return props.features[selectedFeature.value].description
+})
 </script>
 <template>
     <div class="character-container">
@@ -280,7 +295,33 @@ watch(characterResult, async () => {
                         </div>
                     </section>
                     <section class="traits">
-                        <h2>特性</h2>
+                        <h2 class="my-2">特性</h2>
+                        <div class="flex-grow h-10 flex gap-2 items-stretch justify-center pb-2">
+                            <div class="scroll-xs h-full overflow-y-auto flex-grow basis-1 px-2">
+                                <button v-for="feature, idx of props.features" :key="idx" class="feature-button"
+                                    :class="{ 'bg-slate-700': idx === selectedFeature }" @click="selectedFeature = idx">
+                                    <div>
+                                        <div class="text-lg -mb-1">{{ feature.name }}</div>
+                                        <div class="text-sm text-gray-400">{{ feature.sources.join(">") }}</div>
+                                    </div>
+                                    <div class="feature-arrow" :class="{ '!text-slate-50': idx === selectedFeature }"> >
+                                    </div>
+                                </button>
+                            </div>
+                            <div class="flex-grow basis-1 flex flex-col gap-2 pr-2">
+                                <div
+                                    class="flex-grow basis-1 flex-shrink flex flex-col rounded-md border-slate-600 border-2 overflow-hidden">
+                                    <div class="text-center text-lg py-1 bg-slate-700">简介</div>
+                                    <div v-html="currentDescription"
+                                        class="h-10 flex-grow overflow-y-scroll scroll-xs description p-1"></div>
+                                </div>
+                                <div
+                                    class="flex-grow basis-1 flex-shrink flex flex-col rounded-md border-slate-600 border-2 overflow-hidden">
+                                    <div class="text-center text-lg py-1 bg-slate-700">效果</div>
+                                    <div class="h-10 flex-grow overflow-y-scroll scroll-xs description p-1"></div>
+                                </div>
+                            </div>
+                        </div>
                     </section>
                 </div>
             </div>
@@ -345,7 +386,11 @@ section {
 .traits,
 .combat,
 .actions {
-    @apply col-span-2;
+    @apply col-span-2 overflow-hidden;
+}
+
+.traits {
+    @apply flex flex-col p-0;
 }
 
 .character-info {
@@ -417,5 +462,18 @@ tr {
     @apply grid p-0;
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: 1fr 1fr;
+}
+
+.feature-button {
+    @apply border-2 border-slate-600 rounded-md p-1 mb-2 w-full text-left;
+    @apply cursor-pointer transition hover:bg-slate-700 flex items-center justify-between;
+}
+
+.feature-arrow {
+    @apply text-2xl font-bold text-transparent transition mr-2;
+}
+
+.feature-button:hover .feature-arrow {
+    @apply text-slate-50;
 }
 </style>

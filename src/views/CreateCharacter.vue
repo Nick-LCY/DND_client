@@ -34,6 +34,7 @@ import { characterResult } from '../assets/js/expression/expressionResults';
 import { spellList } from '../assets/js/expression/spellLists';
 import _ from "lodash";
 import { renderMD } from '../assets/js/renderMarkdown';
+import { categoryMapping } from '../assets/js/mappings';
 
 const activatedSpellList = computed(() => {
     interface SpellPart {
@@ -158,22 +159,6 @@ const currentCategoryCollapse = computed(
         return categoryCollapse.value[currentStep.value]
     }
 )
-const categoryMapping: { [key: string]: string } = {
-    race_traits: "种族特质",
-    race_proficiencies: "种族熟练项",
-    class_traits: "职业特质",
-    class_level_traits: "职业等级特质",
-    class_proficiencies: "职业熟练项",
-    class_equipments: "职业初始装备",
-    subclass_traits: "子职业特质",
-    subclass_level_traits: "子职业等级特质",
-    subclass_proficiencies: "子职业熟练项",
-    subrace_traits: "亚种特质",
-    subrace_proficiencies: "亚种熟练项",
-    background_traits: "背景特质",
-    background_proficiencies: "背景熟练项",
-    background_equipment: "背景初始装备",
-}
 const currentStep = ref<number>(0);
 const totalSteps = ref<number>(5);
 const stepTranslate = computed(() => {
@@ -329,16 +314,43 @@ const activatedEffects = computed(() => {
     const effects: SourcedEffect[] = []
     for (let featureId in featureSelections.value) {
         let features = findFeatures(featureId)
-        for (let { idx, feature, categoryName } of features) {
+        for (let { idx, feature } of features) {
             let selectedEffectIds = findSelectedEffectIds(featureSelections.value[featureId][idx])
             let effectDict = findAllEffects(feature.effects)
             for (let effectId of selectedEffectIds) {
                 if (effectDict[effectId] !== undefined)
-                    effects.push({ sources: [...feature.sources, categoryMapping[categoryName], feature.name], effect: effectDict[effectId] })
+                    effects.push({ sources: [...feature.sources, feature.name], effect: effectDict[effectId] })
             }
         }
     }
     return effects
+})
+
+const activatedFeatures = computed(() => {
+    interface Result {
+        name: string
+        description: string
+        sources: string[]
+    }
+
+    let results: Result[] = []
+    for (let page of Object.values(categories.value)) {
+        for (let features of Object.values(page)) {
+            for (let feature of features) {
+                if (
+                    (<ConditionalFeature>feature).condition &&
+                    !(<ConditionalFeature>feature).condition()
+                ) continue
+                const result: Result = {
+                    name: feature.name,
+                    description: feature.description,
+                    sources: feature.sources,
+                }
+                results.push(result)
+            }
+        }
+    }
+    return results
 })
 updateCharacter(activatedEffects.value)
 </script>
@@ -383,9 +395,6 @@ updateCharacter(activatedEffects.value)
                     学习法术
                 </h2>
             </div>
-            <!-- <div v-else class="step-detail-title">
-                <h2>人物总览</h2>
-            </div> -->
             <div class="flex overflow-hidden h-64 w-full flex-grow" :class="{ loading: store.loading }">
                 <div class="flex-shrink-0 w-full p-4 text-4xl flex justify-center items-center"
                     :style="{ 'transform': stepTranslate }">
@@ -492,7 +501,7 @@ updateCharacter(activatedEffects.value)
                         </div>
                     </div>
                 </div>
-                <Character :style="{ 'transform': stepTranslate }"></Character>
+                <Character :style="{ 'transform': stepTranslate }" :features="activatedFeatures"></Character>
             </div>
         </div>
         <StatusBar :class="{ 'status-bar-collapse': currentStep === 5 }" :activatedEffects="activatedEffects">

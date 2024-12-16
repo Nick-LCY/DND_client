@@ -26,4 +26,27 @@ const skillCategoryMapping: Record<SkillKeys, AbilityKeys> = {
     stealth: "dex", survival: "wis",
 }
 
-export { shortNameMapping, nameMapping, skillNameMapping, skillCategoryMapping }
+const categoryMapping: { [key: string]: string } = {
+    race_traits: "种族特质",
+    race_proficiencies: "种族熟练项",
+    class_traits: "职业特质",
+    class_level_traits: "职业等级特质",
+    class_proficiencies: "职业熟练项",
+    class_equipments: "职业初始装备",
+    subclass_traits: "子职业特质",
+    subclass_level_traits: "子职业等级特质",
+    subclass_proficiencies: "子职业熟练项",
+    subrace_traits: "亚种特质",
+    subrace_proficiencies: "亚种熟练项",
+    background_traits: "背景特质",
+    background_proficiencies: "背景熟练项",
+    background_equipment: "背景初始装备",
+}
+
+export {
+    shortNameMapping,
+    nameMapping,
+    skillNameMapping,
+    skillCategoryMapping,
+    categoryMapping
+}
