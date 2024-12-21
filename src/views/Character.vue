@@ -324,7 +324,8 @@ const currentEffects = computed(() => {
                                     class="flex-grow basis-1 flex-shrink flex flex-col rounded-md border-slate-600 border-2 overflow-hidden">
                                     <div class="text-center text-lg py-1 bg-slate-700">已获得效果</div>
                                     <div class="h-10 flex-grow overflow-y-scroll scroll-xs p-1">
-                                        <div v-for="effect of currentEffects" class="mb-1 border border-slate-600 rounded-md p-1">
+                                        <div v-for="effect of currentEffects"
+                                            class="mb-1 border border-slate-600 rounded-md p-1">
                                             <div>{{ effect.name }}</div>
                                             <div class="text-sm text-gray-400">{{ effect.description }}</div>
                                         </div>
@@ -338,7 +339,110 @@ const currentEffects = computed(() => {
             <div class="page" :style="{ 'transform': pageTransform }">
                 <div>
                     <section class="combat">
-                        <h2>战斗属性</h2>
+                        <div class="flex items-stretch overflow-hidden border-2 border-slate-600 rounded-md flex-wrap">
+                            <div class="w-1/2 border-r-2 border-slate-600 flex flex-col border-b-2">
+                                <div class="font-bold text-center bg-slate-700 py-1">生命值
+                                </div>
+                                <div class="my-auto text-center flex items-center justify-around text-xl">
+                                    <input class="w-10 text-center py-1 rounded-sm bg-slate-600 outline-none"
+                                        type="text">
+                                    <span>/</span>
+                                    <span>{{ characterResult.hp }}</span>
+                                </div>
+                            </div>
+                            <div class="w-1/2 border-slate-600 flex flex-col border-b-2">
+                                <div class="font-bold text-center bg-slate-700 py-1">临时生命值
+                                </div>
+                                <input
+                                    class="my-auto text-xl py-1 text-center rounded-sm bg-slate-600 mx-2 outline-none"
+                                    type="text">
+                            </div>
+                            <div class="w-1/2 border-r-2 border-slate-600 flex flex-col">
+                                <div class="font-bold text-center bg-slate-700 py-1">AC
+                                </div>
+                                <div class="my-auto text-center text-xl">16</div>
+                            </div>
+                            <div class="w-1/2 flex-grow border-slate-600 flex flex-col">
+                                <div class="font-bold text-center bg-slate-700 py-1">先攻
+                                </div>
+                                <div class="my-auto text-center text-xl">{{ formatNumber(characterResult.initiate) }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border-2 border-slate-600 rounded-md flex flex-col">
+                            <div class="text-center py-1 bg-slate-700 border-b-2 border-slate-600 font-bold">武器</div>
+                            <div class="weapon-data">
+                                <div class="row-span-2 bg-slate-700 border-r-2 border-b-2">主手</div>
+                                <div class="border-r-2 border-b-2">命中</div>
+                                <div class="border-b-2">5d4+1</div>
+                                <div class="border-r-2 border-b-2">伤害</div>
+                                <div class="border-b-2">5d4+1</div>
+                                <div class="row-span-2 bg-slate-700 border-r-2">副手</div>
+                                <div class="border-r-2 border-b-2">命中</div>
+                                <div class="border-b-2">5d4+1</div>
+                                <div class="border-r-2">伤害</div>
+                                <div>5d4+1</div>
+                            </div>
+                        </div>
+                        <div
+                            class="text-center border-2 border-slate-600 rounded-md overflow-hidden flex flex-col row-span-2">
+                            <div class="font-bold border-b-2 border-slate-600 bg-slate-700 py-1">施法</div>
+                            <div class="flex-grow flex items-stretch">
+                                <div class="flex flex-col items-stretch border-r-2 border-slate-600">
+                                    <div class="flex-1 flex flex-col border-b-2 border-slate-600">
+                                        <div class="py-1 bg-slate-700 px-2">豁免</div>
+                                        <div class="flex-grow flex items-center justify-center text-xl">1</div>
+                                    </div>
+                                    <div class="flex-1 flex flex-col border-b-2 border-slate-600">
+                                        <div class="py-1 bg-slate-700 px-2">命中</div>
+                                        <div class="flex-grow flex items-center justify-center text-xl">+3</div>
+                                    </div>
+                                    <div class="flex-1 flex flex-col">
+                                        <div class="py-1 bg-slate-700 px-2">属性</div>
+                                        <div class="flex-grow flex items-center justify-center text-xl">魅</div>
+                                    </div>
+                                </div>
+                                <div class="flex-grow flex flex-col gap-1 py-1">
+                                    <template v-for="{ capacity }, spellLevel in characterResult.spell_slots"
+                                        :key="spellLevel">
+                                        <div v-if="capacity !== 0" class="flex items-center justify-between px-2">
+                                            <div>{{ spellLevel }}环</div>
+                                            <div class="flex items-center">
+                                                <input
+                                                    class="bg-slate-600 w-8 mr-2 h-6 outline-none text-center rounded-sm"
+                                                    type="text"
+                                                    v-model="characterResult.spell_slots[spellLevel].current">
+                                                <span> / {{ capacity }} 🔷</span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border-2 border-slate-600 rounded-md flex flex-col">
+                            <div class="flex font-bold">
+                                <div class="flex-grow basis-1 py-1 bg-slate-700 text-center">职业</div>
+                                <div class="flex-grow basis-1 py-1 bg-slate-700 text-center">子职业</div>
+                                <div class="flex-grow basis-1 py-1 bg-slate-700 text-center">等级</div>
+                            </div>
+                            <div class="flex-grow scroll-xs overflow-y-auto">
+                                <div class="flex border-slate-600 py-1 transition hover:bg-slate-600">
+                                    <div class="flex-grow basis-1 text-center">{{
+                                        computedCharacterData.mainClass }}
+                                    </div>
+                                    <div class="flex-grow basis-1 text-center">{{
+                                        computedCharacterData.subClass }}
+                                    </div>
+                                    <div class="flex-grow basis-1 text-center">{{ characterResult.class.level }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border-2 border-slate-600 rounded-md">
+                            <div class="py-1 border-slate-600 bg-slate-700 text-center font-bold">
+                                其他
+                            </div>
+                            速度、黑暗视觉、抗性……
+                        </div>
                     </section>
                     <section class="actions">
                         <h2>背包、技能与法术</h2>
@@ -397,6 +501,12 @@ section {
 .combat,
 .actions {
     @apply col-span-2 overflow-hidden;
+}
+
+.combat {
+    @apply grid p-0 border-0 gap-2;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 3fr 2fr;
 }
 
 .traits {
@@ -501,5 +611,15 @@ tr:not(:last-child) {
 
 .feature-button:hover .feature-arrow {
     @apply text-slate-50;
+}
+
+.weapon-data {
+    @apply grid flex-grow;
+    grid-template-columns: 3rem 3rem auto;
+    grid-template-rows: repeat(4, 1fr);
+}
+
+.weapon-data>div {
+    @apply border-slate-600 flex items-center justify-center;
 }
 </style>
